@@ -183,6 +183,10 @@
     var valorActual       = null;
     var puntoSeleccionado = { nombre: '', cantidad: 0 };
 
+    /* Control del AJAX de detalle del modal */
+    var xhrDetalle        = null;   // Referencia al request activo (para poder abortarlo)
+    var modalDatosDetalle = null;   // Datos recibidos del endpoint antes de que el modal abra
+
     var NOMBRES_MESES = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -410,80 +414,181 @@
     }
 
     /* ----------------------------------------------------------
-     * Abre el modal con el punto seleccionado
+     * Abre el modal: muestra loading, lanza AJAX de detalle y
+     * coordina el renderizado con la animacion de apertura.
      * ---------------------------------------------------------- */
     function abrirModal(nombre, cantidad) {
         puntoSeleccionado.nombre   = nombre;
         puntoSeleccionado.cantidad = cantidad;
+        modalDatosDetalle          = null;
 
+        /* Abortar cualquier peticion de detalle previa */
+        if (xhrDetalle) {
+            xhrDetalle.abort();
+            xhrDetalle = null;
+        }
+
+        /* Destruir grafico anterior y mostrar spinner de carga */
+        if (chartModal) { chartModal.destroy(); chartModal = null; }
+        $('#grafico-modal').html(
+            '<div style="display:-webkit-box;display:-ms-flexbox;display:flex;'
+          + '-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;'
+          + '-webkit-box-align:center;-ms-flex-align:center;align-items:center;height:380px;color:#999;font-size:16px;">'
+          + '<span class="glyphicon glyphicon-refresh spin"></span>&nbsp;Cargando detalle...</div>'
+        );
+
+        /* Actualizar cabecera del modal */
         $('#modal-nombre').text(nombre);
         $('#modal-subtitulo').html(obtenerTituloGrafico());
+
+        /* Abrir el modal (la animacion dura ~300 ms) */
         $('#modal-detalle').modal('show');
+
+        /* Lanzar AJAX en paralelo con la animacion de apertura */
+        xhrDetalle = $.ajax({
+            url:      'datos.php',
+            method:   'GET',
+            data:     { filtro: filtroActual, valor: valorActual, nombre: nombre },
+            dataType: 'json',
+            success: function(data) {
+                xhrDetalle = null;
+
+                /* Validar estructura de respuesta */
+                if (!data || !data.detalle || data.detalle.length === 0) {
+                    $('#grafico-modal').html(
+                        '<div class="alert alert-info" style="margin:20px;">'
+                      + 'No hay detalle disponible para este elemento.</div>'
+                    );
+                    return;
+                }
+
+                modalDatosDetalle = data;
+
+                /*
+                 * Si el modal ya termino de abrirse (clase 'in' activa en Bootstrap 3)
+                 * renderizar de inmediato; si no, shown.bs.modal lo hara al finalizar.
+                 */
+                if ($('#modal-detalle').hasClass('in')) {
+                    renderizarGraficoModal(data);
+                }
+            },
+            error: function(xhr, status) {
+                if (status === 'abort') { return; }
+                xhrDetalle = null;
+                $('#grafico-modal').html(
+                    '<div class="alert alert-danger" style="margin:20px;">'
+                  + '<strong>Error:</strong> No se pudo cargar el detalle.</div>'
+                );
+            }
+        });
     }
 
     /* ----------------------------------------------------------
-     * Renderiza el grafico de detalle dentro del modal
-     * (se dispara despues de que el modal termina de abrirse)
+     * Se dispara cuando el modal termino de abrirse.
+     * Si los datos ya llegaron los renderiza; si no, el callback
+     * AJAX los renderizara cuando lleguen.
      * ---------------------------------------------------------- */
     $('#modal-detalle').on('shown.bs.modal', function() {
+        if (modalDatosDetalle) {
+            renderizarGraficoModal(modalDatosDetalle);
+        }
+        /* Si modalDatosDetalle es null, el AJAX aun no respondio:
+           el success callback verificara hasClass('in') y renderizara. */
+    });
+
+    /* ----------------------------------------------------------
+     * Renderiza el grafico de detalle con las 3 sub-consultas.
+     * data = { nombre, total, detalle: [{fuente, cantidad}, ...] }
+     * ---------------------------------------------------------- */
+    function renderizarGraficoModal(data) {
         if (chartModal) { chartModal.destroy(); chartModal = null; }
+
+        /* Construir categorias y puntos desde el array de detalle */
+        var categorias = [];
+        var puntos     = [];
+        var sumaVerif  = 0;
+
+        for (var i = 0; i < data.detalle.length; i++) {
+            categorias.push(data.detalle[i].fuente);
+            puntos.push({
+                y:    data.detalle[i].cantidad,
+                name: data.detalle[i].fuente
+            });
+            sumaVerif += data.detalle[i].cantidad;
+        }
+
+        var totalMostrar = (typeof data.total !== 'undefined') ? data.total : sumaVerif;
+        var subtitulo    = obtenerTituloGraficoPlain()
+                         + '   |   Total: ' + totalMostrar;
 
         chartModal = Highcharts.chart('grafico-modal', {
             chart: {
                 type:      'column',
                 height:    380,
-                animation: { duration: 500 },
+                animation: { duration: 450 },
                 style:     { fontFamily: 'inherit' }
             },
             title: {
-                text:  puntoSeleccionado.nombre,
+                text:  data.nombre,
                 style: { fontSize: '20px' }
             },
             subtitle: {
-                text:  obtenerTituloGraficoPlain(),
-                style: { color: '#999' }
+                text:  subtitulo,
+                style: { color: '#555', fontWeight: 'bold' }
             },
             xAxis: {
-                categories: [ puntoSeleccionado.nombre ],
-                labels:     { enabled: false }
+                categories: categorias,
+                labels: {
+                    style: { fontSize: '13px', fontWeight: 'bold' }
+                }
             },
             yAxis: {
                 title:         { text: 'Cantidad' },
                 min:           0,
-                allowDecimals: false
+                allowDecimals: false,
+                gridLineColor: '#eaeaea'
             },
             tooltip: {
                 headerFormat: '',
-                pointFormat:  'Cantidad: <b>{point.y}</b>',
+                pointFormat:  '<span style="font-weight:bold;">{point.name}</span><br/>Cantidad: <b>{point.y}</b>',
                 backgroundColor: 'rgba(30,30,30,0.82)',
                 style:           { color: '#fff' },
-                borderWidth:     0
+                borderWidth:     0,
+                borderRadius:    4
             },
             plotOptions: {
                 column: {
-                    pointWidth:   140,
-                    borderRadius: 5,
+                    colorByPoint:  true,
+                    borderRadius:  4,
+                    pointPadding:  0.1,
+                    groupPadding:  0.15,
                     dataLabels: {
                         enabled:   true,
                         format:    '{y}',
-                        style:     { fontSize: '34px', fontWeight: 'bold', textOutline: 'none' },
-                        y:         -8,
-                        color:     '#fff'
+                        style: {
+                            fontSize:    '18px',
+                            fontWeight:  'bold',
+                            textOutline: 'none'
+                        },
+                        y: -5
                     }
                 }
             },
             series: [{
-                name:  puntoSeleccionado.nombre,
-                data:  [ puntoSeleccionado.cantidad ],
-                color: '#337ab7'
+                name: data.nombre,
+                data: puntos
             }],
             legend:  { enabled: false },
             credits: { enabled: false }
         });
-    });
+    }
 
-    /* Libera memoria al cerrar el modal */
+    /* Libera recursos al cerrar el modal */
     $('#modal-detalle').on('hidden.bs.modal', function() {
+        /* Abortar AJAX si aun estuviera en vuelo */
+        if (xhrDetalle) { xhrDetalle.abort(); xhrDetalle = null; }
+        modalDatosDetalle = null;
+
         if (chartModal) { chartModal.destroy(); chartModal = null; }
         $('#grafico-modal').empty();
     });
