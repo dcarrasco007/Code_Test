@@ -249,16 +249,22 @@
         } else { // anual
 
             var anioActual = hoy.getFullYear();
-            html = '<span class="label label-info"'
-                 + ' style="font-size:15px;padding:7px 14px;">' + anioActual + '</span>';
-            valorActual = anioActual;
+            var ANIO_INICIO = 2025; // Primer anio disponible en el selector
+
+            html = '<select class="form-control input-sm" id="select-valor"'
+                 + ' style="display:inline-block;width:auto;min-width:100px;">';
+            for (var a = ANIO_INICIO; a <= anioActual; a++) {
+                html += '<option value="' + a + '">' + a + '</option>';
+            }
+            html += '</select>';
+            valorActual = anioActual; // seleccionar el anio mas reciente por defecto
 
         }
 
         $('#filtro-selector').html(html);
 
-        /* Seleccionar el valor mas reciente en el select y vincular evento change */
-        if (filtro !== 'anual' && valorActual !== null) {
+        /* Seleccionar el valor por defecto en el select y vincular evento change */
+        if (valorActual !== null) {
             $('#select-valor').val(valorActual);
             $('#select-valor').on('change', function() {
                 valorActual = parseInt($(this).val(), 10);
