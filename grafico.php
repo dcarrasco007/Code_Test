@@ -97,6 +97,10 @@
 
                 <!-- Select dinamico (semanas / meses) o etiqueta de anio -->
                 <span id="filtro-selector"></span>
+                &nbsp;
+                <button type="button" id="btn-aplicar-filtro" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-search"></span> Filtrar
+                </button>
             </div>
         </div>
     </div>
@@ -254,7 +258,6 @@
             $('#select-valor').val(valorActual);
             $('#select-valor').off('change').on('change', function() {
                 valorActual = parseInt($(this).val(), 10);
-                cargarDatos();
             });
         }
     }
@@ -339,20 +342,18 @@
         if (filtro !== 'anual') { $('#select-anio').val(anioFiltro); }
         if (valorActual !== null) { $('#select-valor').val(valorActual); }
 
-        /* Vincular cambio de año (solo Semana y Mes) */
+        /* Vincular cambio de año (solo Semana y Mes): reconstruye opciones, no recarga grafico */
         if (filtro === 'semana' || filtro === 'mes') {
             $('#select-anio').on('change', function() {
                 anioFiltro = parseInt($(this).val(), 10);
                 actualizarSelectSecundario(filtro, anioFiltro);
-                cargarDatos();
             });
         }
 
-        /* Vincular cambio de semana / mes / año-anual */
+        /* Vincular cambio de semana / mes / año-anual: solo actualiza el estado interno */
         if (valorActual !== null) {
             $('#select-valor').on('change', function() {
                 valorActual = parseInt($(this).val(), 10);
-                cargarDatos();
             });
         }
     }
@@ -703,11 +704,17 @@
 
         filtroActual = $btn.data('filtro');
         actualizarSelectorFiltro(filtroActual);
+    });
+
+    /* ----------------------------------------------------------
+     * Boton Filtrar: unico punto que dispara la carga del grafico
+     * ---------------------------------------------------------- */
+    $('#btn-aplicar-filtro').on('click', function() {
         cargarDatos();
     });
 
     /* ----------------------------------------------------------
-     * Inicializacion
+     * Inicializacion: carga inicial al abrir la pagina
      * ---------------------------------------------------------- */
     $(document).ready(function() {
         actualizarSelectorFiltro(filtroActual);
