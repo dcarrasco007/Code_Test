@@ -187,6 +187,10 @@
     var xhrDetalle        = null;   // Referencia al request activo (para poder abortarlo)
     var modalDatosDetalle = null;   // Datos recibidos del endpoint antes de que el modal abra
 
+    /* Año seleccionado en los filtros Semana y Mes */
+    var anioFiltro          = new Date().getFullYear();
+    var ANIO_INICIO_FILTROS = 2025; // Primer año disponible en todos los selectores
+
     var NOMBRES_MESES = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -203,69 +207,149 @@
     }
 
     /* ----------------------------------------------------------
+     * Maximo de semanas disponibles para un año dado.
+     * Años pasados → 52; año actual → semana anterior a hoy.
+     * ---------------------------------------------------------- */
+    function getMaxSemana(anio) {
+        var hoy = new Date();
+        if (anio < hoy.getFullYear()) { return 52; }
+        return getNumeroSemanaISO(hoy) - 1;
+    }
+
+    /* ----------------------------------------------------------
+     * Maximo de meses disponibles para un año dado (1-indexed).
+     * Años pasados → 12; año actual → mes anterior a hoy.
+     * ---------------------------------------------------------- */
+    function getMaxMes(anio) {
+        var hoy = new Date();
+        if (anio < hoy.getFullYear()) { return 12; }
+        return hoy.getMonth(); // getMonth() base-0 = mes anterior en base-1
+    }
+
+    /* ----------------------------------------------------------
+     * Reconstruye las opciones de #select-valor al cambiar el año
+     * en Semana o Mes, y reactiva el evento change.
+     * ---------------------------------------------------------- */
+    function actualizarSelectSecundario(filtro, anio) {
+        var html   = '';
+        var maxVal = (filtro === 'semana') ? getMaxSemana(anio) : getMaxMes(anio);
+
+        if (maxVal < 1) {
+            html        = '<option value="">Sin opciones disponibles</option>';
+            valorActual = null;
+        } else if (filtro === 'semana') {
+            for (var s = 1; s <= maxVal; s++) {
+                html += '<option value="' + s + '">Semana ' + s + '</option>';
+            }
+            valorActual = maxVal;
+        } else {
+            for (var m = 1; m <= maxVal; m++) {
+                html += '<option value="' + m + '">' + NOMBRES_MESES[m - 1] + '</option>';
+            }
+            valorActual = maxVal;
+        }
+
+        $('#select-valor').html(html);
+        if (valorActual !== null) {
+            $('#select-valor').val(valorActual);
+            $('#select-valor').off('change').on('change', function() {
+                valorActual = parseInt($(this).val(), 10);
+                cargarDatos();
+            });
+        }
+    }
+
+    /* ----------------------------------------------------------
      * Construye el selector segun el filtro activo
      * ---------------------------------------------------------- */
     function actualizarSelectorFiltro(filtro) {
         var hoy  = new Date();
         var html = '';
 
+        /* Reiniciar al año actual cada vez que se elige un tipo de filtro */
+        anioFiltro = hoy.getFullYear();
+
         if (filtro === 'semana') {
 
-            var semanaActual      = getNumeroSemanaISO(hoy);
-            var semanasDisponibles = semanaActual - 1;
+            var maxSem = getMaxSemana(anioFiltro);
 
-            if (semanasDisponibles < 1) {
-                html = '<span class="label label-warning" style="font-size:13px;padding:6px 10px;">'
-                     + 'No hay semanas anteriores disponibles este a&ntilde;o</span>';
-                valorActual = null;
-            } else {
-                html = '<select class="form-control input-sm" id="select-valor"'
-                     + ' style="display:inline-block;width:auto;min-width:155px;">';
-                for (var s = 1; s <= semanasDisponibles; s++) {
-                    html += '<option value="' + s + '">Semana ' + s + '</option>';
-                }
-                html += '</select>';
-                valorActual = semanasDisponibles; // semana mas reciente
-            }
-
-        } else if (filtro === 'mes') {
-
-            var mesActual = hoy.getMonth(); // 0 = Enero ... 11 = Diciembre
-
-            if (mesActual === 0) {
-                html = '<span class="label label-warning" style="font-size:13px;padding:6px 10px;">'
-                     + 'No hay meses anteriores disponibles este a&ntilde;o</span>';
-                valorActual = null;
-            } else {
-                html = '<select class="form-control input-sm" id="select-valor"'
-                     + ' style="display:inline-block;width:auto;min-width:155px;">';
-                for (var m = 0; m < mesActual; m++) {
-                    html += '<option value="' + (m + 1) + '">' + NOMBRES_MESES[m] + '</option>';
-                }
-                html += '</select>';
-                valorActual = mesActual; // mes mas reciente (1-indexed)
-            }
-
-        } else { // anual
-
-            var anioActual = hoy.getFullYear();
-            var ANIO_INICIO = 2025; // Primer anio disponible en el selector
-
-            html = '<select class="form-control input-sm" id="select-valor"'
-                 + ' style="display:inline-block;width:auto;min-width:100px;">';
-            for (var a = ANIO_INICIO; a <= anioActual; a++) {
+            /* Selector de año */
+            html = '<select class="form-control input-sm" id="select-anio"'
+                 + ' style="display:inline-block;width:auto;min-width:90px;margin-right:6px;">';
+            for (var a = ANIO_INICIO_FILTROS; a <= hoy.getFullYear(); a++) {
                 html += '<option value="' + a + '">' + a + '</option>';
             }
             html += '</select>';
-            valorActual = anioActual; // seleccionar el anio mas reciente por defecto
+
+            /* Selector de semana */
+            html += '<select class="form-control input-sm" id="select-valor"'
+                  + ' style="display:inline-block;width:auto;min-width:155px;">';
+            if (maxSem < 1) {
+                html        += '<option value="">Sin semanas disponibles</option>';
+                valorActual  = null;
+            } else {
+                for (var s = 1; s <= maxSem; s++) {
+                    html += '<option value="' + s + '">Semana ' + s + '</option>';
+                }
+                valorActual = maxSem;
+            }
+            html += '</select>';
+
+        } else if (filtro === 'mes') {
+
+            var maxMes = getMaxMes(anioFiltro);
+
+            /* Selector de año */
+            html = '<select class="form-control input-sm" id="select-anio"'
+                 + ' style="display:inline-block;width:auto;min-width:90px;margin-right:6px;">';
+            for (var a = ANIO_INICIO_FILTROS; a <= hoy.getFullYear(); a++) {
+                html += '<option value="' + a + '">' + a + '</option>';
+            }
+            html += '</select>';
+
+            /* Selector de mes */
+            html += '<select class="form-control input-sm" id="select-valor"'
+                  + ' style="display:inline-block;width:auto;min-width:155px;">';
+            if (maxMes < 1) {
+                html        += '<option value="">Sin meses disponibles</option>';
+                valorActual  = null;
+            } else {
+                for (var m = 1; m <= maxMes; m++) {
+                    html += '<option value="' + m + '">' + NOMBRES_MESES[m - 1] + '</option>';
+                }
+                valorActual = maxMes;
+            }
+            html += '</select>';
+
+        } else { // anual
+
+            html = '<select class="form-control input-sm" id="select-valor"'
+                 + ' style="display:inline-block;width:auto;min-width:100px;">';
+            for (var a = ANIO_INICIO_FILTROS; a <= hoy.getFullYear(); a++) {
+                html += '<option value="' + a + '">' + a + '</option>';
+            }
+            html += '</select>';
+            valorActual = hoy.getFullYear();
 
         }
 
         $('#filtro-selector').html(html);
 
-        /* Seleccionar el valor por defecto en el select y vincular evento change */
+        /* Establecer valores por defecto */
+        if (filtro !== 'anual') { $('#select-anio').val(anioFiltro); }
+        if (valorActual !== null) { $('#select-valor').val(valorActual); }
+
+        /* Vincular cambio de año (solo Semana y Mes) */
+        if (filtro === 'semana' || filtro === 'mes') {
+            $('#select-anio').on('change', function() {
+                anioFiltro = parseInt($(this).val(), 10);
+                actualizarSelectSecundario(filtro, anioFiltro);
+                cargarDatos();
+            });
+        }
+
+        /* Vincular cambio de semana / mes / año-anual */
         if (valorActual !== null) {
-            $('#select-valor').val(valorActual);
             $('#select-valor').on('change', function() {
                 valorActual = parseInt($(this).val(), 10);
                 cargarDatos();
@@ -277,24 +361,22 @@
      * Titulo descriptivo segun filtro activo
      * ---------------------------------------------------------- */
     function obtenerTituloGrafico() {
-        var hoy = new Date();
         if (filtroActual === 'semana') {
-            return 'Reporte &mdash; Semana ' + valorActual + ' del ' + hoy.getFullYear();
+            return 'Reporte &mdash; Semana ' + valorActual + ' del ' + anioFiltro;
         }
         if (filtroActual === 'mes') {
-            return 'Reporte &mdash; ' + NOMBRES_MESES[valorActual - 1] + ' ' + hoy.getFullYear();
+            return 'Reporte &mdash; ' + NOMBRES_MESES[valorActual - 1] + ' ' + anioFiltro;
         }
         return 'Reporte Anual &mdash; ' + valorActual;
     }
 
     /* Version sin HTML entities para Highcharts */
     function obtenerTituloGraficoPlain() {
-        var hoy = new Date();
         if (filtroActual === 'semana') {
-            return 'Reporte — Semana ' + valorActual + ' del ' + hoy.getFullYear();
+            return 'Reporte — Semana ' + valorActual + ' del ' + anioFiltro;
         }
         if (filtroActual === 'mes') {
-            return 'Reporte — ' + NOMBRES_MESES[valorActual - 1] + ' ' + hoy.getFullYear();
+            return 'Reporte — ' + NOMBRES_MESES[valorActual - 1] + ' ' + anioFiltro;
         }
         return 'Reporte Anual — ' + valorActual;
     }
@@ -313,10 +395,15 @@
             return;
         }
 
+        var paramsPrincipal = { filtro: filtroActual, valor: valorActual };
+        if (filtroActual === 'semana' || filtroActual === 'mes') {
+            paramsPrincipal.anio = anioFiltro;
+        }
+
         $.ajax({
             url:      'datos.php',
             method:   'GET',
-            data:     { filtro: filtroActual, valor: valorActual },
+            data:     paramsPrincipal,
             dataType: 'json',
             beforeSend: function() {
                 if (chartPrincipal) { chartPrincipal.destroy(); chartPrincipal = null; }
@@ -451,10 +538,15 @@
         $('#modal-detalle').modal('show');
 
         /* Lanzar AJAX en paralelo con la animacion de apertura */
+        var paramsDetalle = { filtro: filtroActual, valor: valorActual, nombre: nombre };
+        if (filtroActual === 'semana' || filtroActual === 'mes') {
+            paramsDetalle.anio = anioFiltro;
+        }
+
         xhrDetalle = $.ajax({
             url:      'datos.php',
             method:   'GET',
-            data:     { filtro: filtroActual, valor: valorActual, nombre: nombre },
+            data:     paramsDetalle,
             dataType: 'json',
             success: function(data) {
                 xhrDetalle = null;

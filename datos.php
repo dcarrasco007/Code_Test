@@ -7,11 +7,12 @@
  * MODO PRINCIPAL (sin parametro 'nombre'):
  *   GET filtro => 'semana' | 'mes' | 'anual'
  *   GET valor  => numero de semana, numero de mes (1-12) o anio
+ *   GET anio   => anio del periodo (solo para filtro semana/mes)
  *   Responde: JSON array [ { "nombre": "...", "cantidad": N }, ... ]
  *             donde cantidad = suma de las 3 sub-queries para ese nombre.
  *
  * MODO DETALLE (con parametro 'nombre'):
- *   GET filtro, valor, nombre => nombre especifico a detallar
+ *   GET filtro, valor, anio, nombre => nombre especifico a detallar
  *   Responde: JSON object {
  *               "nombre":  "...",
  *               "total":   N,
@@ -31,33 +32,37 @@ $filtros_validos = array('semana', 'mes', 'anual');
 $filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'anual';
 $valor  = isset($_GET['valor'])  ? intval($_GET['valor']) : intval(date('Y'));
 $nombre = isset($_GET['nombre']) ? trim($_GET['nombre']) : '';
+$anio   = isset($_GET['anio'])   ? intval($_GET['anio'])  : intval(date('Y'));
 
 if (!in_array($filtro, $filtros_validos)) {
     $filtro = 'anual';
 }
 
+/* Para filtro anual el año ya esta en $valor; unificar en $anio */
+if ($filtro === 'anual') {
+    $anio = $valor;
+}
+
 /* -------------------------------------------------------------------
  * Genera el total de un nombre de forma reproducible.
- * Usa semilla por-nombre para que el valor sea siempre el mismo
- * tanto en el grafico principal como en el modo detalle.
- * En produccion: esto seria el resultado de la suma de las 3 queries
- * para ese nombre segun el filtro/valor indicado.
+ * Incluye $anio en la semilla para distinguir periodos del mismo
+ * numero de semana/mes en distintos años.
+ * En produccion: resultado de la suma de las 3 queries para ese nombre.
  * ------------------------------------------------------------------- */
-function generarTotal($filtro, $valor, $nombre) {
-    mt_srand(abs(crc32($filtro . $valor . $nombre)));
+function generarTotal($filtro, $anio, $valor, $nombre) {
+    mt_srand(abs(crc32($filtro . $anio . $valor . $nombre)));
     return mt_rand(0, 100);
 }
 
 /* -------------------------------------------------------------------
  * Divide un total en 3 partes que suman exactamente $total.
- * Usa semilla distinta a generarTotal() para independencia.
- * En produccion: estos son los valores reales de cada sub-query.
+ * En produccion: valores reales de cada sub-query.
  * ------------------------------------------------------------------- */
-function dividirEnTres($filtro, $valor, $nombre, $total) {
+function dividirEnTres($filtro, $anio, $valor, $nombre, $total) {
     if ($total === 0) {
         return array(0, 0, 0);
     }
-    mt_srand(abs(crc32($filtro . $valor . $nombre . '_det')));
+    mt_srand(abs(crc32($filtro . $anio . $valor . $nombre . '_det')));
     $p1   = mt_rand(0, $total);
     $rest = $total - $p1;
     $p2   = ($rest > 0) ? mt_rand(0, $rest) : 0;
@@ -70,8 +75,8 @@ function dividirEnTres($filtro, $valor, $nombre, $total) {
  * =================================================================== */
 if ($nombre !== '') {
 
-    $total  = generarTotal($filtro, $valor, $nombre);
-    $partes = dividirEnTres($filtro, $valor, $nombre, $total);
+    $total  = generarTotal($filtro, $anio, $valor, $nombre);
+    $partes = dividirEnTres($filtro, $anio, $valor, $nombre, $total);
 
     $respuesta = array(
         'nombre' => $nombre,
@@ -104,7 +109,7 @@ $datos = array();
 foreach ($nombres as $n) {
     $datos[] = array(
         'nombre'   => $n,
-        'cantidad' => generarTotal($filtro, $valor, $n)
+        'cantidad' => generarTotal($filtro, $anio, $valor, $n)
     );
 }
 
