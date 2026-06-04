@@ -307,25 +307,47 @@ $idPerfil=getIdPerfil();
                             
                             echo $menu_principal;
 
-                            // [BUSCADOR] Preparo el indice para JS: decodifico entidades HTML (&oacute; -> o con tilde)
-                            // para que el texto se muestre y se busque correctamente.
+                            // [BUSCADOR] Compatible con PHP 5.3.
+                            // Asegura UTF-8 valido en un texto. En PHP 5.3 json_encode() devuelve false
+                            // si recibe UN solo byte no-UTF8, lo que dejaria el indice vacio. Por eso saneamos.
+                            if (!function_exists('bsc_utf8')) {
+                                function bsc_utf8($s){
+                                    if ($s === null) return '';
+                                    if (function_exists('mb_check_encoding')) {
+                                        if (mb_check_encoding($s, 'UTF-8')) return $s;            // ya es UTF-8 valido
+                                        return mb_convert_encoding($s, 'UTF-8', 'ISO-8859-1');    // venia en latin1
+                                    }
+                                    if (function_exists('iconv')) {
+                                        $clean = @iconv('UTF-8', 'UTF-8//IGNORE', $s);
+                                        if ($clean !== false && $clean === $s) return $s;        // ya era UTF-8 valido
+                                        $conv = @iconv('ISO-8859-1', 'UTF-8//IGNORE', $s);
+                                        return ($conv !== false) ? $conv : (string)$clean;
+                                    }
+                                    return $s; // ultimo recurso
+                                }
+                            }
+                            // Preparo el indice para JS: primero garantizo UTF-8, luego decodifico
+                            // entidades HTML (&oacute; -> o con tilde) para mostrar/buscar correctamente.
                             $reportes_js=array();
                             foreach($reportes as $r){
                                 $ruta=array();
-                                foreach($r['ruta'] as $p){ $ruta[]=html_entity_decode($p, ENT_QUOTES, 'UTF-8'); }
+                                foreach($r['ruta'] as $p){
+                                    $ruta[]=html_entity_decode(bsc_utf8($p), ENT_QUOTES, 'UTF-8');
+                                }
                                 $reportes_js[]=array(
-                                    'nombre'=>html_entity_decode($r['nombre'], ENT_QUOTES, 'UTF-8'),
-                                    'url'=>$r['url'],
+                                    'nombre'=>html_entity_decode(bsc_utf8($r['nombre']), ENT_QUOTES, 'UTF-8'),
+                                    'url'=>bsc_utf8($r['url']),
                                     'ruta'=>$ruta
                                 );
                             }
-                            // Codifico SIN JSON_UNESCAPED_UNICODE: los acentos quedan como \uXXXX (ASCII),
-                            // asi funciona aunque la pagina se sirva como latin1/ISO-8859-1.
-                            // JSON_HEX_TAG evita que un "</script>" rompa el bloque.
-                            $reportes_flags = JSON_HEX_TAG;
-                            if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) { $reportes_flags |= JSON_INVALID_UTF8_SUBSTITUTE; }
+                            // En PHP 5.3 json_encode SIEMPRE escapa los acentos a \uXXXX (ASCII puro),
+                            // por lo que funciona aunque la pagina se sirva como latin1/ISO-8859-1.
+                            // Construyo flags sin asumir constantes nuevas (todas validadas con defined()).
+                            $reportes_flags = 0;
+                            if (defined('JSON_HEX_TAG'))                 { $reportes_flags |= JSON_HEX_TAG; }                 // evita que "</script>" rompa el bloque
+                            if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) { $reportes_flags |= JSON_INVALID_UTF8_SUBSTITUTE; } // PHP 7.2+ (extra seguridad)
                             $reportes_json = json_encode($reportes_js, $reportes_flags);
-                            if ($reportes_json === false) { $reportes_json = '[]'; } // nunca dejar el JS vacio
+                            if ($reportes_json === false || $reportes_json === null) { $reportes_json = '[]'; } // nunca dejar el JS vacio
                             ?>
                             <!-- [BUSCADOR] Buscador de reportes -->
                             <form class="navbar-form navbar-left form-search form-inline" role="search" onsubmit="return false;" autocomplete="off">
