@@ -307,7 +307,7 @@ $idPerfil=getIdPerfil();
                             
                             echo $menu_principal;
 
-                            // [BUSCADOR] Preparo el indice para JS: decodifico entidades HTML (&oacute; -> ó)
+                            // [BUSCADOR] Preparo el indice para JS: decodifico entidades HTML (&oacute; -> o con tilde)
                             // para que el texto se muestre y se busque correctamente.
                             $reportes_js=array();
                             foreach($reportes as $r){
@@ -319,6 +319,13 @@ $idPerfil=getIdPerfil();
                                     'ruta'=>$ruta
                                 );
                             }
+                            // Codifico SIN JSON_UNESCAPED_UNICODE: los acentos quedan como \uXXXX (ASCII),
+                            // asi funciona aunque la pagina se sirva como latin1/ISO-8859-1.
+                            // JSON_HEX_TAG evita que un "</script>" rompa el bloque.
+                            $reportes_flags = JSON_HEX_TAG;
+                            if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) { $reportes_flags |= JSON_INVALID_UTF8_SUBSTITUTE; }
+                            $reportes_json = json_encode($reportes_js, $reportes_flags);
+                            if ($reportes_json === false) { $reportes_json = '[]'; } // nunca dejar el JS vacio
                             ?>
                             <!-- [BUSCADOR] Buscador de reportes -->
                             <form class="navbar-form navbar-left form-search form-inline" role="search" onsubmit="return false;" autocomplete="off">
@@ -334,7 +341,7 @@ $idPerfil=getIdPerfil();
                             </form>
                             <script>
                                 // [BUSCADOR] Indice completo de reportes accesibles para el perfil actual.
-                                window.REPORTES_INDEX = <?php echo json_encode($reportes_js, JSON_UNESCAPED_UNICODE); ?>;
+                                window.REPORTES_INDEX = <?php echo $reportes_json; ?>;
                             </script>
                                 <div>
     						                                   
@@ -1773,7 +1780,7 @@ $idPerfil=getIdPerfil();
                 return (s || '')
                     .toString()
                     .toLowerCase()
-                    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             }
 
             // Pre-calcula el texto de busqueda de cada reporte (nombre + ruta completa).
