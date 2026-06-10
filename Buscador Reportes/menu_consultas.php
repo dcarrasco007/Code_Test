@@ -204,16 +204,89 @@ $idPerfil=getIdPerfil();
             .btn-ia .ia-texto { vertical-align: middle; }
             @keyframes ia-pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
+            /* Modal IA: contenedor */
+            #modalIA .modal-content {
+                border: none;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 12px 40px rgba(30,20,80,.35);
+            }
+            #modalIA .modal-body { padding: 22px 24px; }
+
             /* Header del modal IA con el mismo degradado */
             .modal-ia-header {
-                background: linear-gradient(135deg, #7b2ff7 0%, #2a9df4 50%, #16c79a 100%);
+                background: linear-gradient(135deg, #7b2ff7 0%, #2a9df4 52%, #16c79a 100%);
                 color: #fff;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
+                border: none;
+                padding: 18px 20px;
+                position: relative;
             }
-            .modal-ia-header .modal-title { color: #fff; }
-            .modal-ia-header .bg-sub { font-weight: normal; opacity: .9; font-size: 12px; }
-            .modal-ia-header .close { color: #fff; opacity: .9; text-shadow: none; }
+            .modal-ia-header .ia-head {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .modal-ia-header .ia-badge {
+                flex: 0 0 auto;
+                width: 46px;
+                height: 46px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.22);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+            }
+            .modal-ia-header .ia-badge .ia-logo { animation: ia-pulse 2.4s ease-in-out infinite; }
+            .modal-ia-header .ia-head-txt { line-height: 1.25; }
+            .modal-ia-header .modal-title {
+                color: #fff;
+                font-size: 20px;
+                font-weight: 700;
+                margin: 0;
+                text-shadow: 0 1px 2px rgba(0,0,0,.18);
+            }
+            .modal-ia-header .ia-sub {
+                color: #fff;
+                opacity: .96;
+                font-size: 13px;
+                margin-top: 3px;
+                text-shadow: 0 1px 2px rgba(0,0,0,.18);
+            }
+            .modal-ia-header .close {
+                position: absolute;
+                top: 12px;
+                right: 16px;
+                color: #fff;
+                opacity: .95;
+                text-shadow: none;
+                font-size: 26px;
+                font-weight: 400;
+                line-height: 1;
+            }
+            .modal-ia-header .close:hover { opacity: 1; }
+
+            /* Textarea y botones dentro del modal */
+            #modalIA .bg-textarea {
+                border: 1px solid #d7d0f0;
+                border-radius: 10px;
+                box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
+            }
+            #modalIA .bg-textarea:focus {
+                border-color: #7b2ff7;
+                box-shadow: 0 0 0 3px rgba(123,47,247,.15);
+                outline: none;
+            }
+            #modalIA #bgEnviar {
+                background: linear-gradient(135deg, #7b2ff7 0%, #2a9df4 60%, #16c79a 100%);
+                border: none;
+                font-weight: 600;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(123,47,247,.30);
+            }
+            #modalIA #bgEnviar:hover, #modalIA #bgEnviar:focus { filter: brightness(1.06); color:#fff; }
+            #modalIA #bgLimpiar { border-radius: 8px; }
         </style>
     </head>
     <body>
@@ -494,15 +567,19 @@ $idPerfil=getIdPerfil();
                 <div class="modal-content">
                     <div class="modal-header modal-ia-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title" id="modalIATitulo">
-                            <svg class="ia-logo" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="vertical-align:-4px;">
-                                <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2z" fill="currentColor"/>
-                                <path d="M18.5 13l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" fill="currentColor" opacity=".85"/>
-                                <path d="M5 14l.7 1.8L7.5 16.5l-1.8.7L5 19l-.7-1.8L2.5 16.5l1.8-.7L5 14z" fill="currentColor" opacity=".7"/>
-                            </svg>
-                            Consulta IA
-                            <small class="bg-sub">&nbsp;Escribe tu consulta, env&iacute;ala y espera la respuesta.</small>
-                        </h4>
+                        <div class="ia-head">
+                            <span class="ia-badge">
+                                <svg class="ia-logo" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                                    <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2z" fill="currentColor"/>
+                                    <path d="M18.5 13l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" fill="currentColor" opacity=".9"/>
+                                    <path d="M5 14l.7 1.8L7.5 16.5l-1.8.7L5 19l-.7-1.8L2.5 16.5l1.8-.7L5 14z" fill="currentColor" opacity=".75"/>
+                                </svg>
+                            </span>
+                            <div class="ia-head-txt">
+                                <h4 class="modal-title" id="modalIATitulo">Consulta IA</h4>
+                                <div class="ia-sub">Escribe tu consulta, env&iacute;ala y espera la respuesta.</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
