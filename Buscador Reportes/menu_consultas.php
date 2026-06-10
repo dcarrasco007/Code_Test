@@ -124,10 +124,7 @@ $idPerfil=getIdPerfil();
                 border-radius: 2px;
             }
 
-            /* [BUSCADOR CONSULTA] Buscador grande */
-            #buscadorGrandeWrap { margin-top: 12px; margin-bottom: 8px; }
-            .buscador-grande { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-            .buscador-grande .panel-heading .bg-sub { font-weight: normal; opacity: .85; }
+            /* [BUSCADOR CONSULTA] Buscador grande (dentro del modal IA) */
             .bg-textarea {
                 font-size: 16px;
                 resize: vertical;
@@ -185,6 +182,38 @@ $idPerfil=getIdPerfil();
                 font-family: "Courier New", monospace;
                 letter-spacing: 1px;
             }
+
+            /* Boton IA del navbar (color distintivo) */
+            .btn-ia {
+                color: #fff;
+                background: linear-gradient(135deg, #7b2ff7 0%, #2a9df4 50%, #16c79a 100%);
+                border: none;
+                font-weight: 600;
+                border-radius: 22px;
+                padding: 7px 16px;
+                box-shadow: 0 2px 8px rgba(123,47,247,.35);
+                transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+            }
+            .btn-ia:hover, .btn-ia:focus, .btn-ia:active {
+                color: #fff;
+                filter: brightness(1.06);
+                box-shadow: 0 4px 14px rgba(42,157,244,.45);
+                transform: translateY(-1px);
+            }
+            .btn-ia .ia-logo { vertical-align: -4px; margin-right: 6px; animation: ia-pulse 2.4s ease-in-out infinite; }
+            .btn-ia .ia-texto { vertical-align: middle; }
+            @keyframes ia-pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+            /* Header del modal IA con el mismo degradado */
+            .modal-ia-header {
+                background: linear-gradient(135deg, #7b2ff7 0%, #2a9df4 50%, #16c79a 100%);
+                color: #fff;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+            }
+            .modal-ia-header .modal-title { color: #fff; }
+            .modal-ia-header .bg-sub { font-weight: normal; opacity: .9; font-size: 12px; }
+            .modal-ia-header .close { color: #fff; opacity: .9; text-shadow: none; }
         </style>
     </head>
     <body>
@@ -427,6 +456,19 @@ $idPerfil=getIdPerfil();
                                 // [BUSCADOR] Indice completo de reportes accesibles para el perfil actual.
                                 window.REPORTES_INDEX = <?php echo $reportes_json; ?>;
                             </script>
+
+                            <!-- [BUSCADOR CONSULTA] Boton fijo de IA en el navbar (derecha) que abre el modal -->
+                            <div class="navbar-form navbar-right" style="margin-right:6px;">
+                                <button type="button" class="btn btn-ia" data-toggle="modal" data-target="#modalIA" title="Abrir Consulta IA">
+                                    <svg class="ia-logo" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                                        <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2z" fill="currentColor"/>
+                                        <path d="M18.5 13l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" fill="currentColor" opacity=".85"/>
+                                        <path d="M5 14l.7 1.8L7.5 16.5l-1.8.7L5 19l-.7-1.8L2.5 16.5l1.8-.7L5 14z" fill="currentColor" opacity=".7"/>
+                                    </svg>
+                                    <span class="ia-texto">Consulta IA</span>
+                                </button>
+                            </div>
+
                                 <div>
     						                                   
         					
@@ -446,15 +488,23 @@ $idPerfil=getIdPerfil();
     			</div>
     		</div>
     	</div>
-        <!-- [BUSCADOR CONSULTA] Buscador grande (arriba). Envia por AJAX y espera la respuesta desde BD. -->
-        <div class="container-fluid" id="buscadorGrandeWrap">
-            <div class="center-block">
-                <div class="panel panel-primary buscador-grande">
-                    <div class="panel-heading">
-                        <strong>Consulta</strong>
-                        <small class="bg-sub">&nbsp;Escribe tu consulta, env&iacute;ala y espera la respuesta.</small>
+        <!-- [BUSCADOR CONSULTA] Modal con el buscador grande (se abre con el boton IA del navbar) -->
+        <div class="modal fade" id="modalIA" role="dialog" aria-labelledby="modalIATitulo">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header modal-ia-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="modalIATitulo">
+                            <svg class="ia-logo" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="vertical-align:-4px;">
+                                <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2z" fill="currentColor"/>
+                                <path d="M18.5 13l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" fill="currentColor" opacity=".85"/>
+                                <path d="M5 14l.7 1.8L7.5 16.5l-1.8.7L5 19l-.7-1.8L2.5 16.5l1.8-.7L5 14z" fill="currentColor" opacity=".7"/>
+                            </svg>
+                            Consulta IA
+                            <small class="bg-sub">&nbsp;Escribe tu consulta, env&iacute;ala y espera la respuesta.</small>
+                        </h4>
                     </div>
-                    <div class="panel-body">
+                    <div class="modal-body">
                         <div class="form-group">
                             <textarea id="bgConsulta" class="form-control bg-textarea" rows="4"
                                       placeholder="Escribe aqu&iacute; tu consulta... (Ctrl+Enter para enviar)"></textarea>
@@ -2189,6 +2239,9 @@ $idPerfil=getIdPerfil();
                     enviar();
                 }
             });
+
+            // Al abrir el modal IA, enfoca el textarea para escribir de inmediato.
+            $('#modalIA').on('shown.bs.modal', function(){ $consulta.focus(); });
         })();
         /* ============== [BUSCADOR CONSULTA] Fin consulta asincrona via BD ============== */
 
