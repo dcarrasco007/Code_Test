@@ -530,8 +530,8 @@ $idPerfil=getIdPerfil();
                                 window.REPORTES_INDEX = <?php echo $reportes_json; ?>;
                             </script>
 
-                            <!-- [BUSCADOR CONSULTA] Boton fijo de IA en el navbar (derecha) que abre el modal -->
-                            <div class="navbar-form navbar-right" style="margin-right:6px;">
+                            <!-- [BUSCADOR CONSULTA] Boton fijo de IA, al lado del buscador (izquierda) -->
+                            <div class="navbar-form navbar-left" style="margin-left:0; padding-left:0;">
                                 <button type="button" class="btn btn-ia" data-toggle="modal" data-target="#modalIA" title="Abrir Consulta IA">
                                     <svg class="ia-logo" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
                                         <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2z" fill="currentColor"/>
