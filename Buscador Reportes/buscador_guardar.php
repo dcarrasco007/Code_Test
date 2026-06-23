@@ -7,7 +7,7 @@
  */
 
 // >>> CONFIGURA AQUI la URL de tu login (relativa a esta carpeta) <<<
-$LOGIN_URL = '../menu/login.php';
+$LOGIN_URL = '../menu/logout2.php';
 
 include_once('../perfiles/getPerfiles.php');
 include_once('../../conexion/conexion_db.php');
