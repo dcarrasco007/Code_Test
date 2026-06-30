@@ -259,7 +259,7 @@ $idPerfil=getIdPerfil();
                                     
                                     <a class="navbar-brand" href="#"> Semana: <?php echo date("W");?></a>&nbsp;&nbsp;
                                     
-                                        <img src="/contingencia/img/desarrollado_trans.png" style="width:85px;" />.
+                                        
                                     </div>
                                 </div>
     						</div>
@@ -2185,6 +2185,32 @@ $idPerfil=getIdPerfil();
     
 
         </script>
+
+        <!-- Footer "sticky" con position:absolute (patron clasico).
+             Queda al fondo cuando hay poco contenido y fluye despues del contenido
+             cuando la tabla es larga, SIN tocar el display del body (no rompe selects/tablas). -->
+        <style>
+            /* html como contenedor de referencia y de alto minimo = viewport */
+            html{ position: relative; min-height: 100%; }
+            /* Reservo abajo el alto del footer para que nunca tape el contenido */
+            body{ margin-bottom: 70px; }
+            footer#footerApp{
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 70px;
+                text-align: center;
+                padding: 8px 0;
+                background: #fafafa;
+                border-top: 1px solid #e5e5e5;
+            }
+            footer#footerApp img{ width: 85px; max-height: 50px; height: auto; vertical-align: middle; }
+            /* Los reportes que se cargan en #cont traen su propio <footer> con el mismo logo,
+               y al inyectarse aparece pegado tras el contenido. Lo ocultamos: el unico footer
+               visible sera el del menu (footer#footerApp), al fondo. */
+            #cont footer, .contenido footer { display: none !important; }
+        </style>
+        <footer id="footerApp"><img src="/contingencia/img/desarrollado_trans.png" /></footer>
     </body>
-    <img src="/contingencia/img/entelin.png" alt="ENTELIN" class="easter-egg">
 </html>
