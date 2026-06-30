@@ -1,0 +1,3 @@
+2025-09-05 00:10:03
+INSERT INTO OLT_TRAFICO_UPLINK_MA5800_X15_DAY (server, ip, promedio_trafico, peack_trafico, fecha, week, promedio_trafico_up, peack_trafico_up) VALUES
+                ('OLT-GRANAVENIDAPCS-1','10.99.26.138','12268059.2','30542790','2025-09-04','36','1434015.5449219','3298082.375')2025-09-05 00:40:31

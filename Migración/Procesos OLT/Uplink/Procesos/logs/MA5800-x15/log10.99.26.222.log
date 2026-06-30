@@ -1,0 +1,3 @@
+2025-09-05 00:10:03
+INSERT INTO OLT_TRAFICO_UPLINK_MA5800_X15_DAY (server, ip, promedio_trafico, peack_trafico, fecha, week, promedio_trafico_up, peack_trafico_up) VALUES
+                ('OLT-CNT-8','10.99.26.222','3985708.1','9887308.8','2025-09-04','36','448019.86214701','2339041.5')2025-09-05 00:38:50
