@@ -1,0 +1,19 @@
+========================================================================
+ Procesos/proceso_uplink_trafico_diario_conexped.php  ·  Revisión 5.3 -> 8.0
+========================================================================
+Rol del proceso: PADRE del consolidado diario de MA5800-X15. Recorre las OLT
+MA5800-X15 y lanza un hilo con nohup por cada una
+(proceso_uplink_trafico_diario_exped.php), pasando server, ip y fecha.
+
+RESULTADO: SIN CAMBIOS DE CÓDIGO. Ya es compatible con PHP 8.0.
+
+Se revisó y se confirmó:
+- Solo SQL + date()/strtotime() + exec(nohup). Nada removido en PHP 7/8.
+- mysqli + MYSQLI_NUM y "or die(...)" -> OK en PHP 8.0.
+
+NO se modificó (a propósito):
+- include '/u01/crontab127/conexion/conexion_db.php' (ruta intacta).
+- El comando exec/nohup y sus rutas de destino/logs (rutas intactas).
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

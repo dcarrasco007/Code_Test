@@ -1,0 +1,23 @@
+========================================================================
+ proceso_uplink_trafico_diario_MA5600T.php  ·  Revisión PHP 5.3 -> 8.0
+========================================================================
+Rol del proceso: consolidado DIARIO de los MA5600T/MA5680T/MA5603T. Calcula
+promedio y peak de tráfico por puerta y por equipo del día anterior y los
+inserta en OLT_TRAFICO_DIA_PUERTA y OLT_TRAFICO_UPLINK_MA5600T_DAY.
+
+RESULTADO: SIN CAMBIOS DE CÓDIGO. Ya es compatible con PHP 8.0.
+
+Se revisó y se confirmó:
+- Solo SQL + date()/strtotime()/round(). Nada removido en PHP 7/8.
+- mysqli + MYSQLI_NUM y "or die(...)" -> OK en PHP 8.0.
+
+Observación (NO corregida, para no alterar el comportamiento actual):
+- En el bucle interno se usa $row5[3] (línea del cálculo de $peak) antes de
+  que $row5 sea asignado por su consulta, y $row3[3] puede sumar valores
+  nulos. Esto genera Warnings pero NO es un cambio introducido por PHP 8 ni
+  por la migración; es lógica preexistente que ya se ejecuta así en 5.3.
+
+NO se modificó: include '/var/www/html/OLT/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

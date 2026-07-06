@@ -1,0 +1,23 @@
+========================================================================
+ Procesos/proceso_uplink_trafico.php  ·  Revisión PHP 5.3 -> 8.0
+========================================================================
+Rol del proceso: proceso PADRE de las OLT MA5800-X15. Lee los puertos
+configurados (pto1..pto12) de cada equipo, cuenta cuántos hay por slot y
+lanza un hilo con nohup por cada OLT (Procesos/proceso_uplink_trafico_exped.php),
+pasando los conteos por argumentos. Registra la ejecución padre en MONITOREO_*.
+
+RESULTADO: SIN CAMBIOS DE CÓDIGO. Ya es compatible con PHP 8.0.
+
+Se revisó y se confirmó:
+- Solo SQL + date()/strtotime() + shell_exec(nohup) + función ping_ip().
+- No usa eregi/ereg/split/each/create_function ni constantes bareword.
+  (El match de "each(" al buscar patrones era un falso positivo dentro de
+   "foreach(", no hay uso real de each()).
+- mysqli + MYSQLI_NUM y "or die(...)" -> OK en PHP 8.0.
+
+NO se modificó (a propósito):
+- include '/u01/crontab127/conexion/conexion_db.php' (ruta intacta).
+- Los comandos nohup y sus rutas de destino/logs (rutas intactas).
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

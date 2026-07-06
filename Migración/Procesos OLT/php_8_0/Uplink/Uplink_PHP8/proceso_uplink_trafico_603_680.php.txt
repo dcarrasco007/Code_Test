@@ -1,0 +1,45 @@
+========================================================================
+ proceso_uplink_trafico_603_680.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol del proceso: recorre las OLT (modelos distintos de MA5800-X15 y
+MA5600T), hace telnet a cada equipo, lee el tráfico de los puertos uplink
+y guarda el detalle (OLT_TRAFICO_UPLINK_MA5600T) y el peak por hora
+(OLT_TRAFICO_UPLINK_HORA). Registra la ejecución en MONITOREO_PROCESOS_*.
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (obligatorios: eran errores FATALES en PHP 8.0)
+------------------------------------------------------------------------
+1) eregi_replace() -> preg_replace()   (2 ocurrencias)
+   - En el bucle principal de parseo y dentro de verifica_equipo().
+   - Antes:  @eregi_replace("[\n|\r|\n\r]", '', $linea)
+   - Ahora:  preg_replace('/[\n|\r|\n\r]/', '', $linea)
+   - Misma clase de caracteres -> mismo resultado exacto.
+
+2) Definición de constantes bareword (bloque nuevo tras set_charset)
+   - Constantes: USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG,
+     SHELL_CONFIG1, SHELL2, SALIR, ESPACIO, ESPACIO2.
+   - Se definen con su propio nombre como valor, solo si no existen, para
+     reproducir el comportamiento de PHP 5.3 (constante no definida = su
+     nombre como string). Usadas en los switch de las 4 funciones
+     estado_equipo*(). En PHP 8 eran "Undefined constant" (fatal).
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (limpieza: eran solo Warnings, no fatales)
+------------------------------------------------------------------------
+3) $b inicializada a 0 en las 4 funciones estado_equipo* / estado_equipo2/3/4.
+   - Antes se usaba sin definir en el case SHELL. null y 0 se comportan
+     igual en "== 0" y en "$b++", así que la lógica es idéntica; solo evita
+     el Warning "Undefined variable $b" en los .log.
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ
+------------------------------------------------------------------------
+- Lógica de telnet (expect_popen/expect_expectl) ni los comandos enviados.
+- SQL, tablas, columnas, ping_ip().
+- include '/u01/crontab127/conexion/conexion_db.php' (ruta intacta).
+- Observación (no corregida): la variable $cuentas del echo final proviene
+  de un bloque que está comentado, por lo que queda indefinida (Warning).
+  Se dejó igual para no alterar el comportamiento actual.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

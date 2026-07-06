@@ -1,0 +1,145 @@
+========================================================================
+ MIGRACIÓN DE PROCESOS UPLINK  ·  PHP 5.3  ->  PHP 8.0
+========================================================================
+Fecha de migración : 2026-07-06
+Carpeta original   : .../php_8_0/Uplink   (código PHP 5.3 sin migrar)
+Carpeta migrada    : .../php_8_0/Uplink/Uplink_PHP8   (esta carpeta)
+
+La estructura se replicó 1:1 (raíz + subcarpeta Procesos/). Los archivos
+originales NO fueron modificados. Cada proceso tiene su propio archivo
+".php.txt" con el detalle de lo que se cambió (o de por qué no requirió
+cambios).
+
+------------------------------------------------------------------------
+DECISIONES ACORDADAS ANTES DE MIGRAR
+------------------------------------------------------------------------
+1. Carpeta destino: subcarpeta "Uplink_PHP8" junto a los archivos actuales.
+2. Rutas absolutas de producción (include, nohup, exec) se dejaron
+   IDÉNTICAS. No se tocó ninguna ruta /u01/crontab127/..., /var/www/...
+   ni las rutas relativas. Solo se migró sintaxis de PHP.
+3. Versión objetivo: PHP 8.0 estricto. NO se agregó mysqli_report(); el
+   patrón "or die(...)" sigue funcionando igual en 8.0 (ver nota al final).
+
+------------------------------------------------------------------------
+QUÉ ROMPÍA EN PHP 8.0 Y CÓMO SE RESOLVIÓ (resumen global)
+------------------------------------------------------------------------
+A) eregi_replace()  [ERROR FATAL en PHP 8]
+   - Función POSIX eliminada en PHP 7.0.
+   - Uso original:  @eregi_replace("[\n|\r|\n\r]", '', $linea)
+   - Reemplazo:     preg_replace('/[\n|\r|\n\r]/', '', $linea)
+   - La clase de caracteres es idéntica (elimina \n, \r y el carácter '|'),
+     por lo que el resultado es EXACTAMENTE el mismo. El patrón original no
+     tenía letras, así que la insensibilidad a mayúsculas de "eregi" era
+     irrelevante. Se quitó el "@" porque preg_replace no emite el aviso que
+     sí generaba la función antigua.
+
+B) Constantes "bareword" sin comillas  [ERROR FATAL en PHP 8]
+   - USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL_CONFIG1, SHELL2,
+     SALIR, ESPACIO, ESPACIO2.
+   - En PHP 5.3 una constante no definida se evaluaba como su propio nombre
+     en texto (con un E_NOTICE). En PHP 8.0 eso lanza "Error: Undefined
+     constant". Estas se usan como etiquetas de los switch de
+     expect_expectl() y como valor de retorno de cada patrón.
+   - Solución: al inicio de cada archivo que usa telnet se agregó un bloque
+     que las define con su propio nombre como valor, SOLO si no existen ya:
+        foreach ([...] as $__const) {
+            if (!defined($__const)) { define($__const, $__const); }
+        }
+   - Esto reproduce EXACTAMENTE el comportamiento de PHP 5.3. Si el include
+     conexion_db.php ya las definiera, el "if (!defined())" evita
+     redefinirlas, así que es seguro en cualquier caso.
+
+C) Variables usadas sin inicializar ($b, $ERROR, $ERROR2)  [Warning en PHP 8]
+   - No es fatal, pero PHP 8 escala estos avisos y llenarían los .log de los
+     procesos nohup. Se inicializan a 0 al comienzo de su ámbito. El valor
+     null previo también valía 0 en las comparaciones y en ++, por lo que la
+     lógica es idéntica.
+
+------------------------------------------------------------------------
+LO QUE NO SE TOCÓ (a propósito)
+------------------------------------------------------------------------
+- Lógica de telnet: expect_popen() / expect_expectl() y todos los switch.
+- Sentencias SQL, INSERT/SELECT, nombres de tablas y columnas.
+- Función ping_ip() y los shell_exec("ping ... -c ...").
+- Los lanzadores nohup/exec y TODAS las rutas absolutas.
+- Los archivos .sh (solo hacen cd + php -f; no dependen de la versión).
+- Quirks de lógica preexistentes (p. ej. en proceso_uplink_trafico_diario_
+  _MA5600T.php se usa $row5 antes de asignarlo, o $cuentas en el bloque
+  comentado de 603_680). Se documentan pero NO se corrigen para no alterar
+  el comportamiento actual que ya funciona.
+
+------------------------------------------------------------------------
+REQUISITOS DEL ENTORNO DE PRODUCCIÓN (importante)
+------------------------------------------------------------------------
+- Extensión PECL "expect" compilada/instalada para PHP 8.0 (provee
+  expect_popen, expect_expectl y las constantes EXP_EXACT, EXP_REGEXP,
+  EXP_TIMEOUT, EXP_EOF). Es un requisito de infraestructura, no de código.
+- Extensión mysqli habilitada.
+- Comandos del sistema disponibles: telnet, ping, nohup, php (CLI).
+
+NOTA sobre mysqli y versiones futuras:
+  En PHP 8.0 el modo de error de mysqli por defecto es SILENCIOSO
+  (MYSQLI_REPORT_OFF), por lo que "->query(...) or die(...)" funciona igual
+  que en 5.3. A partir de PHP 8.1 el valor por defecto pasa a lanzar
+  EXCEPCIONES; si algún día suben a 8.1+ habría que agregar al inicio:
+        mysqli_report(MYSQLI_REPORT_OFF);
+  para conservar este patrón. (No se agregó porque el objetivo es 8.0.)
+
+------------------------------------------------------------------------
+LIBRERÍAS / DEPENDENCIAS A INSTALAR EN EL SERVIDOR PHP 8.0
+------------------------------------------------------------------------
+EXTENSIONES PHP:
+  1. mysqli        (obligatoria)  -> conexión y consultas a la BD.
+  2. pcre          (ya incluida)  -> preg_replace(); viene de fábrica.
+  3. expect (PECL) (obligatoria y CRÍTICA) -> expect_popen(),
+     expect_expectl() y las constantes EXP_EXACT, EXP_REGEXP,
+     EXP_TIMEOUT, EXP_EOF usadas por TODO el mecanismo de telnet.
+     La extensión PECL "expect" depende de la librería del sistema
+     "expect"/"tcl" (libexpect). Es la única dependencia delicada en
+     PHP 8.0 (ver nota de riesgo abajo).
+
+BINARIOS / PAQUETES DEL SISTEMA (los invoca el código por shell):
+  - php-cli           -> los procesos corren con "php -f ..." desde cron/.sh
+  - telnet (cliente)  -> expect_popen("telnet <ip>")
+  - ping (iputils)    -> ping_ip(): "ping <ip> -c 3"
+  - coreutils         -> nohup (multihilo) y redirección a logs
+
+INSTALACIÓN (Debian/Ubuntu):
+  apt-get install php8.0-cli php8.0-mysqli \
+                  php-pear php8.0-dev \
+                  expect tcl-dev telnet iputils-ping
+  pecl install expect          # compila expect.so para PHP 8.0
+  # habilitar en php.ini (CLI):  extension=mysqli   y   extension=expect.so
+
+INSTALACIÓN (RHEL/CentOS/Rocky/Alma):
+  dnf install php-cli php-mysqlnd php-pear php-devel \
+              expect expect-devel tcl-devel telnet iputils
+  pecl install expect
+  # crear /etc/php.d/40-expect.ini con:  extension=expect.so
+
+VERIFICAR QUE TODO ESTÁ CARGADO:
+  php -m | grep -E 'mysqli|expect'      # deben aparecer ambos
+  php -r 'var_dump(function_exists("expect_popen"), extension_loaded("mysqli"));'
+  which telnet ping nohup php
+
+NOTA DE RIESGO (extensión expect en PHP 8.0):
+  El PECL "expect" (última versión 0.4.0) declara soporte hasta PHP 7.x.
+  En PHP 8.0 lo habitual es que compile igual, pero NO está garantizado
+  por el mantenedor. Si "pecl install expect" falla al compilar contra
+  PHP 8.0, las alternativas (sin reescribir la lógica de negocio) son:
+   a) Usar el binario del sistema "expect" (TCL) mediante proc_open()
+      envolviendo el diálogo telnet, o
+   b) Reemplazar expect_* por una librería PHP de telnet
+      (p. ej. phpseclib para SSH si las OLT lo permiten, o una clase
+      telnet propia con fsockopen()).
+  Estas alternativas SÍ implican reescribir las funciones estado_equipo*;
+  por eso se mantuvo expect_* tal cual, que es lo que hoy funciona.
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA
+------------------------------------------------------------------------
+- Se ejecutó "php -l" (lint) sobre los 15 archivos .php con PHP 8.3:
+  "No syntax errors detected" en todos.
+- El lint valida la sintaxis; la ejecución real requiere el servidor con la
+  extensión expect y el acceso a las OLT por telnet.
+========================================================================

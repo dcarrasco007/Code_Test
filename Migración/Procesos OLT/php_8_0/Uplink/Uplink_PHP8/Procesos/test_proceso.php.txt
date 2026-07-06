@@ -1,0 +1,37 @@
+========================================================================
+ Procesos/test_proceso.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol del archivo: versión de PRUEBA de proceso_uplink_trafico_exped.php.
+Contiene valores fijos de ejemplo (OLT-RECREO-3, 10.99.9.150...), un
+die("Fin---1") a mitad del script y las sentencias $mysqli->query(...) del
+parseo comentadas. Sirve para probar el telnet sin escribir en la BD.
+Se migró igualmente para dejarlo ejecutable en PHP 8.0.
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (obligatorios: eran errores FATALES en PHP 8.0)
+------------------------------------------------------------------------
+1) eregi_replace() -> preg_replace()   (2 ocurrencias)
+   - Antes:  @eregi_replace("[\n|\r|\n\r]", '', $linea)
+   - Ahora:  preg_replace('/[\n|\r|\n\r]/', '', $linea)
+
+2) Definición de constantes bareword (bloque nuevo tras set_charset)
+   - USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL_CONFIG1, SHELL2,
+     SALIR, ESPACIO, ESPACIO2. Usadas en estado_equipo(), estado_equipo2()
+     y estado_equipo3(). Eran "Undefined constant" (fatal).
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (limpieza: eran solo Warnings, no fatales)
+------------------------------------------------------------------------
+3) $b inicializada a 0 en las 3 funciones estado_equipo* (case SHELL).
+4) $ERROR y $ERROR2 inicializadas a 0 antes del if(isset($argv[7])).
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ
+------------------------------------------------------------------------
+- El die("Fin---1"), los valores de prueba fijos ni las queries comentadas
+  (se respeta su naturaleza de archivo de test).
+- Lógica de telnet, SQL y ping_ip().
+- include '/var/www/html/conexion/conexion_db.php' (ruta intacta).
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

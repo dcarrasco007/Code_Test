@@ -1,0 +1,43 @@
+========================================================================
+ Procesos/proceso_uplink_trafico_exped.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol del proceso: subproceso (hilo) lanzado por nohup desde
+Procesos/proceso_uplink_trafico.php. Según los $argv recibidos decide entre
+puertos 16/17/18 (interface eth) o 8/9 (interface mpu), hace telnet a la OLT
+MA5800-X15, lee el tráfico y guarda detalle (OLT_TRAFICO_UPLINK_MA5800_X15)
+y peak por hora (OLT_TRAFICO_UPLINK_HORA). Registra la ejecución hija.
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (obligatorios: eran errores FATALES en PHP 8.0)
+------------------------------------------------------------------------
+1) eregi_replace() -> preg_replace()   (2 ocurrencias)
+   - Antes:  @eregi_replace("[\n|\r|\n\r]", '', $linea)
+   - Ahora:  preg_replace('/[\n|\r|\n\r]/', '', $linea)
+   - Clase de caracteres idéntica -> mismo resultado exacto.
+
+2) Definición de constantes bareword (bloque nuevo tras set_charset)
+   - USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL_CONFIG1, SHELL2,
+     SALIR, ESPACIO, ESPACIO2. Se definen con su propio nombre como valor
+     solo si no existen. Usadas en los switch de estado_equipo(),
+     estado_equipo2() y estado_equipo3(). Eran "Undefined constant" (fatal).
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (limpieza: eran solo Warnings, no fatales)
+------------------------------------------------------------------------
+3) $b inicializada a 0 en las 3 funciones estado_equipo* (case SHELL).
+   Comportamiento idéntico (null == 0); evita Warning en los .log.
+
+4) $ERROR y $ERROR2 inicializadas a 0 antes del bloque if(isset($argv[8])).
+   En este archivo se usaban con "$ERROR++" sin haberlas definido. Init a 0
+   = mismo resultado (null++ también da 1); evita Warning.
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ
+------------------------------------------------------------------------
+- Lógica de telnet ni comandos enviados a la OLT.
+- SQL, tablas, columnas, manejo de $argv, ping_ip().
+- include '/u01/crontab127/conexion/conexion_db.php' (ruta intacta).
+- La función estado_equipo2() conserva su "$server = $server;" original.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

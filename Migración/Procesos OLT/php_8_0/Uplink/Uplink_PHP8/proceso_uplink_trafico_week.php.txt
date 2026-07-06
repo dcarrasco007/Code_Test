@@ -1,0 +1,18 @@
+========================================================================
+ proceso_uplink_trafico_week.php  ·  Revisión PHP 5.3 -> 8.0
+========================================================================
+Rol del proceso: consolidado SEMANAL de las OLT MA5800-X15. Promedia el peak
+diario de la semana anterior por equipo y lo inserta en
+OLT_TRAFICO_UPLINK_MA5800_X15_WEEK.
+
+RESULTADO: SIN CAMBIOS DE CÓDIGO. Ya es compatible con PHP 8.0.
+
+Se revisó y se confirmó:
+- Solo SQL + date()/strtotime()/round(). Nada removido en PHP 7/8.
+- mysqli + MYSQLI_NUM y "or die(...)" -> OK en PHP 8.0.
+- No usa eregi/ereg/split/each/create_function ni constantes bareword.
+
+NO se modificó: include '/var/www/html/OLT/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

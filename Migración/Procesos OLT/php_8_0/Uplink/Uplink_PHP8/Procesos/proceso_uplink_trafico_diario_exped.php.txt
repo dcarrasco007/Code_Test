@@ -1,0 +1,19 @@
+========================================================================
+ Procesos/proceso_uplink_trafico_diario_exped.php  ·  Revisión 5.3 -> 8.0
+========================================================================
+Rol del proceso: subproceso (hilo) del consolidado diario de MA5800-X15,
+lanzado por nohup desde proceso_uplink_trafico_diario_conexped.php. Recibe
+server, ip y fecha por $argv; calcula promedios/peak por puerta (down y up) e
+inserta en OLT_TRAFICO_DIA_PUERTA, OLT_TRAFICOGPON, OLT_TRAFICOGPON2 y
+OLT_TRAFICO_UPLINK_MA5800_X15_DAY.
+
+RESULTADO: SIN CAMBIOS DE CÓDIGO. Ya es compatible con PHP 8.0.
+
+Se revisó y se confirmó:
+- Solo SQL + $argv + date()/round()/number_format(). Nada removido en 7/8.
+- mysqli + MYSQLI_NUM y "or die(...)" -> OK en PHP 8.0.
+
+NO se modificó: include '/u01/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

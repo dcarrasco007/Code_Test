@@ -1,0 +1,21 @@
+========================================================================
+ proceso_uplink_trafico_MA5600T.php  ·  Revisión PHP 5.3 -> 8.0
+========================================================================
+Rol del proceso: proceso PADRE de los MA5600T. Consulta las OLT MA5600T y
+lanza un hilo con nohup por cada una (proceso_uplink_trafico_MA5600T_exped.php).
+Registra la ejecución padre en MONITOREO_PROCESOS_EJECUCIONES.
+
+RESULTADO: SIN CAMBIOS DE CÓDIGO. Ya es compatible con PHP 8.0.
+
+Se revisó y se confirmó que NO usa nada removido/incompatible:
+- No usa eregi/ereg/split/each/create_function ni constantes bareword.
+- mysqli + MYSQLI_NUM, date(), sleep(), shell_exec(nohup) -> OK en PHP 8.0.
+- El patrón "->query(...) or die(...)" funciona en PHP 8.0 (mysqli en modo
+  silencioso por defecto).
+
+NO se modificó (a propósito):
+- include '/u01/crontab127/conexion/conexion_db.php' (ruta intacta).
+- El comando nohup y su ruta de destino/logs (rutas intactas).
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================
