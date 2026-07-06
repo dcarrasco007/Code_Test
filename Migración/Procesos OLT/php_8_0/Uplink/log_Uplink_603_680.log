@@ -1,0 +1,365 @@
+Inicio: 30-06-2026 12:45:01
+
+lote: 2546531la parte 1:0/7||la parte 1:0/8||la parte 1:0/7||la parte 1:0/8||la parte 1:0/17||la parte 1:0/18||Trying 10.99.24.114...
+Connected to 10.99.24.114.
+Escape character is '^]'.
+
+Warning: Telnet is not a secure protocol, and it is recommended to use Stelnet.
+
+>>User name:geret2016
+>>User password:
+
+
+  Huawei Integrated Access Software (MA5680T).
+  Copyright(C) Huawei Technologies Co., Ltd. 2002-2018. All rights reserved.
+
+  -----------------------------------------------------------------------------
+  User last login information:
+  -----------------------------------------------------------------------------
+  Access Type : Telnet 
+  IP-Address  : 192.168.66.126
+  Login  Time : 2026-06-30 12:30:41-04:00
+  Logout Time : 2026-06-30 12:31:01-04:00
+  -----------------------------------------------------------------------------
+
+OLT-LASCONDES-1>enable
+
+OLT-LASCONDES-1#config
+
+OLT-LASCONDES-1(config)#interface giu 0/17
+
+OLT-LASCONDES-1(config-if-giu-0/17)#display port traffic 0
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-LASCONDES-1(config-if-giu-0/17)#
+
+OLT-LASCONDES-1(config-if-giu-0/17)#quit
+
+OLT-LASCONDES-1(config)#interface giu 0/17
+
+OLT-LASCONDES-1(config-if-giu-0/17)#display port traffic 1
+  The received traffic of this port(packets/s)                    =68227
+  The received traffic of this port(octets/s)                     =77297154
+  The received traffic of this port(kbits/s)                      =618377.3
+  The received unicast traffic of this port(packets/s)            =68223
+  The received multicast traffic of this port(packets/s)          =1
+  The received broadcast traffic of this port(packets/s)          =1
+  The received bandwidth occupied percentage                      =6%
+  The transmitted traffic of this port(packets/s)                 =11155
+  The transmitted traffic of this port(octets/s)                  =4632853
+  The transmitted traffic of this port(kbits/s)                   =37062.8
+  The transmitted unicast traffic of this port(packets/s)         =11154
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =1
+  The transmitted bandwidth occupied percentage                   =0%
+
+OLT-LASCONDES-1(config-if-giu-0/17)#
+
+OLT-LASCONDES-1(config-if-giu-0/17)#quit
+
+OLT-LASCONDES-1(config)#interface giu 0/18
+
+OLT-LASCONDES-1(config-if-giu-0/18)#display port traffic 0
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-LASCONDES-1(config-if-giu-0/18)#
+
+OLT-LASCONDES-1(config-if-giu-0/18)#quit
+
+OLT-LASCONDES-1(config)#interface giu 0/18
+
+OLT-LASCONDES-1(config-if-giu-0/18)#display port traffic 1
+  The received traffic of this port(packets/s)                    =53343
+  The received traffic of this port(octets/s)                     =46099586
+  The received traffic of this port(kbits/s)                      =368796.7
+  The received unicast traffic of this port(packets/s)            =53339
+  The received multicast traffic of this port(packets/s)          =1
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      =4%
+  The transmitted traffic of this port(packets/s)                 =49997
+  The transmitted traffic of this port(octets/s)                  =32200800
+  The transmitted traffic of this port(kbits/s)                   =257606.4
+  The transmitted unicast traffic of this port(packets/s)         =49997
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   =3%
+
+OLT-LASCONDES-1(config-if-giu-0/18)#
+
+OLT-LASCONDES-1(config-if-giu-0/18)#quit
+
+OLT-LASCONDES-1(config)#Linea UP: 0.0
+Linea UP: 37062.8
+Linea UP: 0.0
+Linea UP: 257606.4
+la parte 1:0/8||la parte 1:0/9||Trying 10.99.18.3...
+Connected to 10.99.18.3.
+Escape character is '^]'.
+
+Warning: Telnet is not a secure protocol, and it is recommended to use Stelnet.
+
+>>User name:geret2016
+>>User password:
+
+
+  Huawei Integrated Access Software (MA5603T).
+  Copyright(C) Huawei Technologies Co., Ltd. 2002-2018. All rights reserved.
+
+  -----------------------------------------------------------------------------
+  User last login information:
+  -----------------------------------------------------------------------------
+  Access Type : Telnet 
+  IP-Address  : 192.168.66.126
+  Login  Time : 2026-06-30 12:45:27-04:00
+  Logout Time : --
+  -----------------------------------------------------------------------------
+
+OLT-LAUTARO-1>enable
+
+OLT-LAUTARO-1#config
+
+OLT-LAUTARO-1(config)#interface giu 0/8
+
+OLT-LAUTARO-1(config-if-giu-0/8)#display port traffic 0
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-LAUTARO-1(config-if-giu-0/8)#
+
+OLT-LAUTARO-1(config-if-giu-0/8)#quit
+
+OLT-LAUTARO-1(config)#interface giu 0/8
+
+OLT-LAUTARO-1(config-if-giu-0/8)#display port traffic 1
+  The received traffic of this port(packets/s)                    =3357
+  The received traffic of this port(octets/s)                     =2913168
+  The received traffic of this port(kbits/s)                      =23305.3
+  The received unicast traffic of this port(packets/s)            =3357
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      =2%
+  The transmitted traffic of this port(packets/s)                 =2933
+  The transmitted traffic of this port(octets/s)                  =1299049
+  The transmitted traffic of this port(kbits/s)                   =10392.4
+  The transmitted unicast traffic of this port(packets/s)         =2933
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   =1%
+
+OLT-LAUTARO-1(config-if-giu-0/8)#
+
+OLT-LAUTARO-1(config-if-giu-0/8)#quit
+
+OLT-LAUTARO-1(config)#interface giu 0/9
+
+OLT-LAUTARO-1(config-if-giu-0/9)#display port traffic 0
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-LAUTARO-1(config-if-giu-0/9)#
+
+OLT-LAUTARO-1(config-if-giu-0/9)#quit
+
+OLT-LAUTARO-1(config)#interface giu 0/9
+
+OLT-LAUTARO-1(config-if-giu-0/9)#display port traffic 1
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-LAUTARO-1(config-if-giu-0/9)#
+
+OLT-LAUTARO-1(config-if-giu-0/9)#quit
+
+OLT-LAUTARO-1(config)#quit
+
+OLT-LAUTARO-1#quit
+  Check whether system data has been changed. Please save data before logout. 
+Are you sure to log out? (y/n)[n]:Linea UP: 0.0
+Linea UP: 10392.4
+Linea UP: 0.0
+Linea UP: 0.0
+la parte 1:0/8||la parte 1:0/9||Trying 10.99.17.21...
+Connected to 10.99.17.21.
+Escape character is '^]'.
+
+Warning: Telnet is not a secure protocol, and it is recommended to use Stelnet.
+
+>>User name:geret2016
+>>User password:
+
+
+  Huawei Integrated Access Software (MA5603T).
+  Copyright(C) Huawei Technologies Co., Ltd. 2002-2018. All rights reserved.
+
+  -----------------------------------------------------------------------------
+  User last login information:
+  -----------------------------------------------------------------------------
+  Access Type : Telnet 
+  IP-Address  : 192.168.66.126
+  Login  Time : 2026-06-30 12:45:14-04:00
+  Logout Time : 2026-06-30 12:45:26-04:00
+  -----------------------------------------------------------------------------
+
+OLT-SANTAJUANAPCS-1>enable
+
+OLT-SANTAJUANAPCS-1#config
+
+OLT-SANTAJUANAPCS-1(config)#interface giu 0/8
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/8)#display port traffic 0
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/8)#
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/8)#quit
+
+OLT-SANTAJUANAPCS-1(config)#interface giu 0/8
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/8)#display port traffic 1
+  The received traffic of this port(packets/s)                    =2370
+  The received traffic of this port(octets/s)                     =2245511
+  The received traffic of this port(kbits/s)                      =17964.1
+  The received unicast traffic of this port(packets/s)            =2370
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      =2%
+  The transmitted traffic of this port(packets/s)                 =1162
+  The transmitted traffic of this port(octets/s)                  =612710
+  The transmitted traffic of this port(kbits/s)                   =4901.7
+  The transmitted unicast traffic of this port(packets/s)         =1162
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   =0%
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/8)#
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/8)#quit
+
+OLT-SANTAJUANAPCS-1(config)#interface giu 0/9
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/9)#display port traffic 0
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/9)#
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/9)#quit
+
+OLT-SANTAJUANAPCS-1(config)#interface giu 0/9
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/9)#display port traffic 1
+  The received traffic of this port(packets/s)                    =0
+  The received traffic of this port(octets/s)                     =0
+  The received traffic of this port(kbits/s)                      =0.0
+  The received unicast traffic of this port(packets/s)            =0
+  The received multicast traffic of this port(packets/s)          =0
+  The received broadcast traffic of this port(packets/s)          =0
+  The received bandwidth occupied percentage                      -
+  The transmitted traffic of this port(packets/s)                 =0
+  The transmitted traffic of this port(octets/s)                  =0
+  The transmitted traffic of this port(kbits/s)                   =0.0
+  The transmitted unicast traffic of this port(packets/s)         =0
+  The transmitted multicast traffic of this port(packets/s)       =0
+  The transmitted broadcast traffic of this port(packets/s)       =0
+  The transmitted bandwidth occupied percentage                   -
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/9)#
+
+OLT-SANTAJUANAPCS-1(config-if-giu-0/9)#quit
+
+OLT-SANTAJUANAPCS-1(config)#quit
+
+OLT-SANTAJUANAPCS-1#quit
+  Check whether system data has been changed. Please save data before logout. 
+Are you sure to log out? (y/n)[n]:Linea UP: 0.0
+Linea UP: 4901.7
+Linea UP: 0.0
+Linea UP: 0.0
+Entro al ciclo de errores: 0 veces. Y: 0 EN EL SEGUNDO  Entro en vacios:

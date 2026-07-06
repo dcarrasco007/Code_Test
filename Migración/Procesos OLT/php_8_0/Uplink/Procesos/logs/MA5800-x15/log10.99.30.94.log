@@ -1,0 +1,3 @@
+2025-09-05 00:10:07
+INSERT INTO OLT_TRAFICO_UPLINK_MA5800_X15_DAY (server, ip, promedio_trafico, peack_trafico, fecha, week, promedio_trafico_up, peack_trafico_up) VALUES
+                ('OLT-VITACURA-5','10.99.30.94','4804963.7','12884666.6','2025-09-04','36','698557.21046464','3657103.4375')2025-09-05 00:45:52

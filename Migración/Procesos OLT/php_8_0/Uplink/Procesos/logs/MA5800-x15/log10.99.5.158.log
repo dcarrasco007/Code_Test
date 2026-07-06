@@ -1,0 +1,3 @@
+2025-09-05 00:10:05
+INSERT INTO OLT_TRAFICO_UPLINK_MA5800_X15_DAY (server, ip, promedio_trafico, peack_trafico, fecha, week, promedio_trafico_up, peack_trafico_up) VALUES
+                ('OLT-AVDELMARPCS-1','10.99.5.158','6067252.2','13894522.3','2025-09-04','36','549670.79832956','2844759.015625')2025-09-05 00:45:23
