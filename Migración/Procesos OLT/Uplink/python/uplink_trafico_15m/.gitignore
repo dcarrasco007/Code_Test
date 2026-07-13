@@ -1,6 +1,3 @@
-# Entorno virtual
-env/
-
 # Credenciales (nunca versionar)
 .env
 
