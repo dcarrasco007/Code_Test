@@ -11,13 +11,7 @@ from sqlalchemy import text
 
 
 def get_olts(conn, modelo):
-    """Lista las OLT del catálogo filtradas por modelo (MA5800-X15).
 
-    Equivalente PHP (proceso_uplink_trafico.php):
-        SELECT `server`, ip, modelo FROM OLT_SERVER WHERE modelo = 'MA5800-X15'
-
-    Retorna lista de Row: (server, ip, modelo)
-    """
     # [SQL] Lectura del catálogo OLT_SERVER.
     sql = text("""
         SELECT
@@ -31,14 +25,7 @@ def get_olts(conn, modelo):
 
 
 def get_puertos_pto1_12(conn, modelo, server):
-    """Obtiene los 12 puertos configurados (pto1..pto12) de una OLT.
 
-    Equivalente PHP (proceso_uplink_trafico.php):
-        SELECT pto1, pto2, ..., pto12 FROM OLT_SERVER
-        WHERE modelo = 'MA5800-X15' AND server = '$server'
-
-    Retorna un único Row de 12 columnas (algunas pueden ser NULL).
-    """
     # [SQL] Lectura de los puertos uplink configurados para esta OLT.
     sql = text("""
         SELECT
@@ -53,13 +40,7 @@ def get_puertos_pto1_12(conn, modelo, server):
 
 
 def insert_detalle(conn, server, ip, modelo, puerto, trafico, week, trafico_up):
-    """Inserta el detalle de tráfico de un puerto (bajada + subida).
-
-    Equivalente PHP (proceso_uplink_trafico_exped.php):
-        INSERT INTO OLT_TRAFICO_UPLINK_MA5800_X15
-        (server,ip,modelo,puerto,trafico,fecha,week,trafico_up)
-        VALUES ('$server','$ip','MA5800-X15','$puertaIngreso','$valor3',NOW(),'$semana','$valorUpFinal')
-    """
+    
     # [SQL] Escritura de detalle por puerto. Tabla: OLT_TRAFICO_UPLINK_MA5800_X15. fecha=NOW().
     sql = text("""
         INSERT INTO OLT_TRAFICO_UPLINK_MA5800_X15
@@ -74,13 +55,7 @@ def insert_detalle(conn, server, ip, modelo, puerto, trafico, week, trafico_up):
 
 
 def insert_hora(conn, server, ip, modelo, peak, week):
-    """Inserta el peak (pico) de tráfico de la OLT para esta corrida de 15 min.
-
-    Equivalente PHP (proceso_uplink_trafico_exped.php):
-        INSERT INTO OLT_TRAFICO_UPLINK_HORA
-        (server,ip,modelo,peak,fecha,week)
-        VALUES ('$server','$ip','MA5800-X15','$peak',NOW(),'$semana')
-    """
+    
     # [SQL] Escritura de peak. Tabla: OLT_TRAFICO_UPLINK_HORA. fecha=NOW().
     sql = text("""
         INSERT INTO OLT_TRAFICO_UPLINK_HORA
