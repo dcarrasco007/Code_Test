@@ -33,5 +33,15 @@ NO SE MODIFICÓ
 - Lógica de telnet, SQL y ping_ip().
 - include '/var/www/html/conexion/conexion_db.php' (ruta intacta).
 
+------------------------------------------------------------------------
+REEMPLAZO DE LA EXTENSIÓN "expect" (añadido posteriormente)
+------------------------------------------------------------------------
+5) La extensión PECL "expect" no existe en PHP 8, así que se integró la capa
+   en PHP puro expect_compat.php (telnet por socket):
+   - require_once __DIR__ . '/../expect_compat.php';   (al inicio)
+   - fwrite($stream, ...)          -> expect_send($stream, ...)
+   - ini_set("expect.timeout", n)  -> expect_set_timeout(n)
+   Los switch/case NO cambiaron. Detalle en ../_LEEME_MIGRACION_PHP8.txt.
+
 Verificación: php -l -> "No syntax errors detected".
 ========================================================================

@@ -35,5 +35,16 @@ NO SE MODIFICÓ
 - include '/u01/crontab127/conexion/conexion_db.php' (ruta intacta).
 - $ERROR y $ERROR2 ya venían inicializadas en este archivo.
 
+------------------------------------------------------------------------
+REEMPLAZO DE LA EXTENSIÓN "expect" (añadido posteriormente)
+------------------------------------------------------------------------
+4) La extensión PECL "expect" no existe en PHP 8, así que se integró la capa
+   en PHP puro expect_compat.php (telnet por socket):
+   - require_once __DIR__ . '/expect_compat.php';   (al inicio)
+   - fwrite($stream, ...)          -> expect_send($stream, ...)
+   - ini_set("expect.timeout", n)  -> expect_set_timeout(n)
+   Los switch/case de estado_equipo* NO cambiaron. Detalle completo en
+   _LEEME_MIGRACION_PHP8.txt (sección "CAPA DE COMPATIBILIDAD").
+
 Verificación: php -l -> "No syntax errors detected".
 ========================================================================

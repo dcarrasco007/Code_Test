@@ -12,6 +12,7 @@ foreach (['USER','PASSWORD','SALTO','SHELL','SHELL_CONFIG','SHELL_CONFIG1','SHEL
     if (!defined($__const)) { define($__const, $__const); }
 }
 // -------------------------------------------------------------------------
+require_once __DIR__ . '/expect_compat.php'; // Reemplazo en PHP puro de la extensión PECL 'expect' (no soportada en PHP 8)
 //-----------MONITOREO
 $fecha_monitor=date('Y-m-d H:i:s');
 $lote=$argv[3];
@@ -376,7 +377,7 @@ function estado_equipo($ip,$puerto17,$puerto18){
     $total=$puerto17+$puerto18;
     $user = 'geret2016';
     $pass = 'Geret#2016*2021';
-    ini_set("expect.timeout", 2);
+    expect_set_timeout(2);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
     $uname = "";
@@ -400,10 +401,10 @@ function estado_equipo($ip,$puerto17,$puerto18){
             ), $match))
         {
             case PASSWORD:
-                fwrite($stream, $pass . "\n");
+                expect_send($stream,$pass . "\n");
                 break;
             case SALIR:
-                    fwrite($stream, "y\n");
+                    expect_send($stream,"y\n");
                     //echo"entro en salir";
                     $uname .= $match[0];
                     sleep(2);
@@ -411,23 +412,23 @@ function estado_equipo($ip,$puerto17,$puerto18){
                     return $uname;
                 break;
             case USER:
-                fwrite($stream, $user . "\n");
+                expect_send($stream,$user . "\n");
                 break;
             case SHELL:
                 if($b == 0){
-                    fwrite($stream, "enable\n");
+                    expect_send($stream,"enable\n");
                     $b++;
                 }elseif($b == 1){
-                    fwrite($stream, "\n");
+                    expect_send($stream,"\n");
                 }
                 break;
             case SHELL2:
                 if($cantConfig==0){
-                    fwrite($stream, "config\n");
+                    expect_send($stream,"config\n");
                     sleep(1);
                 }else{
 
-                    fwrite($stream, "quit\n");
+                    expect_send($stream,"quit\n");
                     sleep(2);
                     echo "quit 2";
                 }
@@ -438,31 +439,31 @@ function estado_equipo($ip,$puerto17,$puerto18){
                     
                         if($puerto17>0){
                             for ($x=0; $x<$puerto17; $x++) { 
-                                fwrite($stream, "interface giu 0/17\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface giu 0/17\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                                 
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto17=0;
                             break;
                         }if($puerto18>0){
                             for ($x=0; $x<$puerto18; $x++) { 
-                                fwrite($stream, "interface giu 0/18\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface giu 0/18\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto18=0;
                             break;
                         }
                         if($puerto18==0 && $puerto17==0){
                             sleep(1);
-                            fwrite($stream, "quit\n");
+                            expect_send($stream,"quit\n");
                             sleep(1);
                             //echo "quit 1";
                         }
@@ -474,11 +475,11 @@ function estado_equipo($ip,$puerto17,$puerto18){
                 return $uname;
                 break;
             case ESPACIO:
-                fwrite($stream, " ");
+                expect_send($stream," ");
                 $uname .= $match[0];
                 break;
             case ESPACIO2:
-                fwrite($stream, "\n");
+                expect_send($stream,"\n");
                 $uname .= $match[0];
                 break;
             case EXP_EOF:
@@ -498,7 +499,7 @@ function estado_equipo4($ip,$puerto07,$puerto08){
     $total=$puerto08+$puerto07;
     $user = 'geret2016';
     $pass = 'Geret#2016*2021';
-    ini_set("expect.timeout", 2);
+    expect_set_timeout(2);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
     $uname = "";
@@ -522,10 +523,10 @@ function estado_equipo4($ip,$puerto07,$puerto08){
             ), $match))
         {
             case PASSWORD:
-                fwrite($stream, $pass . "\n");
+                expect_send($stream,$pass . "\n");
                 break;
             case SALIR:
-                    fwrite($stream, "y\n");
+                    expect_send($stream,"y\n");
                     //echo"entro en salir";
                     $uname .= $match[0];
                     sleep(2);
@@ -533,22 +534,22 @@ function estado_equipo4($ip,$puerto07,$puerto08){
                     return $uname;
                 break;
             case USER:
-                fwrite($stream, $user . "\n");
+                expect_send($stream,$user . "\n");
                 break;
             case SHELL:
                 if($b == 0){
-                    fwrite($stream, "enable\n");
+                    expect_send($stream,"enable\n");
                     $b++;
                 }elseif($b == 1){
-                    fwrite($stream, "\n");
+                    expect_send($stream,"\n");
                 }
                 break;
             case SHELL2:
                 if($cantConfig==0){
-                    fwrite($stream, "config\n");
+                    expect_send($stream,"config\n");
                     sleep(1);
                 }else{
-                    fwrite($stream, "quit\n");
+                    expect_send($stream,"quit\n");
                     sleep(2);
                 }
                 $cantConfig++;
@@ -557,31 +558,31 @@ function estado_equipo4($ip,$puerto07,$puerto08){
                     
                         if($puerto07>0){
                             for ($x=0; $x<$puerto07; $x++) { 
-                                fwrite($stream, "interface scu 0/7\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface scu 0/7\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                                 
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto07=0;
                             break;
                         }if($puerto08>0){
                             for ($x=0; $x<$puerto08; $x++) { 
-                                fwrite($stream, "interface scu 0/8\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface scu 0/8\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto08=0;
                             break;
                         }
                         if($puerto08==0 && $puerto07==0){
                             sleep(1);
-                            fwrite($stream, "quit\n");
+                            expect_send($stream,"quit\n");
                             sleep(1);
                             //echo "quit 1";
                         }
@@ -593,11 +594,11 @@ function estado_equipo4($ip,$puerto07,$puerto08){
                 return $uname;
                 break;
             case ESPACIO:
-                fwrite($stream, " ");
+                expect_send($stream," ");
                 $uname .= $match[0];
                 break;
             case ESPACIO2:
-                fwrite($stream, "\n");
+                expect_send($stream,"\n");
                 $uname .= $match[0];
                 break;
             case EXP_EOF:
@@ -616,7 +617,7 @@ function estado_equipo3($ip,$puerto19,$puerto20){
     $total=$puerto20+$puerto19;
     $user = 'geret2016';
     $pass = 'Geret#2016*2021';
-    ini_set("expect.timeout", 2);
+    expect_set_timeout(2);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
     $uname = "";
@@ -640,10 +641,10 @@ function estado_equipo3($ip,$puerto19,$puerto20){
             ), $match))
         {
             case PASSWORD:
-                fwrite($stream, $pass . "\n");
+                expect_send($stream,$pass . "\n");
                 break;
             case SALIR:
-                    fwrite($stream, "y\n");
+                    expect_send($stream,"y\n");
                     //echo"entro en salir";
                     $uname .= $match[0];
                     sleep(2);
@@ -651,22 +652,22 @@ function estado_equipo3($ip,$puerto19,$puerto20){
                     return $uname;
                 break;
             case USER:
-                fwrite($stream, $user . "\n");
+                expect_send($stream,$user . "\n");
                 break;
             case SHELL:
                 if($b == 0){
-                    fwrite($stream, "enable\n");
+                    expect_send($stream,"enable\n");
                     $b++;
                 }elseif($b == 1){
-                    fwrite($stream, "\n");
+                    expect_send($stream,"\n");
                 }
                 break;
             case SHELL2:
                 if($cantConfig==0){
-                    fwrite($stream, "config\n");
+                    expect_send($stream,"config\n");
                     sleep(1);
                 }else{
-                    fwrite($stream, "quit\n");
+                    expect_send($stream,"quit\n");
                     sleep(2);
                 }
                 $cantConfig++;
@@ -675,30 +676,30 @@ function estado_equipo3($ip,$puerto19,$puerto20){
                     
                         if($puerto19>0){
                             for ($x=0; $x<$puerto19; $x++) { 
-                                fwrite($stream, "interface giu 0/19\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface giu 0/19\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                                 
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto19=0;
                             break;
                         }if($puerto20>0){
                             for ($x=0; $x<$puerto20; $x++) { 
-                                fwrite($stream, "interface giu 0/20\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface giu 0/20\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                             }
                             $puerto20=0;
                             break;
                         }
                         if($puerto20==0 && $puerto19==0){
                             sleep(1);
-                            fwrite($stream, "quit\n");
+                            expect_send($stream,"quit\n");
                             sleep(1);
                         }
                         break;   
@@ -709,11 +710,11 @@ function estado_equipo3($ip,$puerto19,$puerto20){
                 return $uname;
                 break;
             case ESPACIO:
-                fwrite($stream, " ");
+                expect_send($stream," ");
                 $uname .= $match[0];
                 break;
             case ESPACIO2:
-                fwrite($stream, "\n");
+                expect_send($stream,"\n");
                 $uname .= $match[0];
                 break;
             case EXP_EOF:
@@ -732,7 +733,7 @@ function estado_equipo2($ip,$puerto17,$puerto18){
     $total=$puerto17+$puerto18;
     $user = 'geret2016';
     $pass = 'Geret#2016*2021';
-    ini_set("expect.timeout", 2);
+    expect_set_timeout(2);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
     $uname = "";
@@ -756,10 +757,10 @@ function estado_equipo2($ip,$puerto17,$puerto18){
             ), $match))
         {
             case PASSWORD:
-                fwrite($stream, $pass . "\n");
+                expect_send($stream,$pass . "\n");
                 break;
             case SALIR:
-                    fwrite($stream, "y\n");
+                    expect_send($stream,"y\n");
                     //echo"entro en salir";
                     $uname .= $match[0];
                     sleep(2);
@@ -767,22 +768,22 @@ function estado_equipo2($ip,$puerto17,$puerto18){
                     return $uname;
                 break;
             case USER:
-                fwrite($stream, $user . "\n");
+                expect_send($stream,$user . "\n");
                 break;
             case SHELL:
                 if($b == 0){
-                    fwrite($stream, "enable\n");
+                    expect_send($stream,"enable\n");
                     $b++;
                 }elseif($b == 1){
-                    fwrite($stream, "\n");
+                    expect_send($stream,"\n");
                 }
                 break;
             case SHELL2:
                 if($cantConfig==0){
-                    fwrite($stream, "config\n");
+                    expect_send($stream,"config\n");
                     sleep(1);
                 }else{
-                    fwrite($stream, "quit\n");
+                    expect_send($stream,"quit\n");
                     sleep(2);
                 }
                 $cantConfig++;
@@ -791,32 +792,32 @@ function estado_equipo2($ip,$puerto17,$puerto18){
                     
                         if($puerto17>0){
                             for ($x=0; $x<$puerto17; $x++) { 
-                                fwrite($stream, "\n");
-                                fwrite($stream, "interface giu 0/17\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"interface giu 0/17\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                                 
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto17=0;
                             break;
                         }if($puerto18>0){
                             for ($x=0; $x<$puerto18; $x++) { 
-                                fwrite($stream, "interface giu 0/18\n");
-                                fwrite($stream, "display port traffic $x\n");
+                                expect_send($stream,"interface giu 0/18\n");
+                                expect_send($stream,"display port traffic $x\n");
                                 $uname .= $match[0];
-                                fwrite($stream, "\n");
-                                fwrite($stream, "quit\n");
+                                expect_send($stream,"\n");
+                                expect_send($stream,"quit\n");
                             }
-                            //fwrite($stream, "quit\n");
+                            //expect_send($stream,"quit\n");
                             $puerto18=0;
                             break;
                         }
                         if($puerto18==0 && $puerto17==0){
                             sleep(1);
-                            fwrite($stream, "quit\n");
+                            expect_send($stream,"quit\n");
                             sleep(1);
                         }
                         break;   
@@ -827,11 +828,11 @@ function estado_equipo2($ip,$puerto17,$puerto18){
                 return $uname;
                 break;
             case ESPACIO:
-                fwrite($stream, " ");
+                expect_send($stream," ");
                 $uname .= $match[0];
                 break;
             case ESPACIO2:
-                fwrite($stream, "\n");
+                expect_send($stream,"\n");
                 $uname .= $match[0];
                 break;
             case EXP_EOF:

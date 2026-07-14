@@ -55,10 +55,22 @@ C) Variables usadas sin inicializar ($b, $ERROR, $ERROR2)  [Warning en PHP 8]
      null previo también valía 0 en las comparaciones y en ++, por lo que la
      lógica es idéntica.
 
+D) Extensión "expect" ausente en PHP 8  [ERROR FATAL en PHP 8]
+   - expect_popen()/expect_expectl() venían de la extensión PECL "expect",
+     que NO soporta PHP 8 (ver más abajo). Sin ella el telnet fallaba con
+     "Call to undefined function expect_popen()".
+   - Solución: se creó expect_compat.php, una capa en PHP puro que reimplementa
+     esas funciones y sus constantes hablando Telnet por socket (fsockopen).
+     Se incluye con require_once en los 4 procesos de telnet y se cambiaron
+     mecánicamente fwrite($stream,...) -> expect_send($stream,...) e
+     ini_set("expect.timeout",n) -> expect_set_timeout(n). La lógica de
+     estado_equipo* no cambió. Ver la sección "CAPA DE COMPATIBILIDAD".
+
 ------------------------------------------------------------------------
 LO QUE NO SE TOCÓ (a propósito)
 ------------------------------------------------------------------------
-- Lógica de telnet: expect_popen() / expect_expectl() y todos los switch.
+- Lógica de telnet: los switch/case de estado_equipo* quedaron intactos
+  (sólo cambió el transporte por debajo, vía expect_compat.php).
 - Sentencias SQL, INSERT/SELECT, nombres de tablas y columnas.
 - Función ping_ip() y los shell_exec("ping ... -c ...").
 - Los lanzadores nohup/exec y TODAS las rutas absolutas.
@@ -91,55 +103,83 @@ LIBRERÍAS / DEPENDENCIAS A INSTALAR EN EL SERVIDOR PHP 8.0
 EXTENSIONES PHP:
   1. mysqli        (obligatoria)  -> conexión y consultas a la BD.
   2. pcre          (ya incluida)  -> preg_replace(); viene de fábrica.
-  3. expect (PECL) (obligatoria y CRÍTICA) -> expect_popen(),
-     expect_expectl() y las constantes EXP_EXACT, EXP_REGEXP,
-     EXP_TIMEOUT, EXP_EOF usadas por TODO el mecanismo de telnet.
-     La extensión PECL "expect" depende de la librería del sistema
-     "expect"/"tcl" (libexpect). Es la única dependencia delicada en
-     PHP 8.0 (ver nota de riesgo abajo).
+  3. sockets/streams (ya incluidos) -> fsockopen()/stream_select() usados
+     por expect_compat.php. Son del núcleo de PHP; no se instala nada.
+  ** expect (PECL): YA NO SE NECESITA. Se comprobó que su última versión
+     (0.4.0) sólo soporta hasta PHP 7.x y no compila en PHP 8. Se reemplazó
+     por una capa en PHP puro: expect_compat.php (ver sección siguiente).
+     NO instalar la extensión expect.
 
-BINARIOS / PAQUETES DEL SISTEMA (los invoca el código por shell):
-  - php-cli           -> los procesos corren con "php -f ..." desde cron/.sh
-  - telnet (cliente)  -> expect_popen("telnet <ip>")
-  - ping (iputils)    -> ping_ip(): "ping <ip> -c 3"
-  - coreutils         -> nohup (multihilo) y redirección a logs
+BINARIOS / PAQUETES DEL SISTEMA:
+  - php-cli   -> los procesos corren con "php -f ..." desde cron/.sh
+  - ping (iputils) -> ping_ip(): "ping <ip> -c 3"
+  - coreutils -> nohup (multihilo) y redirección a logs
+  - telnet (cliente): YA NO se necesita el binario. expect_compat.php habla
+    el protocolo Telnet por socket (fsockopen al puerto 23). Sólo hace falta
+    conectividad de red hacia las OLT en el puerto 23/tcp.
 
 INSTALACIÓN (Debian/Ubuntu):
-  apt-get install php8.0-cli php8.0-mysqli \
-                  php-pear php8.0-dev \
-                  expect tcl-dev telnet iputils-ping
-  pecl install expect          # compila expect.so para PHP 8.0
-  # habilitar en php.ini (CLI):  extension=mysqli   y   extension=expect.so
+  apt-get install php8.0-cli php8.0-mysqli iputils-ping
+  # habilitar en php.ini (CLI):  extension=mysqli
+  # (NO se necesita pecl / expect / tcl / telnet: los reemplaza expect_compat.php)
 
 INSTALACIÓN (RHEL/CentOS/Rocky/Alma):
-  dnf install php-cli php-mysqlnd php-pear php-devel \
-              expect expect-devel tcl-devel telnet iputils
-  pecl install expect
-  # crear /etc/php.d/40-expect.ini con:  extension=expect.so
+  dnf install php-cli php-mysqlnd iputils
+  # habilitar mysqli en php.ini/php.d (suele venir con php-mysqlnd)
 
 VERIFICAR QUE TODO ESTÁ CARGADO:
-  php -m | grep -E 'mysqli|expect'      # deben aparecer ambos
-  php -r 'var_dump(function_exists("expect_popen"), extension_loaded("mysqli"));'
-  which telnet ping nohup php
+  php -m | grep -i mysqli        # debe aparecer mysqli
+  which ping nohup php
 
-NOTA DE RIESGO (extensión expect en PHP 8.0):
-  El PECL "expect" (última versión 0.4.0) declara soporte hasta PHP 7.x.
-  En PHP 8.0 lo habitual es que compile igual, pero NO está garantizado
-  por el mantenedor. Si "pecl install expect" falla al compilar contra
-  PHP 8.0, las alternativas (sin reescribir la lógica de negocio) son:
-   a) Usar el binario del sistema "expect" (TCL) mediante proc_open()
-      envolviendo el diálogo telnet, o
-   b) Reemplazar expect_* por una librería PHP de telnet
-      (p. ej. phpseclib para SSH si las OLT lo permiten, o una clase
-      telnet propia con fsockopen()).
-  Estas alternativas SÍ implican reescribir las funciones estado_equipo*;
-  por eso se mantuvo expect_* tal cual, que es lo que hoy funciona.
+------------------------------------------------------------------------
+CAPA DE COMPATIBILIDAD  expect_compat.php  (reemplazo de la extensión expect)
+------------------------------------------------------------------------
+Archivo: Uplink_PHP8/expect_compat.php
+Por qué: la extensión PECL "expect" no soporta PHP 8. Este archivo la
+reemplaza en PHP puro, sin extensiones ni binarios externos.
+
+Qué provee (misma semántica que usaba el código):
+  - expect_popen("telnet <ip>")  -> abre la sesión Telnet por socket.
+  - expect_expectl($s, [...], $m) -> espera patrones (EXACT/REGEXP), maneja
+    la negociación Telnet (IAC), acumula la salida y devuelve el valor del
+    patrón que coincide, o EXP_TIMEOUT cuando el equipo deja de responder.
+  - expect_send($s, "texto\n")   -> reemplaza a fwrite($stream, ...).
+  - expect_set_timeout(n)         -> reemplaza a ini_set("expect.timeout", n).
+  - Constantes EXP_EXACT, EXP_REGEXP, EXP_TIMEOUT, EXP_EOF, etc.
+
+Cómo se integró (cambios mecánicos en los 4 procesos con telnet):
+  - require_once del expect_compat.php al inicio.
+  - fwrite($stream, ...)          -> expect_send($stream, ...)
+  - ini_set("expect.timeout", n)  -> expect_set_timeout(n)
+  La lógica de los switch/case de estado_equipo* NO cambió.
+
+Parámetros ajustables (constantes al inicio de expect_compat.php), por si
+al probar contra una OLT real hiciera falta afinar:
+  - EXPECT_COMPAT_EOL             (fin de línea enviado; por defecto "\r\n")
+  - EXPECT_COMPAT_CONNECT_TIMEOUT (segundos para conectar el socket)
+  - EXPECT_COMPAT_DEFAULT_TIMEOUT (silencio del equipo -> EXP_TIMEOUT)
+  Los timeouts por función se respetan vía expect_set_timeout(2)/(30), que
+  quedan igual que los ini_set("expect.timeout", ...) originales.
+
+IMPORTANTE - PROBAR CONTRA UNA OLT REAL:
+  El shim se validó con 17 pruebas unitarias (coincidencia de patrones,
+  consumo de buffer, parser Telnet IAC) y con una prueba end-to-end contra
+  un servidor que simula el diálogo Huawei (login -> enable -> config ->
+  display port traffic -> logout): capturó el tráfico correctamente.
+  Aun así, cada modelo/firmware de OLT puede variar el prompt o los tiempos;
+  ejecuta primero UN proceso a mano contra una OLT y revisa el .log antes de
+  reactivar todos los cron. Si algo no calza, ajusta los parámetros de
+  arriba (normalmente EXPECT_COMPAT_EOL o los timeouts).
 
 ------------------------------------------------------------------------
 VERIFICACIÓN REALIZADA
 ------------------------------------------------------------------------
-- Se ejecutó "php -l" (lint) sobre los 15 archivos .php con PHP 8.3:
+- Se ejecutó "php -l" (lint) sobre los 15 archivos .php + expect_compat.php:
   "No syntax errors detected" en todos.
-- El lint valida la sintaxis; la ejecución real requiere el servidor con la
-  extensión expect y el acceso a las OLT por telnet.
+- expect_compat.php: 17 pruebas unitarias OK (coincidencia de patrones,
+  consumo de buffer, parser Telnet IAC) + 1 prueba end-to-end contra un
+  servidor que simula el diálogo Huawei -> capturó el tráfico correctamente.
+- El lint valida la sintaxis; la ejecución real requiere sólo mysqli y acceso
+  de red a las OLT en el puerto 23/tcp (ya NO se necesita la extensión expect
+  ni el binario telnet).
 ========================================================================

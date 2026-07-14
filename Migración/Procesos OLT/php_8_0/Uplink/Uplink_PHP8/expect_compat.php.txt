@@ -1,0 +1,56 @@
+========================================================================
+ expect_compat.php  ·  Capa de compatibilidad (reemplazo de la extensión expect)
+========================================================================
+Qué es: un archivo NUEVO (no existía en el original). Reemplaza la extensión
+PECL "expect" —que NO soporta PHP 8— por una implementación en PHP puro que
+habla el protocolo Telnet directamente por socket (fsockopen). No requiere
+ninguna extensión adicional ni el binario "telnet".
+
+Por qué se creó: al ejecutar en el servidor (PHP 8.0.30) el proceso fallaba con
+"Call to undefined function expect_popen()", porque la extensión expect no está
+(y no puede instalarse: su última versión 0.4.0 sólo soporta hasta PHP 7.x).
+
+Funciones/constantes que provee (misma semántica que la extensión):
+  - expect_popen("telnet <ip> [puerto]")  abre la sesión (fsockopen, puerto 23
+    por defecto). Si el equipo no responde, la sesión queda "muerta" y el
+    primer expect_expectl devuelve EXP_TIMEOUT (flujo termina limpio).
+  - expect_expectl($stream, [[patron, valor, tipo], ...], $match)
+      * tipos: EXP_EXACT (subcadena), EXP_REGEXP (PCRE), o sin tipo (subcadena).
+      * gestiona la negociación Telnet (secuencias IAC) y las quita del texto.
+      * acumula la salida; devuelve el valor del PRIMER patrón (en el orden de
+        la lista) que coincide, consumiendo el buffer hasta el fin del match.
+      * si el equipo deja de enviar durante 'timeout' seg -> EXP_TIMEOUT
+        (así es como estado_equipo* sale del bucle: case EXP_TIMEOUT).
+  - expect_send($stream, "texto\n")  reemplaza a fwrite($stream, ...). Traduce
+    "\n" al fin de línea Telnet (CR LF) y escapa el byte IAC (0xFF).
+  - expect_set_timeout(n)  reemplaza a ini_set("expect.timeout", n).
+  - Constantes EXP_GLOB/EXP_EXACT/EXP_REGEXP/EXP_EOF/EXP_TIMEOUT/EXP_FULLBUFFER
+    (sólo se definen si no existían).
+
+Todo va protegido con if(!function_exists()) / if(!defined()): si algún día se
+instalara una extensión expect real, no habría conflicto.
+
+Parámetros ajustables (constantes al inicio del archivo):
+  - EXPECT_COMPAT_EOL              fin de línea enviado al equipo (def. "\r\n")
+  - EXPECT_COMPAT_CONNECT_TIMEOUT  segundos para conectar el socket (def. 10)
+  - EXPECT_COMPAT_DEFAULT_TIMEOUT  silencio -> EXP_TIMEOUT si no se llamó a
+                                   expect_set_timeout (def. 10)
+
+Dónde se usa: incluido con require_once en los 4 procesos con telnet:
+  - proceso_uplink_trafico_603_680.php        (__DIR__ . '/expect_compat.php')
+  - proceso_uplink_trafico_MA5600T_exped.php  (__DIR__ . '/expect_compat.php')
+  - Procesos/proceso_uplink_trafico_exped.php (__DIR__ . '/../expect_compat.php')
+  - Procesos/test_proceso.php                 (__DIR__ . '/../expect_compat.php')
+
+Verificación realizada:
+  - php -l -> "No syntax errors detected".
+  - 17 pruebas unitarias OK: orden de patrones, consumo de buffer, regex vs
+    exacto, y parser Telnet IAC (incluida secuencia partida entre lecturas).
+  - 1 prueba end-to-end contra un servidor que simula el diálogo Huawei
+    (login -> enable -> config -> display port traffic -> logout): el mismo
+    switch/case del código real capturó el tráfico correctamente.
+
+PENDIENTE DE CAMPO: probar UN proceso a mano contra una OLT real y revisar el
+.log antes de reactivar todos los cron. Si el prompt o los tiempos difieren en
+algún modelo/firmware, ajustar EXPECT_COMPAT_EOL o los timeouts de arriba.
+========================================================================
