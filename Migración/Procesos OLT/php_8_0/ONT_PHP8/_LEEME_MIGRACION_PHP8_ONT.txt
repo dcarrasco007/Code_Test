@@ -125,10 +125,31 @@ migración automática inicial había dejado mal:
      la BD "Aden" y die() con mysqli_connect_error(). ($conn/$db no se usan
      en el resto del archivo; era código muerto, pero igual era fatal.)
 
+5) fclose($stream) sobre la conexión telnet  [ERROR FATAL en PHP 8]
+   Detectado al probar proceso_data_V4.php contra una OLT real:
+     "fclose(): Argument #1 must be of type resource, ExpectCompatConn given"
+   Los procesos ONT cierran la sesión con fclose($stream); con la extensión
+   original $stream era un recurso, pero el shim devuelve un objeto.
+   Solución:
+   - Se añadió la función expect_close($conn) a expect_compat.php (cierra el
+     socket interno del objeto; también acepta un recurso real por compat).
+   - fclose($stream) -> expect_close($stream) en los 6 procesos telnet que lo
+     usaban (proceso_data*, shell_ont_repaso_equipos_detalle). Total 12.
+   OJO: proceso_informacion.php y submit_ONT.php TAMBIÉN tienen fclose($stream)
+   pero ahí $stream es un fopen("ssh2.sftp://..."), NO telnet -> se dejaron
+   intactos (esos usan la extensión ssh2, aparte).
+
 Comprobación en runtime (php): tras las correcciones, el require carga el
 shim y quedan disponibles expect_popen/expect_expectl/expect_send/
-expect_set_timeout y TODAS las constantes (USER..ACEPTAR); un switch de
-prueba con ellas no lanza "Undefined constant".
+expect_set_timeout/expect_close y TODAS las constantes (USER..ACEPTAR); un
+switch de prueba con ellas no lanza "Undefined constant", y expect_close()
+sobre una conexión no lanza TypeError.
+
+NOTA: durante esta corrección, un script con un preg_replace mal escapado
+vació 6 archivos (devolvió NULL y se escribió vacío). Se detectó de inmediato
+y se RE-MIGRARON los 6 desde el ORIGINAL (/ONT) aplicando todos los cambios de
+forma limpia (solo str_replace + guarda anti-vaciado). Verificado: 0 archivos
+vacíos, tamaños coherentes, 20/20 lint OK.
 
 ------------------------------------------------------------------------
 VERIFICACIÓN REALIZADA

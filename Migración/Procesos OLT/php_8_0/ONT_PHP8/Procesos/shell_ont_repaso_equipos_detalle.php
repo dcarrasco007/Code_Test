@@ -1,9 +1,11 @@
 <?php
-require_once __DIR__ . '/../expect_compat.php'; // Reemplazo en PHP puro de la extensión PECL 'expect' (no soportada en PHP 8)
-// --- Migración a PHP 8.0: constantes bareword para los switch de expect_expectl ---
-foreach (['USER','PASSWORD','SALTO','SHELL','SHELL_CONFIG','SHELL_CONFIG1','SHELL2','SALIR','LOGOUT','LOGOUT2','ESPACIO','ESPACIO2','ESPACIO3','EXP_EXACT','EXP_REGEXP','EXP_TIMEOUT','EXP_EOF','ACEPTAR'] as $__const) {
+// --- Migración a PHP 8.0: reemplazo de la extensión PECL 'expect' (no soportada en PHP 8) ---
+require_once __DIR__ . '/../expect_compat.php';
+// Constantes bareword usadas en los switch de expect_expectl:
+foreach (['USER','PASSWORD','SALTO','SHELL','SHELL_CONFIG','SHELL_CONFIG1','SHELL2','SALIR','LOGOUT','LOGOUT2','ESPACIO','ESPACIO2','ESPACIO3','ACEPTAR','EXP_EXACT','EXP_REGEXP','EXP_TIMEOUT','EXP_EOF'] as $__const) {
     if (!defined($__const)) { define($__const, $__const); }
 }
+// -------------------------------------------------------------------------
 include ('/u01/crontab127/conexion/conexion_db.php');
 
 $mysqli = new mysqli($host144_geret,$user144_geret,$pass144_geret, 'Aden');
@@ -65,7 +67,7 @@ while ($row = $result_ip->fetch_array(MYSQLI_NUM)){
             //print_r($texto);
             foreach (explode(chr(13), $texto) as $linea)
             {
-                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea); // Migración PHP 8.0: eregi_replace() eliminada en PHP 7;
+                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
                 $data[] = $linea;
             }
             $cantidad22=count($data);
@@ -463,10 +465,10 @@ function obtener_ont($ip)
     $b=0;
     $user = 'geret2016';
     $pass = 'Geret#2016*2021';
-    expect_set_timeout( 30);
+    expect_set_timeout(30);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $ip);
-    $b = 0; // Migración PHP 8.0: inicializada (antes se usaba sin definir -> Warning)
+    $b = 0; // Migración PHP 8.0: inicializada
     $uname = "";
     $x = true;
     while ($x)
@@ -524,14 +526,14 @@ function obtener_ont($ip)
             case LOGOUT:
                 expect_send($stream, "y\n");
                 $x = false;
-                fclose($stream);
+                expect_close($stream);
                 return $uname;
                 unset($uname);
                 break;
             case LOGOUT2:
                 expect_send($stream, "y\n");
                 $x = false;
-                fclose($stream);
+                expect_close($stream);
                 return $uname;
                 unset($uname);
                 break;
@@ -540,7 +542,7 @@ function obtener_ont($ip)
                 break;
             case EXP_TIMEOUT:
                 $x = false;
-                fclose($stream);
+                expect_close($stream);
                 return $uname;
                 break;
             case ESPACIO:
@@ -564,10 +566,10 @@ function obtener_ont2($ip)
     $b=0;
     $user = 'geret2016';
     $pass = 'Geret#2016*2021';
-    expect_set_timeout( 30);
+    expect_set_timeout(30);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $ip);
-    $b = 0; // Migración PHP 8.0: inicializada (antes se usaba sin definir -> Warning)
+    $b = 0; // Migración PHP 8.0: inicializada
     $uname = "";
     $x = true;
     while ($x)
@@ -618,14 +620,14 @@ function obtener_ont2($ip)
             case LOGOUT:
                 expect_send($stream, "y\n");
                 $x = false;
-                fclose($stream);
+                expect_close($stream);
                 return $uname;
                 unset($uname);
                 break;
             case LOGOUT2:
                 expect_send($stream, "y\n");
                 $x = false;
-                fclose($stream);
+                expect_close($stream);
                 return $uname;
                 unset($uname);
                 break;

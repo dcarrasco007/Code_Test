@@ -115,6 +115,22 @@ if (!function_exists('expect_send')) {
     }
 }
 
+if (!function_exists('expect_close')) {
+    function expect_close($conn) {
+        // Cierra la sesión telnet abierta por expect_popen().
+        // Reemplaza a fclose($stream): con la extensión original $stream era un
+        // recurso; aquí es un objeto ExpectCompatConn, así que fclose() fallaba.
+        if ($conn instanceof ExpectCompatConn) {
+            if (is_resource($conn->sock)) { @fclose($conn->sock); }
+            $conn->sock = false;
+            return true;
+        }
+        // Compatibilidad: si fuese un recurso real, ciérralo normalmente.
+        if (is_resource($conn)) { return @fclose($conn); }
+        return false;
+    }
+}
+
 if (!function_exists('expect_expectl')) {
     function expect_expectl($conn, $patterns, &$match = null) {
         $match = array();

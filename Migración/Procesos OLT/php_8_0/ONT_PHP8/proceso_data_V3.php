@@ -1,9 +1,11 @@
 <?php
-require_once __DIR__ . '/expect_compat.php'; // Reemplazo en PHP puro de la extensión PECL 'expect' (no soportada en PHP 8)
-// --- Migración a PHP 8.0: constantes bareword para los switch de expect_expectl ---
-foreach (['USER','PASSWORD','SALTO','SHELL','SHELL_CONFIG','SHELL_CONFIG1','SHELL2','SALIR','LOGOUT','LOGOUT2','ESPACIO','ESPACIO2','ESPACIO3','EXP_EXACT','EXP_REGEXP','EXP_TIMEOUT','EXP_EOF','ACEPTAR'] as $__const) {
+// --- Migración a PHP 8.0: reemplazo de la extensión PECL 'expect' (no soportada en PHP 8) ---
+require_once __DIR__ . '/expect_compat.php';
+// Constantes bareword usadas en los switch de expect_expectl:
+foreach (['USER','PASSWORD','SALTO','SHELL','SHELL_CONFIG','SHELL_CONFIG1','SHELL2','SALIR','LOGOUT','LOGOUT2','ESPACIO','ESPACIO2','ESPACIO3','ACEPTAR','EXP_EXACT','EXP_REGEXP','EXP_TIMEOUT','EXP_EOF'] as $__const) {
     if (!defined($__const)) { define($__const, $__const); }
 }
+// -------------------------------------------------------------------------
 include ('/u01/crontab127/conexion/conexion_db.php');
 echo $hora_inicio=date("H:i:s");
 $mysqli = new mysqli($host144_geret,$user144_geret,$pass144_geret, 'Aden');
@@ -48,7 +50,7 @@ $mysqli->query($truncate) or die("Error query ont $truncate");*/
             $texto = estado_equipo($ip,$puertos, $modelo);   
             foreach (explode(chr(13), $texto) as $linea)
             {
-                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea); // Migración PHP 8.0: eregi_replace() eliminada en PHP 7;
+                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
                 $linea = str_replace(array('','[16D','[16D [16','[16D                [16D','[16D','[16D                [16D ',' [16D [16D ',' [16D[16D','[1D',
             '[37D','[37D                                     ','[37D                                     [37D',"---- More ( Press 'Q' to break ) ----",' [1D','}:','Command:',"% Unknown command, the error locates at '^'",'^','EchoLife:'),'',$linea);
                 $data[] = $linea;
@@ -455,7 +457,7 @@ $mysqli->query($truncate) or die("Error query ont $truncate");*/
                 $texto = estado_equipo_repaso_2($ip,$puertos, $modelo);
                 foreach (explode(chr(13), $texto) as $linea)
                 {
-                    $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea); // Migración PHP 8.0: eregi_replace() eliminada en PHP 7;
+                    $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
                     $linea = str_replace(array('','[16D','[16D [16','[16D                [16D','[16D','[16D                [16D ',' [16D [16D ',' [16D[16D','[1D',
                 '[37D','[37D                                     ','[37D                                     [37D',"---- More ( Press 'Q' to break ) ----",' [1D','}:','Command:',"% Unknown command, the error locates at '^'",'^','EchoLife:'),'',$linea);
                     $data1[] = $linea;
@@ -493,7 +495,7 @@ $mysqli->query($truncate) or die("Error query ont $truncate");*/
 
         foreach (explode(chr(13), $texto) as $linea)
             {
-                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea); // Migración PHP 8.0: eregi_replace() eliminada en PHP 7;
+                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
                 $linea = str_replace(array('','[16D','[16D [16','[16D                [16D','[16D','[16D                [16D ',' [16D [16D ',' [16D[16D','[1D',
             '[37D','[37D                                     ','[37D                                     [37D',"---- More ( Press 'Q' to break ) ----",' [1D','}:','Command:',"% Unknown command, the error locates at '^'",'^'),'',$linea);
                 $data[] = $linea;
@@ -618,7 +620,7 @@ $mysqli->query($truncate) or die("Error query ont $truncate");*/
 
         foreach (explode(chr(13), $texto) as $linea)
             {
-                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea); // Migración PHP 8.0: eregi_replace() eliminada en PHP 7;
+                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
                 $linea = str_replace(array('','[16D','[16D [16','[16D                [16D','[16D','[16D                [16D ',' [16D [16D ',' [16D[16D','[1D',
             '[37D','[37D                                     ','[37D                                     [37D',"---- More ( Press 'Q' to break ) ----",' [1D','}:','Command:',"% Unknown command, the error locates at '^'",'^'),'',$linea);
                 $data[] = $linea;
@@ -787,10 +789,10 @@ function estado_equipo($server, $puertos, $modelo)
 //print_r($comandos);
     $user = 'geretont';
     $pass = 'Geret#2024*2029';
-    expect_set_timeout( 60);
+    expect_set_timeout(60);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
-    $b = 0; // Migración PHP 8.0: inicializada (antes se usaba sin definir -> Warning)
+    $b = 0; // Migración PHP 8.0: inicializada
     $uname = "";
     $x = true;
     $a=0;
@@ -854,7 +856,7 @@ function estado_equipo($server, $puertos, $modelo)
                     }else{    
                         sleep(1);
                         expect_send($stream, "quit\n");  
-                        fclose($stream);
+                        expect_close($stream);
                         return $uname;
                     }
                 break;
@@ -899,10 +901,10 @@ function estado_equipo_repaso($server, $puertos, $modelo)
     
     $user = 'geretont';
     $pass = 'Geret#2024*2029';
-    expect_set_timeout( 60);
+    expect_set_timeout(60);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
-    $b = 0; // Migración PHP 8.0: inicializada (antes se usaba sin definir -> Warning)
+    $b = 0; // Migración PHP 8.0: inicializada
     $uname = "";
     $x = true;
     $a=0;
@@ -952,7 +954,7 @@ function estado_equipo_repaso($server, $puertos, $modelo)
                     }else{    
                         sleep(1);
                         expect_send($stream, "quit\n");  
-                        fclose($stream);
+                        expect_close($stream);
                         return $uname;
                     }
                 break;
@@ -989,10 +991,10 @@ function estado_equipo_repaso_2($server, $puertos, $modelo)
     
     $user = 'geretont';
     $pass = 'Geret#2024*2029';
-    expect_set_timeout( 60);
+    expect_set_timeout(60);
     ini_set('memory_limit', '-1');
     $stream = expect_popen("telnet " . $server);
-    $b = 0; // Migración PHP 8.0: inicializada (antes se usaba sin definir -> Warning)
+    $b = 0; // Migración PHP 8.0: inicializada
     $uname = "";
     $x = true;
     $a=0;
@@ -1042,7 +1044,7 @@ function estado_equipo_repaso_2($server, $puertos, $modelo)
                     }else{    
                         sleep(1);
                         expect_send($stream, "quit\n");  
-                        fclose($stream);
+                        expect_close($stream);
                         return $uname;
                     }
                 break;
@@ -1086,7 +1088,7 @@ function verifica_equipo($texto){
     $texto=$texto;
     $val=1;
     foreach (explode(chr(13), $texto) as $linea){
-        $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea); // Migración PHP 8.0: eregi_replace() eliminada en PHP 7;
+        $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
         $data[] = $linea;
     }
     for($j=0;$j<count($data);$j++){
