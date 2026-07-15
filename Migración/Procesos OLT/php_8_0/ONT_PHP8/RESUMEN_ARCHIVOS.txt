@@ -1,0 +1,38 @@
+========================================================================
+ RESUMEN RÁPIDO: Tipo de cambios por archivo
+========================================================================
+
+ARCHIVOS CON TELNET/EXPECT (7 - requieren expect_compat.php):
+✓ proceso_data.php                                - 2 eregi + expect + constantes
+✓ proceso_data_V2.php                            - 2 eregi + expect + constantes
+✓ proceso_data_V2_repaso.php                     - 2 eregi + expect + constantes
+✓ proceso_data_V3.php                            - 5 eregi + expect + constantes
+✓ proceso_data_V4.php                            - 6 eregi + expect + constantes
+✓ Procesos/reporte_general_v2_data.php           - 2 eregi + expect + constantes
+✓ Procesos/shell_ont_repaso_equipos_detalle.php - 1 eregi + expect + constantes
+
+ARCHIVOS SIN TELNET (no necesitan expect_compat, cambios triviales o ninguno):
+✓ proceso_informacion.php                        - sin cambios
+✓ proceso_informacion_V2.php                     - sin cambios
+✓ proceso_informacion_V2_repaso.php              - sin cambios
+✓ proceso_informacion_V2_repaso_2.php            - sin cambios
+✓ submit_ONT.php                                 - sin cambios
+✓ submit_ONT_zip.php                             - sin cambios
+✓ comparador_qry.php                             - sin cambios
+✓ duplicado_ont_detalle.php                      - sin cambios
+✓ index_subir_archivo.php                        - 1 eregi (mysql_* bajo impacto)
+✓ Procesos/proceso_replica_ont.php               - SQL batch, sin cambios
+✓ Procesos/reporte_general_v2_2.php              - dispatcher, sin cambios
+✓ Procesos/reporte_general_repaso_v2_2.php       - dispatcher, sin cambios
+
+SOPORTE:
+✓ expect_compat.php                              - shim (copied from Uplink_PHP8)
+
+TOTAL: 20 archivos → 20/20 lint OK
+
+PRÓXIMOS PASOS:
+1. Ejecutar tests contra OLT real (empezar por un proceso).
+2. Si timeouts/prompts no calzan: ajustar expect_compat.php.
+3. Migrar cron de a uno (validar antes de siguiente).
+4. Future: refactor duplicación (Opción B), externalizar credenciales.
+========================================================================

@@ -1,0 +1,23 @@
+========================================================================
+ proceso_data_V4.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: Proceso batch de recolección de información ONT. Recibe por argv: IP,
+server, model, region. Hace telnet a la OLT, ejecuta "display ont version 0 all"
+y "display ont info 0 all", parsea la salida y guarda en BD.
+
+CAMBIOS APLICADOS (obligatorios: fatales en PHP 8):
+1) eregi_replace() → preg_replace()   (6 ocurrencias)
+   Reemplaza caracteres de control (\n, \r, |) en el flujo de telnet.
+2) Definición de constantes bareword  (USER, PASSWORD, SALTO, SHELL, etc.)
+   Usadas en el switch de expect_expectl; se definen con su propio nombre.
+3) Inicialización de $b a 0  (evita Warning)
+4) require_once expect_compat.php  (reemplazo del PECL expect)
+5) fwrite($stream, ...) → expect_send($stream, ...)
+6) ini_set("expect.timeout", ...) → expect_set_timeout(...)
+
+Los cambios son mecánicos; la lógica telnet quedó intacta.
+
+DEPENDENCIAS: expect_compat.php (debe estar en __DIR__).
+
+Verificación: php -l → "No syntax errors detected".
+========================================================================

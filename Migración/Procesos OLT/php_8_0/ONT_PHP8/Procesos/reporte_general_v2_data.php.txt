@@ -1,0 +1,23 @@
+========================================================================
+ Procesos/reporte_general_v2_data.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: Subproceso (nohup) del dispatcher reporte_general_v2_2.php. Lanzado con
+5 argumentos (IP, server, region, etc.). Hace telnet a OLT, ejecuta comandos
+"display ont version 0 all" e info, parsea salida y guarda en BD.
+
+Este archivo DUPLICA ~90% del código de shell_ont_repaso_equipos_detalle.php
+(mismos comandos, mismo switch de telnet, mismo parsing). Técnica debt.
+
+CAMBIOS APLICADOS (igual que otros 6 de telnet):
+1) eregi_replace() → preg_replace()   (2 ocurrencias)
+2) Definición constantes bareword (en el switch de expect_expectl)
+3) Inicializar $b a 0
+4) require_once /../expect_compat.php  (nivel arriba)
+5) fwrite(...) → expect_send(...)
+6) ini_set("expect.timeout",...) → expect_set_timeout(...)
+
+NOTA: También contiene la función ping_ip() copiada (código idéntico en
+      reporte_general_v2_data y shell_ont_repaso_equipos_detalle).
+
+Verificación: php -l → "No syntax errors detected".
+========================================================================

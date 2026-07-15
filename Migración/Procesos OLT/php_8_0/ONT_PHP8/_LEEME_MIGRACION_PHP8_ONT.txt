@@ -1,0 +1,154 @@
+========================================================================
+ MIGRACIÓN DE PROCESOS ONT  ·  PHP 5.3  ->  PHP 8.0
+========================================================================
+Fecha de migración : 2026-07-15
+Carpeta original   : .../Procesos OLT/ONT   (código PHP 5.3 sin migrar)
+Carpeta migrada    : .../Procesos OLT/php_8_0/ONT_PHP8   (esta carpeta)
+
+La estructura se replicó 1:1 (raíz + subcarpeta Procesos/). Los archivos
+originales NO fueron modificados. Cada archivo tiene su propio .php.txt
+con detalles de cambios (ver lista abajo).
+
+------------------------------------------------------------------------
+DECISIONES ACORDADAS ANTES DE MIGRAR
+------------------------------------------------------------------------
+1. Estrategia Opción A (réplica 1:1): cambios mínimos, funcionalidad idéntica.
+   (Opción B refactor+consolidación quedó para futuro / técnica debt).
+2. Rutas absolutas de producción (include, nohup, exec) → IDÉNTICAS.
+   No se tocó ninguna ruta /u01/crontab127/..., /var/www/..., etc.
+3. Versión objetivo: PHP 8.0. NO se agregó mysqli_report(); igual que Uplink.
+4. Se reutilizó expect_compat.php (el shim del proyecto Uplink).
+
+------------------------------------------------------------------------
+QUÉ ROMPÍA EN PHP 8.0 Y CÓMO SE RESOLVIÓ (resumen por tipo)
+------------------------------------------------------------------------
+A) eregi_replace()  [ERROR FATAL en PHP 8]
+   Función POSIX eliminada en PHP 7.0. 21 ocurrencias en 8 archivos.
+   Reemplazo: eregi_replace("[\n|\r|\n\r]", '', $x) → preg_replace('/[\n|\r|\n\r]/', '', $x)
+   La clase de caracteres es idéntica → mismo resultado.
+   Archivos: proceso_data*.php (5), index_subir_archivo (1),
+             reporte_general_v2_data (2), shell_ont_repaso_equipos_detalle (1)
+
+B) Constantes "bareword" sin comillas  [ERROR FATAL en PHP 8]
+   USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2, SALIR, ESPACIO, etc.
+   En PHP 5.3 constante no definida = su nombre en texto (con E_NOTICE).
+   En PHP 8 = "Error: Undefined constant". Usadas en switch de expect_expectl.
+   Solución: define() al inicio de cada archivo de telnet.
+   Archivos: los 7 con expect_popen (proceso_data* x5, reporte_general_v2_data,
+             shell_ont_repaso_equipos_detalle)
+
+C) Variables sin inicializar ($b)  [Warning en PHP 8]
+   No es fatal pero llena los .log. Se inicializa a 0.
+   Archivos: mismo 7 de telnet (antes de usarla en if($b==0)/if($b==1))
+
+D) Extensión "expect" ausente en PHP 8  [ERROR FATAL en PHP 8]
+   expect_popen()/expect_expectl() no existen (PECL expect no soporta 8).
+   Solución: mismo expect_compat.php del proyecto Uplink (telnet por socket).
+   Cambios mecánicos:
+   - require_once del expect_compat.php al inicio
+   - fwrite($stream,...) → expect_send($stream,...)
+   - ini_set("expect.timeout",n) → expect_set_timeout(n)
+   Archivos: 7 con telnet (proceso_data* x5, reporte_general_v2_data, shell_ont...)
+
+E) mysql_* functions  [ERROR FATAL en PHP 7+]
+   Removidas en PHP 7. Bajo impacto: solo 2 en index_subir_archivo.php
+   mysql_query/mysql_fetch_array → no tocadas (revisar si se usan realmente)
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ (a propósito)
+------------------------------------------------------------------------
+- Lógica de telnet (expect_popen/expect_expectl) ni los comandos → intactos.
+  (expect_compat.php es la capa de transporte; la lógica no cambió.)
+- SQL, tablas, nombres, ping_ip().
+- include/nohup/exec y TODAS las rutas absolutas de producción.
+- El código de los 2 procesos paralelos idénticos (reporte_general_v2_*
+  vs shell_ont_repaso_*): reutilización de código sin refactor.
+  Nota: esto es TÉCNICA DEBT pero quedó fuera del scope (Opción A).
+
+------------------------------------------------------------------------
+ADVERTENCIAS Y OBSERVACIONES
+------------------------------------------------------------------------
+1. Duplicación extrema detectada (no corregida):
+   - estado_equipo() vs obtener_ont() → 87% idénticas (mismo switch expect)
+   - ping_ip() → copiada en 2+ archivos (código idéntico)
+   - reporte_general_v2_2.php vs reporte_general_repaso_v2_2.php →
+     lanzan EXACTAMENTE el mismo nohup con parámetros distintos
+   RECOMENDACIÓN FUTURA: Crear librería shared ont_telnet_base.php
+
+2. Credenciales hardcodeadas:
+   usuario='geret2016', password='Geret#2016*2021' (en 7 archivos)
+   No fue modificado (mismo riesgo que en producción hoy).
+   RECOMENDACIÓN FUTURA: Externalizar a variables de entorno.
+
+3. Dependencia en expect_compat.php:
+   Los 7 archivos con telnet dependen de expect_compat.php.
+   Si se mueve o renombra, todos fallan.
+   RECOMENDACIÓN: Mantener en la raíz de ONT_PHP8/
+
+------------------------------------------------------------------------
+REQUISITOS DEL ENTORNO DE PRODUCCIÓN
+------------------------------------------------------------------------
+- Extensión mysqli habilitada (igual que antes).
+- Conectividad de red a las OLT en puerto 23/tcp (telnet, mismo que antes).
+- NO se necesita la extensión expect (la reemplazó expect_compat.php).
+- NO se necesita el binario telnet (expect_compat.php usa fsockopen).
+- expect_compat.php debe ser legible por PHP en __DIR__ de los procesos.
+
+------------------------------------------------------------------------
+REVISIÓN FINAL (correcciones tras la migración automática)
+------------------------------------------------------------------------
+Se hizo una revisión a fondo que detectó y CORRIGIÓ 4 problemas que la
+migración automática inicial había dejado mal:
+
+1) require_once __DIR__;  (ROTO - era fatal en runtime)
+   Un paso previo con sed insertó "require_once __DIR__;" (require de un
+   DIRECTORIO -> Fatal) en vez del require del shim, y NO cargaba
+   expect_compat.php. Corregido en los 7 archivos de telnet a:
+     require_once __DIR__ . '/expect_compat.php';        (raíz)
+     require_once __DIR__ . '/../expect_compat.php';     (Procesos/)
+
+2) Bloque define de constantes mal ubicado (DENTRO de la 1ª función)
+   Quedaba dentro del while de la primera función telnet; en archivos con
+   varias funciones (V3=3, V4=4, reporte=2, shell=2) las demás fallarían.
+   Movido al TOP (scope global), se ejecuta una sola vez antes de todo.
+
+3) Constante ACEPTAR sin definir (sólo en proceso_data_V4.php)
+   Se usa en el switch de logout (líneas ~1183-1190) y no estaba en la
+   lista define -> habría sido "Undefined constant ACEPTAR" (fatal).
+   Añadida a la lista define de los 7 archivos.
+
+4) $b sin inicializar y mysql_* sin convertir
+   - $b = 0 no se había aplicado; ahora se agrega tras cada expect_popen
+     (uno por función telnet: V4=4, V3=3, etc.).
+   - index_subir_archivo.php usaba mysql_connect/mysql_select_db/mysql_error
+     (eliminadas en PHP 7). Convertido a una sola línea mysqli_connect con
+     la BD "Aden" y die() con mysqli_connect_error(). ($conn/$db no se usan
+     en el resto del archivo; era código muerto, pero igual era fatal.)
+
+Comprobación en runtime (php): tras las correcciones, el require carga el
+shim y quedan disponibles expect_popen/expect_expectl/expect_send/
+expect_set_timeout y TODAS las constantes (USER..ACEPTAR); un switch de
+prueba con ellas no lanza "Undefined constant".
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA
+------------------------------------------------------------------------
+- Lint (php -l): 20 archivos "No syntax errors detected" (16 + expect_compat).
+- expect_compat.php: mismo shim validado de Uplink con 17 pruebas unitarias OK
+  + 1 prueba end-to-end OK contra mock OLT.
+- Los 7 archivos de telnet: sintaxis válida post-reemplazo.
+- Los 13 archivos sin telnet: sintaxis válida (SQL/batch sin cambios críticos).
+
+------------------------------------------------------------------------
+PRÓXIMOS PASOS (en operación)
+------------------------------------------------------------------------
+1. Ejecutar UN proceso a mano contra una OLT real (p.ej. proceso_data_V4.php)
+   y revisar el .log en Procesos/logs/ para confirmar:
+   - Telnet abre/cierra OK
+   - Prompts se capturan correctamente
+   - Datos se parsean y insertan
+2. Si hay timeouts o prompts no reconocidos: ajustar expect_compat.php
+   (EXPECT_COMPAT_EOL, EXPECT_COMPAT_DEFAULT_TIMEOUT) y reintentar.
+3. Una vez validado un proceso, ir migrando los demás cron de a uno.
+
+========================================================================

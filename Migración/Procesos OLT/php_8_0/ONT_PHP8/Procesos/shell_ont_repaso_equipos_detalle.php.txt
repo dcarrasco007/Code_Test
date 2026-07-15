@@ -1,0 +1,27 @@
+========================================================================
+ Procesos/shell_ont_repaso_equipos_detalle.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: Subproceso paralelo a reporte_general_v2_data.php (DÚO DUPLICADO).
+Lanzado desde shell_ont_repaso*.sh con argumentos. Hace telnet, ejecuta
+"display ont version 0 all" e info, parsea y guarda en BD.
+
+DUPLICACIÓN CRÍTICA: Este archivo es 87% idéntico a reporte_general_v2_data.php.
+La única diferencia es el contexto del lanzamiento (dispatcher distinto).
+→ Técnica debt: consolidar en una función común sería lo ideal.
+
+CAMBIOS APLICADOS (mismo patrón que los 6 otros de telnet):
+1) eregi_replace() → preg_replace()   (1 ocurrencia)
+2) Definición constantes bareword
+3) Inicializar $b a 0
+4) require_once /../expect_compat.php
+5) fwrite(...) → expect_send(...)
+6) ini_set("expect.timeout",...) → expect_set_timeout(...)
+
+ARCHIVOS RELACIONADOS:
+- reporte_general_v2_data.php: hace lo mismo (funciones idénticas)
+- reporte_general_v2_2.php, reporte_general_repaso_v2_2.php: dispatchers que
+  lanzan AMBOS procesos (reporte_general_v2_data y shell_ont_repaso) en nohup
+  con parámetros distintos.
+
+Verificación: php -l → "No syntax errors detected".
+========================================================================
