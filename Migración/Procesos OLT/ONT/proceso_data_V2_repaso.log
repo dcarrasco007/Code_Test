@@ -1,0 +1,217 @@
+13:13:59Array
+(
+    [0] => 0/16/0
+    [1] => 
+)
+Array
+(
+    [0] => interface gpon 0/16
+    [1] => display ont info summary 0
+    [2] => display ont optical-info 0 all
+    [3] => display ont profile 0 all
+    [4] => quit
+)
+Trying 10.99.24.66...
+Connected to 10.99.24.66.
+Escape character is '^]'.
+
+Warning: Telnet is not a secure protocol, and it is recommended to use Stelnet.
+
+>>User name:geretont
+>>User password:
+
+
+  Huawei Integrated Access Software (MA5600T).
+  Copyright(C) Huawei Technologies Co., Ltd. 2002-2018. All rights reserved.
+
+  -----------------------------------------------------------------------------
+  User last login information:
+  -----------------------------------------------------------------------------
+  Access Type : Telnet 
+  IP-Address  : 192.168.66.126
+  Login  Time : 2025-04-23 13:14:09-03:00
+  Logout Time : 2025-04-23 13:14:09-03:00
+  -----------------------------------------------------------------------------
+
+OLT-DURZUA-2>enable
+
+OLT-DURZUA-2#config
+
+OLT-DURZUA-2(config)#interface gpon 0/16
+
+OLT-DURZUA-2(config-if-gpon-0/16)#display ont info summary 0
+  Command is being executed. Please wait
+  ------------------------------------------------------------------------------
+  In port 0/16/0, the total of ONTs are: 7, online: 7
+  ------------------------------------------------------------------------------
+  ONT  Run     Last                Last                Last                   
+  ID   State   UpTime              DownTime            DownCause
+  ------------------------------------------------------------------------------
+  0    online  2025-03-17 01:27:27 2025-03-17 01:26:33 reset                    
+  3    online  2025-04-17 19:12:09 2025-04-17 19:03:13 dying-gasp               
+  4    online  2025-04-21 10:00:39 2025-04-21 09:23:30 dying-gasp               
+  5    online  2025-03-17 01:27:15 2025-03-17 01:26:35 reset                    
+  6    online  2025-03-17 01:27:35 2025-03-17 01:26:36 reset                    
+  7    online  2025-03-12 08:52:52 2025-03-12 08:51:53 reset                    
+  8    online  2025-03-17 01:27:16 2025-03-17 01:26:35 reset                    
+  ------------------------------------------------------------------------------
+  ONT        SN        Type          Distance Rx/Tx power  Description
+  ID                                    (m)      (dBm)
+  ------------------------------------------------------------------------------
+  0   48575443BAC1F19A 245Q             2956  -17.12/2.35  10000388689          
+  3   4857544373F077AD HG8145X6         2937  -16.18/2.22  10000668332          
+  4   485754438DB984A8 HG8145X6         2944  -17.21/2.31  10000613269          
+  5   485754430D71D5A6 HG8245W5         2923  -19.10/2.23  10000408291          
+  6   4857544373F1FCAD HG8145X6         2933  -17.44/2.28  10000408467          
+---- More ( Press 'Q' to break ) ----[37D                                     [37D  7   48575443684D98AE HG8145X6         2924  -17.90/1.94  10000684536          
+  8   485754431CA795A4 HG8245W5         2925  -16.99/2.30  10000579748          
+  ------------------------------------------------------------------------------
+  
+
+OLT-DURZUA-2(config-if-gpon-0/16)#display ont optical-info 0 all
+  -----------------------------------------------------------------------------
+  ONT  Rx power  Tx power  OLT Rx ONT  Temperature  Voltage  Current  Distance
+  ID   (dBm)     (dBm)     power(dBm)  (C)          (V)      (mA)     (m)
+  -----------------------------------------------------------------------------
+    0  -17.14    2.28      -19.83      47           3.200    13       2956    
+    3  -16.18    2.30      -20.32      44           3.320    8        2937    
+    4  -17.28    2.35      -21.49      41           3.320    9        2944    
+    5  -19.10    2.39      -21.14      51           3.360    10       2923    
+    6  -17.44    2.31      -21.74      49           3.360    9        2933    
+    7  -17.90    2.02      -20.92      47           3.360    8        2924    
+    8  -17.03    2.30      -19.96      41           3.340    10       2925    
+  -----------------------------------------------------------------------------
+
+OLT-DURZUA-2(config-if-gpon-0/16)#display ont profile 0 all
+  -----------------------------------------------------------------------------
+  In port 0/16/ 0                                                           
+  -----------------------------------------------------------------------------
+  ONT-ID    Line profile name                 Service profile name             
+  -----------------------------------------------------------------------------
+       0    SE_2V_100I_0OTT_MS                3_PLAY_EMP_SRV_PROF              
+       3    SE_SYM_0V_1000I_1000I_0OTT_MS     3_PLAY_EMP_SRV_PROF              
+       4    SE_SYM_0V_800I_800I_0OTT_MS       3_PLAY_EMP_SRV_PROF              
+       5    SE_SYM_0V_1000I_1000I_0OTT_MS     3_PLAY_EMP_SRV_PROF              
+       6    SE_SYM_0V_400I_400I_0OTT_MS       3_PLAY_EMP_SRV_PROF              
+       7    SE_SYM_0V_1000I_1000I_0OTT_MS     3_PLAY_EMP_SRV_PROF              
+       8    SE_SYM_2V_1000I_1000I_6OTT_MS     3_PLAY_EMP_SRV_PROF              
+  -----------------------------------------------------------------------------
+
+OLT-DURZUA-2(config-if-gpon-0/16)#quit
+
+OLT-DURZUA-2(config)#Array
+(
+    [0] => Trying 10.99.24.66...
+    [1] => 
+    [2] => Connected to 10.99.24.66.
+    [3] => 
+    [4] => Escape character is ']'.
+    [5] => 
+    [6] => 
+    [7] => 
+    [8] => 
+    [9] =>   Huawei Integrated Access Software (MA5600T).
+    [10] =>   Copyright(C) Huawei Technologies Co., Ltd. 2002-2018. All rights reserved.
+    [11] => 
+    [12] =>   -----------------------------------------------------------------------------
+    [13] =>   User last login information:
+    [14] =>   -----------------------------------------------------------------------------
+    [15] =>   Access Type : Telnet 
+    [16] =>   IP-Address  : 192.168.66.126
+    [17] =>   Login  Time : 2025-04-23 13:14:09-03:00
+    [18] =>   Logout Time : 2025-04-23 13:14:09-03:00
+    [19] =>   -----------------------------------------------------------------------------
+    [20] => 
+    [21] => enable
+    [22] => 
+    [23] => config
+    [24] => 
+    [25] => interface gpon 0/16
+    [26] => 
+    [27] => display ont info summary 0
+    [28] =>   Command is being executed. Please wait
+    [29] =>   ------------------------------------------------------------------------------
+    [30] =>   In port 0/16/0, the total of ONTs are: 7, online: 7
+    [31] =>   ------------------------------------------------------------------------------
+    [32] =>   ONT  Run     Last                Last                Last                   
+    [33] =>   ID   State   UpTime              DownTime            DownCause
+    [34] =>   ------------------------------------------------------------------------------
+    [35] =>   0    online  2025-03-17 01:27:27 2025-03-17 01:26:33 reset                    
+    [36] =>   3    online  2025-04-17 19:12:09 2025-04-17 19:03:13 dying-gasp               
+    [37] =>   4    online  2025-04-21 10:00:39 2025-04-21 09:23:30 dying-gasp               
+    [38] =>   5    online  2025-03-17 01:27:15 2025-03-17 01:26:35 reset                    
+    [39] =>   6    online  2025-03-17 01:27:35 2025-03-17 01:26:36 reset                    
+    [40] =>   7    online  2025-03-12 08:52:52 2025-03-12 08:51:53 reset                    
+    [41] =>   8    online  2025-03-17 01:27:16 2025-03-17 01:26:35 reset                    
+    [42] =>   ------------------------------------------------------------------------------
+    [43] =>   ONT        SN        Type          Distance Rx/Tx power  Description
+    [44] =>   ID                                    (m)      (dBm)
+    [45] =>   ------------------------------------------------------------------------------
+    [46] =>   0   48575443BAC1F19A 245Q             2956  -17.12/2.35  10000388689          
+    [47] =>   3   4857544373F077AD HG8145X6         2937  -16.18/2.22  10000668332          
+    [48] =>   4   485754438DB984A8 HG8145X6         2944  -17.21/2.31  10000613269          
+    [49] =>   5   485754430D71D5A6 HG8245W5         2923  -19.10/2.23  10000408291          
+    [50] =>   6   4857544373F1FCAD HG8145X6         2933  -17.44/2.28  10000408467          
+    [51] =>   7   48575443684D98AE HG8145X6         2924  -17.90/1.94  10000684536          
+    [52] =>   8   485754431CA795A4 HG8245W5         2925  -16.99/2.30  10000579748          
+    [53] =>   ------------------------------------------------------------------------------
+    [54] =>   
+    [55] => 
+    [56] => display ont optical-info 0 all
+    [57] =>   -----------------------------------------------------------------------------
+    [58] =>   ONT  Rx power  Tx power  OLT Rx ONT  Temperature  Voltage  Current  Distance
+    [59] =>   ID   (dBm)     (dBm)     power(dBm)  (C)          (V)      (mA)     (m)
+    [60] =>   -----------------------------------------------------------------------------
+    [61] =>     0  -17.14    2.28      -19.83      47           3.200    13       2956    
+    [62] =>     3  -16.18    2.30      -20.32      44           3.320    8        2937    
+    [63] =>     4  -17.28    2.35      -21.49      41           3.320    9        2944    
+    [64] =>     5  -19.10    2.39      -21.14      51           3.360    10       2923    
+    [65] =>     6  -17.44    2.31      -21.74      49           3.360    9        2933    
+    [66] =>     7  -17.90    2.02      -20.92      47           3.360    8        2924    
+    [67] =>     8  -17.03    2.30      -19.96      41           3.340    10       2925    
+    [68] =>   -----------------------------------------------------------------------------
+    [69] => 
+    [70] => display ont profile 0 all
+    [71] =>   -----------------------------------------------------------------------------
+    [72] =>   In port 0/16/ 0                                                           
+    [73] =>   -----------------------------------------------------------------------------
+    [74] =>   ONT-ID    Line profile name                 Service profile name             
+    [75] =>   -----------------------------------------------------------------------------
+    [76] =>        0    SE_2V_100I_0OTT_MS                3_PLAY_EMP_SRV_PROF              
+    [77] =>        3    SE_SYM_0V_1000I_1000I_0OTT_MS     3_PLAY_EMP_SRV_PROF              
+    [78] =>        4    SE_SYM_0V_800I_800I_0OTT_MS       3_PLAY_EMP_SRV_PROF              
+    [79] =>        5    SE_SYM_0V_1000I_1000I_0OTT_MS     3_PLAY_EMP_SRV_PROF              
+    [80] =>        6    SE_SYM_0V_400I_400I_0OTT_MS       3_PLAY_EMP_SRV_PROF              
+    [81] =>        7    SE_SYM_0V_1000I_1000I_0OTT_MS     3_PLAY_EMP_SRV_PROF              
+    [82] =>        8    SE_SYM_2V_1000I_1000I_6OTT_MS     3_PLAY_EMP_SRV_PROF              
+    [83] =>   -----------------------------------------------------------------------------
+    [84] => 
+    [85] => quit
+    [86] => 
+    [87] => 
+)
+llaves: 
+Array
+(
+    [0] => 25
+)
+
+---------------------------------
+**Port: 0/16/0**
+INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '0', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000388689', '10000388689', '48575443BAC1F19A(HWTCBAC1F19A)', '-19.83', '2.28', '-17.14', '3.200', '47', '2025-03-17 01:27:27', '2025-03-17 01:26:33', '2956', 'SE_2V_100I_0OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '3', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000668332', '10000668332', '4857544373F077AD(HWTC73F077AD)', '-20.32', '2.30', '-16.18', '3.320', '44', '2025-04-17 19:12:09', '2025-04-17 19:03:13', '2937', 'SE_SYM_0V_1000I_1000I_0OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '4', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000613269', '10000613269', '485754438DB984A8(HWTC8DB984A8)', '-21.49', '2.35', '-17.28', '3.320', '41', '2025-04-21 10:00:39', '2025-04-21 09:23:30', '2944', 'SE_SYM_0V_800I_800I_0OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '5', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000408291', '10000408291', '485754430D71D5A6(HWTC0D71D5A6)', '-21.14', '2.39', '-19.10', '3.360', '51', '2025-03-17 01:27:15', '2025-03-17 01:26:35', '2923', 'SE_SYM_0V_1000I_1000I_0OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '6', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000408467', '10000408467', '4857544373F1FCAD(HWTC73F1FCAD)', '-21.74', '2.31', '-17.44', '3.360', '49', '2025-03-17 01:27:35', '2025-03-17 01:26:36', '2933', 'SE_SYM_0V_400I_400I_0OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '7', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000684536', '10000684536', '48575443684D98AE(HWTC684D98AE)', '-20.92', '2.02', '-17.90', '3.360', '47', '2025-03-12 08:52:52', '2025-03-12 08:51:53', '2924', 'SE_SYM_0V_1000I_1000I_0OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());INSERT INTO Aden.OLT_INFORMACION_ONT_DETALLE_COMPLETO
+                (equipo, ip, frame_id, slot_id, port_id, onu_id, estado, region, comuna, onu_name, onu_alias, sn_mac, olt_rx_onu, tx_optical_power, rx_optical_power, voltaje, temperature, last_up_time, last_down_time, distancia, line_profile_name, service_profile_name, fecha_registo)
+                VALUES('OLT-DURZUA-2', '10.99.24.66', '0', '16', '0', '8', 'online', 'METROPOLITANA SANTIAGO', 'PROVIDENCIA', '10000579748', '10000579748', '485754431CA795A4(HWTC1CA795A4)', '-19.96', '2.30', '-17.03', '3.340', '41', '2025-03-17 01:27:16', '2025-03-17 01:26:35', '2925', 'SE_SYM_2V_1000I_1000I_6OTT_MS', '3_PLAY_EMP_SRV_PROF', NOW());Hora de inicio: 13:13:59
+Hora de fin: 13:14:16
+Diferencia: 00:00:17
