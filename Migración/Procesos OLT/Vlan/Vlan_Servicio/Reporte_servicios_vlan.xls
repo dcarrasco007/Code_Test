@@ -1,0 +1,30 @@
+<table align='center' id='tblvlan' class ='table table-bordered table-striped' border='1'>
+            <thead class = 'bg-primary'><tr>
+            <th bgcolor='#0566FC'><center>EQUIPO</center></th>
+            <th bgcolor='#0566FC'><center>IP </center></th>
+            <th bgcolor='#0566FC' class='filter-select filter-onlyAvail'><center>VLAN</center></th>
+            <th bgcolor='#0566FC' ><center>TOTAL CLIENTES</center></th>
+            </tr></thead><tr>
+                                <td><center>OLT-ANFIONMUNOZ-1</center></td>
+                                <td><center>10.99.18.4</center></td>
+                                <td><center>Vlan Internet</center></td>
+                                <td><center>30</center></td>
+                                </tr>
+                                <tr>
+                                <td><center>OLT-ANFIONMUNOZ-1</center></td>
+                                <td><center>10.99.18.4</center></td>
+                                <td><center>Vlan TV</center></td>
+                                <td><center>0</center></td>
+                                </tr>
+                                <tr>
+                                <td><center>OLT-ANFIONMUNOZ-1</center></td>
+                                <td><center>10.99.18.4</center></td>
+                                <td><center>Vlan Voz</center></td>
+                                <td><center>20</center></td>
+                                </tr>
+                                <tr>
+                                <td><center>OLT-ANFIONMUNOZ-1</center></td>
+                                <td><center>10.99.18.4</center></td>
+                                <td><center>Vlan Gesti&oacute;n</center></td>
+                                <td><center>0</center></td>
+                                </tr>
