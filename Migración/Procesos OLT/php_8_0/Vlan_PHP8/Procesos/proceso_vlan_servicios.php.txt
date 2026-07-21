@@ -1,0 +1,24 @@
+========================================================================
+ Procesos/proceso_vlan_servicios.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: por cada VLAN de OLT_VLAN_SERVICIOS hace telnet ("display traffic vlan")
+e inserta tráfico en OLT_VLAN_TRAFICO y en la tabla anual OLT_VLAN_TRAFICO_<year>.
+2 funciones telnet (estado_equipo con $b ya inicializada, estado_equipo2).
+
+CAMBIOS APLICADOS (obligatorios: fatales en PHP 8):
+1) eregi_replace() -> preg_replace()   (1 ocurrencia, L46)
+2) require_once __DIR__ . '/../expect_compat.php'
+3) Bloque define de constantes bareword (scope global)
+4) fwrite($stream, ...)          -> expect_send($stream, ...)   (15)
+5) ini_set("expect.timeout", n)  -> expect_set_timeout(n)       (2)
+6) fclose($stream)               -> expect_close($stream)       (2: L243,316)
+
+CAMBIOS APLICADOS (limpieza):
+7) $b = 0 tras cada expect_popen (redundante en estado_equipo que ya lo tenía;
+   inofensivo). Este archivo NO usa $ERROR2.
+
+NO SE MODIFICÓ: lógica telnet, SQL, ping_ip(), include
+'/u01/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

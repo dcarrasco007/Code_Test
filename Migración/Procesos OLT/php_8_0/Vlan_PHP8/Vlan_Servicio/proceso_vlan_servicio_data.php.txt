@@ -1,0 +1,26 @@
+========================================================================
+ Vlan_Servicio/proceso_vlan_servicio_data.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: worker lanzado por nohup desde proceso_servicios_vlan.php. Recibe $argv:
+ip, server. Hace telnet a UNA OLT y guarda tráfico de servicios por VLAN.
+1 función telnet (estado_equipo). Define también verifica_equipo() y ping_ip().
+
+CAMBIOS APLICADOS (obligatorios: fatales en PHP 8):
+1) eregi_replace() -> preg_replace()   (2 ocurrencias: L37, L81)
+2) require_once __DIR__ . '/../expect_compat.php'
+3) Bloque define de constantes bareword (scope global)
+4) fwrite($stream, ...)          -> expect_send($stream, ...)   (11)
+5) ini_set("expect.timeout", n)  -> expect_set_timeout(n)       (1)
+
+CAMBIOS APLICADOS (limpieza: solo Warnings):
+6) $b = 0 tras el expect_popen (estado_equipo lo usaba sin definir)
+7) $ERROR2 = 0 al inicio
+
+NOTA: este archivo NO usa fclose($stream) (el stream se maneja solo con
+expect_send). No hubo conversión a expect_close.
+
+NO SE MODIFICÓ: lógica telnet, SQL, ping_ip(), include
+'/u01/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

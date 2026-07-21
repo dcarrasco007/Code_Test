@@ -1,0 +1,141 @@
+========================================================================
+ MIGRACIÓN DE PROCESOS VLAN  ·  PHP 5.3  ->  PHP 8.0
+========================================================================
+Fecha de migración : 2026-07-21
+Carpeta original   : .../Procesos OLT/Vlan   (código PHP 5.3 sin migrar)
+Carpeta migrada    : .../Procesos OLT/php_8_0/Vlan_PHP8   (esta carpeta)
+
+Se replicó 1:1 la estructura (Procesos/ + Vlan_Servicio/). Los archivos
+originales NO fueron modificados. Misma estrategia que ONT y Uplink.
+
+------------------------------------------------------------------------
+DECISIONES (idénticas a ONT/Uplink)
+------------------------------------------------------------------------
+1. Opción A: réplica 1:1, cambios mínimos, funcionalidad idéntica.
+2. Rutas absolutas de producción (include, nohup) -> IDÉNTICAS. No se tocó
+   ninguna ruta /u01/crontab127/... ni /var/www/...
+3. Versión objetivo: PHP 8.0 estricto. NO se agregó mysqli_report().
+4. Se reutilizó expect_compat.php (el shim validado de Uplink/ONT, con
+   expect_close incluido).
+
+------------------------------------------------------------------------
+ARCHIVOS Y CAMBIOS
+------------------------------------------------------------------------
+CON TELNET (4 - requieren expect_compat.php):
+  Procesos/cantidad_vlan.php
+  Procesos/cantidad_vlan_data.php          (worker $argv: ip, server, region)
+  Procesos/proceso_vlan_servicios.php
+  Vlan_Servicio/proceso_vlan_servicio_data.php  (worker $argv: ip, server)
+
+SIN TELNET (7 - compatibles, copiados sin cambios de fondo):
+  Procesos/proceso_cantidad_vlan.php        (dispatcher nohup)
+  Procesos/proceso_cantidad_vlan_repaso.php (dispatcher nohup)
+  Procesos/proceso_carga_vlan.php           (SQL/batch)
+  Vlan_Servicio/funciones.php               (helper: vlanInternet/Voz/TV/Gestion)
+  Vlan_Servicio/index_servicios.php         (UI)
+  Vlan_Servicio/proceso_servicios_vlan.php  (dispatcher nohup)
+  Vlan_Servicio/tabla_vlan_servicio.php     (UI/SQL -> HTML/.xls)
+
+------------------------------------------------------------------------
+QUÉ ROMPÍA EN PHP 8.0 Y CÓMO SE RESOLVIÓ (solo en los 4 telnet)
+------------------------------------------------------------------------
+A) eregi_replace()  [FATAL]  9 ocurrencias
+   @eregi_replace("[\n|\r|\n\r]", '', $linea) -> preg_replace('/[\n|\r|\n\r]/', '', $linea)
+
+B) Extensión "expect" ausente  [FATAL]
+   expect_popen/expect_expectl no existen en PHP 8. Se reutilizó
+   expect_compat.php (telnet por socket, PHP puro). Cambios mecánicos:
+   - require_once __DIR__ . '/../expect_compat.php';  (al inicio; los 4 están
+     en subcarpeta Procesos/ o Vlan_Servicio/, por eso '/../')
+   - fwrite($stream, ...)          -> expect_send($stream, ...)
+   - ini_set("expect.timeout", n)  -> expect_set_timeout(n)
+   - fclose($stream)               -> expect_close($stream)   (ver nota D)
+
+C) Constantes "bareword" sin comillas  [FATAL]
+   USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2, SALIR, ESPACIO,
+   ESPACIO2 (+ EXP_*). En PHP 8 una constante no definida es error fatal.
+   Se define un bloque al inicio de cada archivo telnet (scope global) con
+   su propio nombre como valor. (Se usa el bloque completo de ONT; las
+   constantes extra como ACEPTAR/LOGOUT no se usan aquí pero son inofensivas.)
+
+D) fclose($stream) sobre la conexión telnet  [FATAL en PHP 8]
+   Con la extensión original $stream era un recurso; el shim devuelve un
+   objeto -> fclose() lanzaría TypeError. Se convirtió a expect_close() SOLO
+   en los 2 archivos que lo usan sobre telnet:
+     Procesos/cantidad_vlan.php (2)  y  Procesos/proceso_vlan_servicios.php (2)
+   OJO: Vlan_Servicio/tabla_vlan_servicio.php tiene fclose($fp) sobre el
+   archivo .xls (fopen local) -> NO es telnet, se dejó INTACTO.
+
+E) Variables sin inicializar ($b, $ERROR2)  [Warning]
+   Se inicializan a 0 (evita llenar los .log). $b tras cada expect_popen;
+   $ERROR2 al inicio (donde se usa). Comportamiento idéntico.
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ (a propósito)
+------------------------------------------------------------------------
+- Lógica de telnet (switch/case de estado_equipo*) y comandos enviados.
+- SQL, tablas, columnas, ping_ip().
+- include / nohup y TODAS las rutas absolutas de producción.
+- Los 7 archivos no-telnet (solo se copiaron).
+- fclose($fp) del .xls en tabla_vlan_servicio.php.
+- Warnings menores preexistentes: $data (proceso_carga_vlan.php),
+  $tabla_vlan (tabla_vlan_servicio.php), short tags <? (index_servicios.php),
+  etiqueta </tabla> (typo en tabla_vlan_servicio.php). No son fatales.
+
+------------------------------------------------------------------------
+REQUISITOS DEL ENTORNO (igual que ONT/Uplink)
+------------------------------------------------------------------------
+- Extensión mysqli habilitada.
+- Conectividad de red a las OLT en puerto 23/tcp (telnet).
+- NO se necesita la extensión expect ni el binario telnet (los reemplaza
+  expect_compat.php vía fsockopen).
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA
+------------------------------------------------------------------------
+- php -l: 12 archivos (11 + expect_compat) "No syntax errors".
+- 0 archivos vacíos; tamaños >= original.
+- Runtime: el shim carga y quedan disponibles expect_popen/expect_expectl/
+  expect_send/expect_set_timeout/expect_close y TODAS las constantes usadas
+  (0 faltantes); expect_close() sobre una conexión no lanza TypeError.
+- Sin residuos: 0 fwrite($stream / fclose($stream) / eregi_replace(
+  / ini_set("expect.timeout" en los 4 telnet.
+- Confirmado: fclose($fp) del .xls intacto.
+
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-21) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+Se ejecutó la misma batería de revisión que detectó bugs en ONT. En VLAN
+NO se encontró ningún problema (los errores de ONT se evitaron aplicando
+sus lecciones desde el inicio). Chequeos realizados:
+
+ 1. Archivos vacíos: 0 (se usó str_replace + guarda anti-vaciado).
+ 2. require_once __DIR__; roto: NINGUNO. Los 4 telnet usan la ruta correcta
+    require_once __DIR__ . '/../expect_compat.php' (están en subcarpeta).
+ 3. Funciones eliminadas (eregi/ereg/split/each/create_function/money_format/
+    mysql_*) en TODA la carpeta: NINGUNA.
+ 4. Acceso con llaves $var{...}: NINGUNO.
+ 5. Operaciones crudas sobre $stream (fclose/feof/fgets/fread/...): NINGUNA
+    en los procesos (todo va por expect_send/expect_expectl/expect_close).
+ 6. Bloque define en scope GLOBAL (antes de las funciones) en los 4: OK.
+ 7. Constantes usadas vs definidas (chequeo robusto de barewords): 0 faltantes.
+ 8. fclose($fp) del .xls en tabla_vlan_servicio.php: INTACTO.
+ 9. Los 7 archivos no-telnet: byte-idénticos al original (sin cambios).
+10. Lint (php -l): 12/12 "No syntax errors".
+11. Runtime en PHP 8: al ejecutar un telnet, el require carga el shim y el
+    define corre sin error; el único fatal es en 'new mysqli' (línea del DB),
+    posterior a nuestro código y solo porque el include de producción no
+    existe en el entorno local. NO aparece "undefined function/constant".
+
+CONCLUSIÓN: apto para pasar a producción, sujeto a la prueba de campo abajo.
+
+------------------------------------------------------------------------
+PRÓXIMOS PASOS (en operación)
+------------------------------------------------------------------------
+1. Correr UN worker a mano contra una OLT real, p. ej.:
+     php -f Procesos/cantidad_vlan_data.php <ip> <server> <region>
+   y revisar el .log en Procesos/logs/ (o Vlan_Servicio/logs/).
+2. Si el prompt o los tiempos no calzan: ajustar expect_compat.php
+   (EXPECT_COMPAT_EOL o los timeouts) y reintentar.
+3. Validado un proceso, migrar los cron de a uno.
+========================================================================

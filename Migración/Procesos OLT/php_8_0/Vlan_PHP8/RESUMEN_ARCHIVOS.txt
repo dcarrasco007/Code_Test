@@ -1,0 +1,31 @@
+========================================================================
+ RESUMEN RÁPIDO: Tipo de cambios por archivo (VLAN)
+========================================================================
+
+ARCHIVOS CON TELNET/EXPECT (4 - requieren expect_compat.php):
+ OK Procesos/cantidad_vlan.php                    - 3 eregi + expect + 2 fclose + $b + $ERROR2
+ OK Procesos/cantidad_vlan_data.php               - 3 eregi + expect + $b + $ERROR2 (sin fclose)
+ OK Procesos/proceso_vlan_servicios.php           - 1 eregi + expect + 2 fclose
+ OK Vlan_Servicio/proceso_vlan_servicio_data.php  - 2 eregi + expect + $b + $ERROR2 (sin fclose)
+
+ARCHIVOS SIN TELNET (copiados sin cambios de fondo):
+ OK Procesos/proceso_cantidad_vlan.php            - dispatcher nohup
+ OK Procesos/proceso_cantidad_vlan_repaso.php     - dispatcher nohup
+ OK Procesos/proceso_carga_vlan.php               - SQL/batch (warning menor: $data)
+ OK Vlan_Servicio/funciones.php                   - helper (4 funciones vlan)
+ OK Vlan_Servicio/index_servicios.php             - UI (HTML/form)
+ OK Vlan_Servicio/proceso_servicios_vlan.php      - dispatcher nohup
+ OK Vlan_Servicio/tabla_vlan_servicio.php         - UI/SQL->HTML/.xls (fclose($fp) del .xls INTACTO)
+
+SOPORTE:
+ OK expect_compat.php                             - shim (con expect_close), copiado de ONT_PHP8
+
+NO SE COPIÓ: Vlan_Servicio/Reporte_servicios_vlan.xls (output generado)
+
+TOTAL: 12 archivos .php -> 12/12 lint OK
+
+PRÓXIMOS PASOS:
+1. Probar UN worker contra OLT real y revisar el .log.
+2. Si timeouts/prompts no calzan: ajustar expect_compat.php.
+3. Migrar cron de a uno.
+========================================================================

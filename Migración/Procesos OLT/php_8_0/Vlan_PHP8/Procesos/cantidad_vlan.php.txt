@@ -1,0 +1,25 @@
+========================================================================
+ Procesos/cantidad_vlan.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: recorre OLT_SERVER, hace telnet a cada OLT para contar VLANs, y hace
+TRUNCATE+INSERT sobre OLT_CANTIDAD_VLAN. 2 funciones telnet (estado_equipo,
+estado_equipo2).
+
+CAMBIOS APLICADOS (obligatorios: fatales en PHP 8):
+1) eregi_replace() -> preg_replace()   (3 ocurrencias)
+2) require_once __DIR__ . '/../expect_compat.php'  (reemplazo del PECL expect)
+3) Bloque define de constantes bareword (scope global, al inicio):
+   USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2, ESPACIO, ESPACIO2 + EXP_*
+4) fwrite($stream, ...)          -> expect_send($stream, ...)   (19)
+5) ini_set("expect.timeout", n)  -> expect_set_timeout(n)       (2)
+6) fclose($stream)               -> expect_close($stream)       (2: L351,430)
+
+CAMBIOS APLICADOS (limpieza: solo Warnings):
+7) $b = 0 tras cada expect_popen (2 funciones)
+8) $ERROR2 = 0 al inicio (se usaba con ++ sin definir; es contador "muerto")
+
+NO SE MODIFICÓ: lógica telnet, SQL, ping_ip(), include
+'/u01/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

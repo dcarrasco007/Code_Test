@@ -1,0 +1,26 @@
+========================================================================
+ Procesos/cantidad_vlan_data.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: worker lanzado por nohup desde los dispatchers (proceso_cantidad_vlan*).
+Recibe $argv: ip($1), server($2), region($3). Hace telnet a UNA OLT, cuenta
+VLANs e inserta en OLT_CANTIDAD_VLAN. 2 funciones telnet.
+
+CAMBIOS APLICADOS (obligatorios: fatales en PHP 8):
+1) eregi_replace() -> preg_replace()   (3 ocurrencias)
+2) require_once __DIR__ . '/../expect_compat.php'
+3) Bloque define de constantes bareword (scope global; incluye SALIR)
+4) fwrite($stream, ...)          -> expect_send($stream, ...)   (22)
+5) ini_set("expect.timeout", n)  -> expect_set_timeout(n)       (2)
+
+CAMBIOS APLICADOS (limpieza: solo Warnings):
+6) $b = 0 tras cada expect_popen (2 funciones)
+7) $ERROR2 = 0 al inicio
+
+NOTA: este archivo NO usa fclose($stream) (sale por el case SALIR con return),
+por eso no hubo conversión a expect_close.
+
+NO SE MODIFICÓ: lógica telnet, SQL, ping_ip(), include
+'/u01/crontab127/conexion/conexion_db.php'.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================
