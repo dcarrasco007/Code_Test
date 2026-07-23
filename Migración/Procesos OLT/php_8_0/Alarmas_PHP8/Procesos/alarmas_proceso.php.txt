@@ -1,0 +1,23 @@
+========================================================================
+ Procesos/alarmas_proceso.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: dispatcher (padre) del proceso general de alarmas. Consulta OLTs y lanza
+alarmas_proceso_exped.php con nohup por cada una. ADEMÁS define 2 funciones
+telnet (estado_equipo/estado_equipo2) que NO se invocan en este archivo
+(código muerto heredado). Se trata como TELNET por seguridad/consistencia.
+
+CAMBIOS NUEVOS (servidor):
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+ - nohup/logs -> /var/www/procesos/php/Alarmas_PHP8/  (2 rutas en la línea nohup)
+
+CAMBIOS PHP 8 (en las funciones telnet, por si se llegaran a usar):
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define de constantes.
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (20)
+ - ini_set("expect.timeout", n) -> expect_set_timeout(n)  (2)
+ - fclose($stream) -> expect_close($stream)  (2)
+ - $b = 0 tras cada expect_popen (2)
+ - NO tiene eregi_replace.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

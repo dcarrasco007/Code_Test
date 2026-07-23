@@ -1,0 +1,24 @@
+========================================================================
+ Procesos/proceso_critical_exped.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: worker lanzado por nohup desde alarmas_proceso_critical.php. Recibe $argv
+(ip, server, tipo, modelo, lote). Telnet a UNA OLT (estado_equipo/2) para
+alarmas críticas. Usa la constante SALIR en el switch.
+
+CAMBIOS NUEVOS (servidor):
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+   (OJO: el original de ESTE archivo apuntaba a /var/www/html/OLT/crontab127/...,
+    distinto de los demás; también se unificó a la nueva ruta.)
+
+CAMBIOS PHP 8 (obligatorios/limpieza):
+ - eregi_replace() -> preg_replace()   (1)
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define (scope global).
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (27)
+ - ini_set("expect.timeout", n) -> expect_set_timeout(n)  (2)
+ - fclose($stream) -> expect_close($stream)  (2: 1 activo + 1 comentado)
+ - $b = 0 tras cada expect_popen (2)
+
+NO SE MODIFICÓ: lógica telnet, SQL. (No tiene ping_ip ni nohup: es worker puro.)
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

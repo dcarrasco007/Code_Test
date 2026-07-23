@@ -1,0 +1,115 @@
+========================================================================
+ MIGRACIÓN DE PROCESOS ALARMAS  ·  PHP 5.3  ->  PHP 8.0
+========================================================================
+Fecha de migración : 2026-07-23
+Carpeta original   : .../Procesos OLT/Alarmas   (código PHP 5.3 sin migrar)
+Carpeta migrada    : .../Procesos OLT/php_8_0/Alarmas_PHP8   (esta carpeta)
+
+Réplica 1:1 (subcarpeta Procesos/ + logs/). Misma estrategia que ONT/Uplink/
+Vlan, MÁS tres cambios nuevos de servidor (ver abajo). Originales NO tocados.
+
+------------------------------------------------------------------------
+CAMBIOS NUEVOS DE ESTA MIGRACIÓN (pedidos por el usuario)
+------------------------------------------------------------------------
+El servidor se reorganizó a /var/www/procesos/php/. Por eso, ADEMÁS de la
+migración normal a PHP 8, en los 8 archivos se aplicó:
+
+ 1. date_default_timezone_set('America/Santiago');  al INICIO de cada .php
+    (línea 2, justo después de <?php).
+
+ 2. Include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+    (antes: /u01/crontab127/conexion/... en 7 archivos, y
+     /var/www/html/OLT/crontab127/conexion/... en proceso_critical_exped.php).
+    Solo se cambió el include ACTIVO; los comentados quedaron igual.
+
+ 3. Rutas nohup/exec y de logs -> /var/www/procesos/php/Alarmas_PHP8/
+    (antes: /u01/crontab127/OLT/Alarmas/). Afecta a los 4 dispatchers.
+    Los logs quedan en /var/www/procesos/php/Alarmas_PHP8/logs/ (y subcarpetas
+    Alarmas_general/, Alarmas_detalle/, log_los_ont/).
+
+DECISIÓN: estos cambios se aplicaron SOLO a Alarmas. ONT_PHP8/Vlan_PHP8/
+Uplink_PHP8 NO se tocaron (siguen con su include /u01/... o /var/www/html/...).
+
+------------------------------------------------------------------------
+ARCHIVOS
+------------------------------------------------------------------------
+CON TELNET (5 - requieren expect_compat.php):
+  Procesos/alarmas_proceso.php               (dispatcher + funcs telnet que NO
+                                              se llaman; tratado como telnet
+                                              por seguridad/consistencia)
+  Procesos/alarmas_proceso_exped.php         (worker)
+  Procesos/alarmas_proceso_detalle_exped.php (worker)
+  Procesos/proceso_critical_exped.php        (worker)
+  Procesos/proceso_los_ont_exped.php         (worker)
+
+SIN TELNET (3 dispatchers - solo cambios nuevos, sin shim):
+  Procesos/alarmas_proceso_critical.php
+  Procesos/alarmas_proceso_detalle.php
+  Procesos/alarmas_proceso_ont_los.php       (warning menor: $y indefinida L~40)
+
+------------------------------------------------------------------------
+QUÉ ROMPÍA EN PHP 8.0 Y CÓMO SE RESOLVIÓ (solo en los 5 telnet)
+------------------------------------------------------------------------
+A) eregi_replace()  [FATAL]  (4 ocurrencias, 1 por worker; alarmas_proceso no tiene)
+   @eregi_replace("[\n|\r|\n\r]", '', $linea) -> preg_replace('/[\n|\r|\n\r]/', '', $linea)
+
+B) Extensión "expect" ausente  [FATAL]
+   Se reutilizó expect_compat.php (telnet por socket, PHP puro). Cambios:
+   - require_once __DIR__ . '/../expect_compat.php';  (están en Procesos/)
+   - fwrite($stream, ...)          -> expect_send($stream, ...)
+   - ini_set("expect.timeout", n)  -> expect_set_timeout(n)
+   - fclose($stream)               -> expect_close($stream)   (todos son telnet;
+     se convirtieron también los que estaban comentados, inofensivo)
+
+C) Constantes "bareword" sin comillas  [FATAL]
+   USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2, SALIR, ESPACIO,
+   ESPACIO2, ESPACIO3 (+ EXP_*). Se define un bloque al inicio de cada archivo
+   telnet (scope global). Se usa el bloque completo de ONT (superset).
+
+D) Variable $b sin inicializar  [Warning]
+   Se agregó $b = 0 tras cada expect_popen. Comportamiento idéntico.
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ (a propósito)
+------------------------------------------------------------------------
+- Lógica de telnet (switch/case de estado_equipo*) y comandos enviados.
+- SQL, tablas, columnas, ping_ip().
+- Los 3 dispatchers no-telnet (salvo date_default + include + nohup).
+- Warning menor preexistente: $y indefinida en alarmas_proceso_ont_los.php.
+
+------------------------------------------------------------------------
+REQUISITOS DEL ENTORNO
+------------------------------------------------------------------------
+- Extensión mysqli habilitada.
+- Conectividad a las OLT por telnet en puerto 23/tcp.
+- NO se necesita la extensión expect ni el binario telnet (los reemplaza
+  expect_compat.php vía fsockopen).
+- El archivo /var/www/procesos/php/conexion/conexion_db.php debe existir.
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA
+------------------------------------------------------------------------
+- php -l: 9 archivos (8 + expect_compat) "No syntax errors".
+- 0 archivos vacíos; tamaños >= original (str_replace + guarda anti-vaciado).
+- Runtime PHP 8: al ejecutar un worker, corre date_default + require(shim) +
+  define; imprime "Hora inicio" con hora local; el único fallo es el include
+  de /var/www/procesos/php/conexion/... porque no existe en el entorno local.
+  NO aparece "undefined function/constant".
+- Constantes usadas vs definidas: 0 faltantes. define en scope global.
+- Sin residuos: 0 fwrite($stream / fclose($stream) / eregi_replace(
+  / ini_set("expect.timeout" en los 5 telnet.
+- Cambios nuevos confirmados: date_default en los 8 (línea 2); include nuevo
+  en los 8 (0 restos viejos); nohup nuevo en los 4 dispatchers (0 restos /u01).
+- 0 operaciones crudas sobre $stream (todo por expect_send/expectl/close).
+
+------------------------------------------------------------------------
+PRÓXIMOS PASOS (en operación)
+------------------------------------------------------------------------
+1. Verificar que exista /var/www/procesos/php/conexion/conexion_db.php y que
+   la carpeta esté desplegada como /var/www/procesos/php/Alarmas_PHP8/.
+2. Correr UN worker a mano, p. ej.:
+     php -f Procesos/alarmas_proceso_exped.php <ip> <server> <region> <lote>
+   y revisar el .log en logs/Alarmas_general/ (o el que corresponda).
+3. Si el prompt/tiempos de alguna OLT difieren: ajustar expect_compat.php.
+4. Validado, activar los cron.
+========================================================================

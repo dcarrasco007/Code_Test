@@ -1,0 +1,22 @@
+========================================================================
+ Procesos/alarmas_proceso_exped.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: worker lanzado por nohup desde alarmas_proceso.php. Recibe $argv (ip,
+server, region, lote). Hace telnet a UNA OLT (2 funciones estado_equipo/2)
+y registra alarmas. Ping por shell_exec.
+
+CAMBIOS NUEVOS (servidor):
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+
+CAMBIOS PHP 8 (obligatorios/limpieza):
+ - eregi_replace() -> preg_replace()   (1)
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define (scope global).
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (20)
+ - ini_set("expect.timeout", n) -> expect_set_timeout(n)  (2)
+ - fclose($stream) -> expect_close($stream)  (2)
+ - $b = 0 tras cada expect_popen (2)
+
+NO SE MODIFICÓ: lógica telnet, SQL, ping_ip().
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

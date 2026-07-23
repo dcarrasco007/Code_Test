@@ -1,0 +1,32 @@
+========================================================================
+ RESUMEN RÁPIDO: cambios por archivo (ALARMAS)
+========================================================================
+Cambios comunes a los 8: date_default_timezone_set('America/Santiago') al
+inicio + include -> /var/www/procesos/php/conexion/conexion_db.php.
+
+CON TELNET (5 - requieren expect_compat.php):
+ OK alarmas_proceso.php              - dispatcher+funcs telnet(dead) | nohup(new) + shim + fclose(2) + $b
+ OK alarmas_proceso_exped.php        - worker  | eregi + shim + fclose(2) + $b
+ OK alarmas_proceso_detalle_exped.php- worker  | eregi + shim + fclose(3) + $b
+ OK proceso_critical_exped.php       - worker  | eregi + shim + fclose(2) + $b
+ OK proceso_los_ont_exped.php        - worker  | eregi + shim + $b (sin fclose)
+
+DISPATCHERS SIN TELNET (3 - solo date_default + include + nohup):
+ OK alarmas_proceso_critical.php     - nohup(new) x2
+ OK alarmas_proceso_detalle.php      - nohup(new)
+ OK alarmas_proceso_ont_los.php      - nohup(new) (warning menor: $y indefinida)
+
+SOPORTE:
+ OK expect_compat.php                - shim (con expect_close), copiado de ONT_PHP8
+
+LOGS (en la raíz de Alarmas_PHP8, según las rutas nohup):
+   logs/ , logs/Alarmas_general/ , logs/Alarmas_detalle/ , logs/log_los_ont/
+
+TOTAL: 9 archivos .php -> 9/9 lint OK
+
+RUTAS ACTUALIZADAS (solo Alarmas):
+ - Conexión: /var/www/procesos/php/conexion/conexion_db.php
+ - nohup/logs: /var/www/procesos/php/Alarmas_PHP8/...
+
+PRÓXIMOS PASOS: probar un worker contra OLT real y revisar el .log.
+========================================================================

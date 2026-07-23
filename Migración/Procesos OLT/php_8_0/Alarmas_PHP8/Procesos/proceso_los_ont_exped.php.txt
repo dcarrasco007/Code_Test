@@ -1,0 +1,22 @@
+========================================================================
+ Procesos/proceso_los_ont_exped.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: worker lanzado por nohup desde alarmas_proceso_ont_los.php. Recibe $argv
+(ip, server, tipo, modelo, lote). Telnet a UNA OLT (1 función estado_equipo)
+para alarmas de LOS de ONT. Usa la constante SALIR. Ping por shell_exec.
+
+CAMBIOS NUEVOS (servidor):
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+
+CAMBIOS PHP 8 (obligatorios/limpieza):
+ - eregi_replace() -> preg_replace()   (1)
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define (scope global).
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (11)
+ - ini_set("expect.timeout", n) -> expect_set_timeout(n)  (1)
+ - $b = 0 tras el expect_popen (1)
+ - NO usa fclose($stream) (la función envía 'quit' pero no cierra el stream).
+
+NO SE MODIFICÓ: lógica telnet, SQL, ping_ip().
+Verificación: php -l -> "No syntax errors detected".
+========================================================================
