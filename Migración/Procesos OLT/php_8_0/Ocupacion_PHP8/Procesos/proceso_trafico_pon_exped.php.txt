@@ -1,0 +1,34 @@
+========================================================================
+ Procesos/proceso_trafico_pon_exped.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: worker telnet lanzado por nohup desde Procesos/proceso_trafico_pon.php.
+Recibe $argv[1]=server, $argv[2]=ip. Consulta tráfico por puerta GPON e inserta
+en OLT_TRAFICOGPON. 1 función telnet (estado_equipo) + verifica_equipo()
+(código muerto) + ping_ip().
+
+CAMBIOS DE SERVIDOR:
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes /var/www/html/OLT/crontab127/conexion/...)
+
+CAMBIOS PHP 8:
+ - eregi_replace() -> preg_replace()   (2: una en el flujo principal y otra en
+   verifica_equipo(), que nunca se llama pero igual se corrigió)
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define (scope global)
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (19)
+ - ini_set("expect.timeout", 120) -> expect_set_timeout(120)   (1)
+   OJO: el timeout aquí es 120 seg (en Tarjetas/Alarmas era 30).
+ - $b = 0 tras el expect_popen (1)
+ - NO tiene fclose($stream): la función nunca cierra el stream (se apoyaba en
+   el die() final del script). No hubo conversión a expect_close.
+
+Constantes definidas: USER, PASSWORD, SALTO, SHELL, SHELL2, SHELL_CONFIG1,
+ESPACIO, ESPACIO2 (+ EXP_*). Se usa el superset de ONT.
+
+OBSERVACIONES (no corregidas, lógica preexistente):
+ - count($cantidadPuerta) / count($llaves) / count($data) pueden recibir null si
+   el equipo no responde -> TypeError en PHP 8. Vigilar en la primera corrida.
+ - $ups puede quedar indefinida si aparece "Down traffic" sin "Up traffic" previo.
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

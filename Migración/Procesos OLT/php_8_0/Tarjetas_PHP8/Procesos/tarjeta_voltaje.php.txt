@@ -1,0 +1,30 @@
+========================================================================
+ Procesos/tarjeta_voltaje.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: proceso telnet MONOLÍTICO: recorre todas las OLT de OLT_SERVER de forma
+secuencial (no usa nohup) y guarda voltaje/tarjetas. 2 funciones telnet
+(estado_equipo, estado_equipo2) + ping_ip().
+
+CAMBIOS DE SERVIDOR:
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes era RELATIVO: '../../../conexion/conexion_db.php' — el único del set)
+
+CAMBIOS PHP 8:
+ - eregi_replace() -> preg_replace()   (1)
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define (scope global)
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (21)
+ - ini_set("expect.timeout", 30) -> expect_set_timeout(30)   (2)
+ - fclose($stream) -> expect_close($stream)   (3)  <-- ÚNICO archivo de Tarjetas
+   que cerraba el stream; con el shim, fclose() sobre el objeto habría dado
+   TypeError.
+ - $b = 0 tras cada expect_popen (2)
+
+Constantes definidas: USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2,
+ESPACIO, ESPACIO2 (+ EXP_*). (Este archivo NO usa SALIR.)
+
+OBSERVACIONES (no corregidas): $tippp y $voltaje_f sin inicializar;
+explode(chr(13), $texto) cuando la función devuelve el int 2 (EXP_TIMEOUT).
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

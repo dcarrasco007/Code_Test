@@ -1,0 +1,25 @@
+========================================================================
+ RESUMEN RÁPIDO: cambios por archivo (TARJETAS)
+========================================================================
+Comunes a los 4 .php: date_default_timezone_set('America/Santiago') +
+include -> /var/www/procesos/php/conexion/conexion_db.php
+
+CON TELNET (3 - requieren expect_compat.php):
+ OK Procesos/tarjeta_voltaje.php         | eregi(1) + shim + fclose->expect_close(3) + $b(2)
+ OK Procesos/tarjeta_voltaje_exped.php   | eregi(1) + shim + $b(2)   (sin fclose)
+ OK Procesos/tarjeta_voltaje_repaso.php  | eregi(2) + shim + $b(2)   (sin fclose)
+
+SIN TELNET (1):
+ OK Procesos/tarjeta_voltaje_principal.php  dispatcher | nohup(new) x2
+
+SOPORTE:
+ OK expect_compat.php   (shim con expect_close, copiado de ONT_PHP8)
+
+LOGS: Procesos/logs/  (nohup: $ip.log)
+
+OJO MAYÚSCULAS: origen = "tarjetas", migrado = "Tarjetas_PHP8".
+El nohup apunta a /var/www/procesos/php/Tarjetas_PHP8/ -> desplegar con la
+T mayúscula exacta (Linux distingue mayúsculas).
+
+TOTAL: 5 .php -> 5/5 lint OK
+========================================================================

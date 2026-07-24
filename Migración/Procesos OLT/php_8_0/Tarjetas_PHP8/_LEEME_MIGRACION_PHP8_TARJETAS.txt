@@ -1,0 +1,106 @@
+========================================================================
+ MIGRACIÓN DE PROCESOS TARJETAS  ·  PHP 5.3  ->  PHP 8.0
+========================================================================
+Fecha de migración : 2026-07-24
+Carpeta original   : .../Procesos OLT/tarjetas   (minúscula en el origen)
+Carpeta migrada    : .../Procesos OLT/php_8_0/Tarjetas_PHP8   (esta carpeta)
+
+Réplica 1:1 (Procesos/ + logs). Misma receta que Alarmas, incluidas las
+convenciones de servidor nuevas. Los originales NO fueron modificados.
+
+IMPORTANTE (mayúsculas): la carpeta origen se llama "tarjetas" pero la migrada
+se llama "Tarjetas_PHP8" (decisión acordada, estilo Alarmas_PHP8). Linux es
+sensible a mayúsculas: al desplegar, la carpeta DEBE llamarse exactamente
+Tarjetas_PHP8, porque así quedó escrita la ruta del nohup.
+
+------------------------------------------------------------------------
+CONVENCIONES DE SERVIDOR APLICADAS (igual que Alarmas)
+------------------------------------------------------------------------
+ 1. date_default_timezone_set('America/Santiago');  al inicio de CADA .php.
+ 2. Include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+    En el origen convivían:
+      - /u01/crontab127/conexion/...        (3 archivos)
+      - ../../../conexion/conexion_db.php   (RELATIVO, en tarjeta_voltaje.php)
+    Ambas se unificaron a la ruta nueva. (En tarjeta_voltaje_exped.php el
+    include relativo estaba comentado; también quedó reescrito, sigue comentado
+    y es inofensivo.)
+ 3. nohup -> /var/www/procesos/php/Tarjetas_PHP8/
+    (antes /u01/crontab127/OLT/tarjetas/). Afecta a tarjeta_voltaje_principal.php:
+    script hijo y log (Procesos/logs/$ip.log).
+
+------------------------------------------------------------------------
+ARCHIVOS
+------------------------------------------------------------------------
+CON TELNET (3 - requieren expect_compat.php):
+  Procesos/tarjeta_voltaje.php          monolítico (recorre todas las OLT)
+  Procesos/tarjeta_voltaje_exped.php    worker ($argv: ip, server, region)
+  Procesos/tarjeta_voltaje_repaso.php   repaso/reintento de OLT sin datos
+
+SIN TELNET (1):
+  Procesos/tarjeta_voltaje_principal.php  dispatcher (nohup) - trunca tablas y
+                                          lanza un worker por IP
+
+LOGS: Procesos/logs/  (el nohup escribe Procesos/logs/$ip.log)
+
+------------------------------------------------------------------------
+QUÉ ROMPÍA EN PHP 8.0 (los 3 telnet)
+------------------------------------------------------------------------
+A) eregi_replace()  [FATAL]
+   tarjeta_voltaje.php (1), tarjeta_voltaje_exped.php (1),
+   tarjeta_voltaje_repaso.php (2)
+   -> preg_replace('/[\n|\r|\n\r]/', '', $linea)
+
+B) Extensión "expect" ausente  [FATAL]
+   Se reutilizó expect_compat.php (telnet por socket, PHP puro):
+   - require_once __DIR__ . '/../expect_compat.php';
+   - fwrite($stream, ...)          -> expect_send($stream, ...)  (21/24/24)
+   - ini_set("expect.timeout", 30) -> expect_set_timeout(30)     (2 por archivo)
+   - fclose($stream)               -> expect_close($stream)
+     SOLO en tarjeta_voltaje.php (3 ocurrencias). Los otros dos NO cierran el
+     stream (salen por el case SALIR con return), así que no hubo conversión.
+
+C) Constantes "bareword"  [FATAL]
+   USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2, ESPACIO, ESPACIO2
+   (+ SALIR en exped y repaso; + EXP_*). Bloque define al inicio (scope
+   global), usando el superset de ONT.
+
+D) $b sin inicializar  [Warning] -> $b = 0 tras cada expect_popen (2 por archivo).
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ (se documenta, para no alterar comportamiento)
+------------------------------------------------------------------------
+- Lógica de telnet, SQL, ping_ip().
+- $tippp y $voltaje_f sin inicializar (Warnings; pueden insertar valores del
+  ciclo anterior o vacíos si ningún patrón coincide).
+- $ERROR y $ERROR2 en tarjeta_voltaje_repaso.php: contadores que se incrementan
+  y nunca se leen (Warnings).
+- explode(chr(13), $texto) cuando la función telnet devuelve el int 2
+  (case EXP_TIMEOUT: return 2) -> deprecation en 8.1+, NO fatal en 8.0.
+- ping_ip() está definida pero nunca se llama en tarjeta_voltaje_exped.php.
+- En tarjeta_voltaje_principal.php el echo final dice "Inicio:" en vez de
+  "Fin:" (bug de log preexistente).
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA
+------------------------------------------------------------------------
+- php -l: 5 archivos (4 + expect_compat) "No syntax errors".
+- 0 archivos vacíos; tamaños >= original (str_replace + guarda anti-vaciado).
+- date_default en línea 2 de los 4 .php.
+- Include nuevo en los 4; 0 restos de las rutas viejas (ni la relativa).
+- nohup nuevo; 0 restos de /u01/crontab127/OLT/tarjetas.
+- Telnet: 0 residuos (fwrite/fclose/eregi/ini_set expect); expect_close=3 en
+  tarjeta_voltaje.php; constantes usadas ⊆ definidas (0 faltantes); define en
+  scope global (L7, antes de la 1ª función); 0 operaciones crudas sobre $stream.
+- Runtime PHP 8: corre date_default + require(shim) + define; el único fallo es
+  el include de la BD (no existe local). 0 errores del shim.
+
+------------------------------------------------------------------------
+PRÓXIMOS PASOS
+------------------------------------------------------------------------
+1. Desplegar como /var/www/procesos/php/Tarjetas_PHP8/ (con T mayúscula) y
+   verificar que exista /var/www/procesos/php/conexion/conexion_db.php
+2. Correr el worker a mano:
+     php -f Procesos/tarjeta_voltaje_exped.php <ip> <server> <region>
+   y revisar Procesos/logs/<ip>.log
+3. Si el prompt/tiempos difieren, ajustar expect_compat.php.
+========================================================================

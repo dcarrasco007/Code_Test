@@ -1,0 +1,32 @@
+========================================================================
+ Procesos/tarjeta_voltaje_repaso.php  ·  Cambios PHP 5.3 -> 8.0
+========================================================================
+Rol: proceso de REPASO/reintento. Busca las OLT con cantidad='0' o que faltan en
+OLT_VOLTAJE_TARJETA, borra sus filas previas y reintenta el telnet (hasta 3
+intentos usando verifica_equipo()). 2 funciones telnet + ping_ip() (sí se usa).
+
+CAMBIOS DE SERVIDOR:
+ - date_default_timezone_set('America/Santiago') al inicio.
+ - include -> /var/www/procesos/php/conexion/conexion_db.php
+
+CAMBIOS PHP 8:
+ - eregi_replace() -> preg_replace()   (2: flujo principal y verifica_equipo())
+ - require_once __DIR__ . '/../expect_compat.php' + bloque define (scope global)
+ - fwrite($stream, ...) -> expect_send($stream, ...)   (24)
+ - ini_set("expect.timeout", 30) -> expect_set_timeout(30)   (2)
+ - $b = 0 tras cada expect_popen (2)
+ - NO usa fclose($stream): sale por el case SALIR con return. Sin conversión.
+
+Constantes definidas: USER, PASSWORD, SALTO, SHELL, SHELL_CONFIG, SHELL2,
+SALIR, ESPACIO, ESPACIO2 (+ EXP_*).
+
+OBSERVACIONES (no corregidas, lógica preexistente):
+ - $ERROR y $ERROR2 se incrementan con ++ sin estar inicializadas y NUNCA se
+   leen: contadores muertos (solo generan Warnings). Se dejaron igual para no
+   alterar comportamiento.
+ - $tippp y $voltaje_f sin inicializar.
+ - En verifica_equipo(), count($data) puede recibir un array de un solo elemento
+   cuando la función telnet devuelve el int 2 (EXP_TIMEOUT).
+
+Verificación: php -l -> "No syntax errors detected".
+========================================================================

@@ -1,0 +1,110 @@
+========================================================================
+ MIGRACIÓN DE PROCESOS OCUPACION  ·  PHP 5.3  ->  PHP 8.0
+========================================================================
+Fecha de migración : 2026-07-24
+Carpeta original   : .../Procesos OLT/Ocupacion
+Carpeta migrada    : .../Procesos OLT/php_8_0/Ocupacion_PHP8   (esta carpeta)
+
+Réplica 1:1 (raíz + Procesos/ + logs). Misma receta que Alarmas, incluidas las
+convenciones de servidor nuevas. Los originales NO fueron modificados.
+
+------------------------------------------------------------------------
+CONVENCIONES DE SERVIDOR APLICADAS (igual que Alarmas)
+------------------------------------------------------------------------
+ 1. date_default_timezone_set('America/Santiago');  al inicio de CADA .php
+    (línea 2, justo después de <?php).
+ 2. Include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+    En el origen convivían DOS rutas distintas:
+      - /var/www/html/OLT/crontab127/conexion/... (5 archivos)
+      - /u01/crontab127/conexion/...              (1 archivo)
+    Ambas se unificaron a la ruta nueva.
+ 3. nohup -> /var/www/procesos/php/Ocupacion_PHP8/
+    (antes /u01/crontab127/OLT/Ocupacion/). Afecta al dispatcher
+    Procesos/proceso_trafico_pon.php: script hijo y log.
+ 4. Los 3 .sh se unificaron a la misma base. En el origen apuntaban a TRES
+    árboles distintos:
+      - cd /var/www/html/OLT/crontab127/OLT/Ocupacion
+      - cd /var/www/html/OLT/Ocupacion
+      - cd /u01/crontab127/OLT/Ocupacion
+    Ahora los tres hacen: cd /var/www/procesos/php/Ocupacion_PHP8
+
+------------------------------------------------------------------------
+ARCHIVOS
+------------------------------------------------------------------------
+CON TELNET (1 - requiere expect_compat.php):
+  Procesos/proceso_trafico_pon_exped.php   (worker: $argv[1]=server, $argv[2]=ip)
+
+SIN TELNET (5 - solo convenciones de servidor):
+  proceso_ocu_gpon.php                  SQL/batch (peaks GPON diario)
+  proceso_ocu_gpon_semanal.php          SQL/batch (consolidado semanal)
+  proceso_ocu_gpon_semanal_diario.php   SQL/batch (inserción por lotes)
+  proceso_trafico_pon_diario.php        SQL/batch (promedio horario)
+  Procesos/proceso_trafico_pon.php      dispatcher (nohup)
+
+LANZADORES (.sh, 3): proceso_ocu_gpon.sh, proceso_ocu_gpon_semanal.sh,
+  proceso_ocu_gpon_semanal_dia.sh
+
+LOGS: logs/ (para los .sh) y Procesos/log/ (para el nohup; "log" en singular,
+  tal como en el origen: .../Procesos/log/log$ip.log)
+
+------------------------------------------------------------------------
+QUÉ ROMPÍA EN PHP 8.0 (solo el archivo telnet)
+------------------------------------------------------------------------
+A) eregi_replace()  [FATAL]  2 ocurrencias (una está en verifica_equipo(),
+   que es código muerto, pero se corrigió igual).
+   -> preg_replace('/[\n|\r|\n\r]/', '', $linea)
+
+B) Extensión "expect" ausente  [FATAL]
+   Se reutilizó expect_compat.php (telnet por socket, PHP puro):
+   - require_once __DIR__ . '/../expect_compat.php';
+   - fwrite($stream, ...)          -> expect_send($stream, ...)   (19)
+   - ini_set("expect.timeout", 120)-> expect_set_timeout(120)     (1)
+     OJO: aquí el timeout es 120 (en otras carpetas era 30).
+   - NO tiene fclose($stream): la función nunca cierra el stream (se apoya en
+     el die() final). No hubo conversión a expect_close.
+
+C) Constantes "bareword"  [FATAL]
+   USER, PASSWORD, SALTO, SHELL, SHELL2, SHELL_CONFIG1, ESPACIO, ESPACIO2
+   (+ EXP_*). Se define un bloque al inicio (scope global). Se usa el bloque
+   completo de ONT (superset; las extras son inofensivas).
+
+D) $b sin inicializar  [Warning] -> $b = 0 tras el expect_popen.
+
+------------------------------------------------------------------------
+NO SE MODIFICÓ (se documenta, para no alterar comportamiento)
+------------------------------------------------------------------------
+- Lógica de telnet, SQL, ping_ip().
+- $ips sin inicializar en proceso_trafico_pon_diario.php (Warning si el SELECT
+  no devuelve filas).
+- round() sobre FORMAT(...) con separador de miles en proceso_ocu_gpon.php
+  (si down_mbps > 999 puede dar warning de valor no numérico).
+- count($data)/count($llaves) pueden recibir null si el equipo no responde
+  (TypeError en PHP 8). Es lógica preexistente; conviene vigilarlo en la
+  primera corrida real.
+- verifica_equipo() en el worker es código muerto (nunca se llama).
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA
+------------------------------------------------------------------------
+- php -l: 7 archivos (6 + expect_compat) "No syntax errors".
+- 0 archivos vacíos; tamaños >= original (str_replace + guarda anti-vaciado).
+- date_default en línea 2 de los 6 .php.
+- Include nuevo en los 6; 0 restos de las rutas viejas.
+- nohup nuevo; 0 restos de /u01/crontab127/OLT/Ocupacion.
+- Los 3 .sh apuntando a /var/www/procesos/php/Ocupacion_PHP8.
+- Telnet: 0 residuos (fwrite/fclose/eregi/ini_set expect); constantes usadas
+  ⊆ definidas (0 faltantes); define en scope global (L7, antes de la 1ª
+  función en L128); 0 operaciones crudas sobre $stream.
+- Runtime PHP 8: corre date_default + require(shim) + define; el único fallo
+  es el include de la BD (no existe en el entorno local). 0 errores del shim.
+
+------------------------------------------------------------------------
+PRÓXIMOS PASOS
+------------------------------------------------------------------------
+1. Desplegar como /var/www/procesos/php/Ocupacion_PHP8/ y verificar que exista
+   /var/www/procesos/php/conexion/conexion_db.php
+2. Correr el worker a mano:
+     php -f Procesos/proceso_trafico_pon_exped.php <server> <ip>
+   y revisar Procesos/log/log<ip>.log
+3. Si el prompt/tiempos difieren, ajustar expect_compat.php.
+========================================================================
