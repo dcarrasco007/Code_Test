@@ -1,0 +1,58 @@
+========================================================================
+ MIGRACIÓN VERSIONES  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/Versiones (minúscula en algún listado; real "Versiones")
+Migrado: .../Procesos OLT/php_8_0/Versiones_PHP8   (esta carpeta)
+Fecha  : 2026-07-25 · Misma receta que Alarmas + conversión mysql_* -> mysqli.
+
+CONVENCIONES DE SERVIDOR (a los 3 .php):
+ - date_default_timezone_set('America/Santiago'); al inicio.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (version_patch_modelo*.php venían de /var/www/html/OLT/crontab127/...;
+    muestra_data.php de ../../conexion/...).
+ - .sh actualizado: cd /var/www/procesos/php/Versiones_PHP8 (antes /var/www/html/OLT/Versiones).
+   No hay nohup en esta carpeta.
+
+** NOVEDAD: los 3 .php usaban funciones mysql_* (ELIMINADAS en PHP 7, fatales en 8).
+   Se convirtieron a mysqli:
+     mysql_connect(...) + mysql_select_db("Aden")  ->  mysqli_connect(...,"Aden")
+     mysql_set_charset('utf8')  ->  mysqli_set_charset($conn,'utf8')
+     mysql_query($q)            ->  mysqli_query($conn, $q)
+     mysql_fetch_array($r)      ->  mysqli_fetch_array($r)
+     mysql_close($conn)         ->  mysqli_close($conn)
+     mysql_error()              ->  mysqli_error($conn) / mysqli_connect_error()
+
+ARCHIVOS:
+ - version_patch_modelo.php        TELNET + mysqli (monolítico: TRUNCATE, recorre
+                                   OLTs, telnet a cada una, INSERT versión/parche).
+ - version_patch_modelo_repaso.php TELNET + mysqli (repaso; el TRUNCATE va comentado).
+   Cambios PHP 8 (ambos): shim (require __DIR__.'/expect_compat.php', RAÍZ),
+   eregi(1)->preg_replace, fwrite->expect_send(9), ini_set->expect_set_timeout(1),
+   fclose($stream)->expect_close(1), $b=0 (1 func), + conversión mysql->mysqli.
+ - muestra_data.php                UI (HTML) + mysqli. Solo date_default + include +
+                                   conversión mysql->mysqli. NO se tocaron sus
+                                   include de ../perfiles/ ni su fclose($fp) (archivo).
+
+Constantes definidas (superset ONT). Requisitos: mysqli + red a OLT puerto 23.
+Verificación: 3/3 php -l OK; 0 mysql_* residual; date_default L2; 0 restos de
+rutas viejas; runtime PHP 8 sin errores del shim.
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-25) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ - 0 vacíos; 0 require_once __DIR__; roto; 0 funciones eliminadas; 0 llaves.
+ - Los 2 telnet (+mysqli): 0 residuos; constantes ⊆ definidas; define global;
+   require '/expect_compat.php'; fclose($stream)->expect_close OK; 0 ops crudas
+   sobre $stream. Runtime PHP 8: 0 errores del shim, 0 mysql_* legacy.
+ - mysql_* -> mysqli: 0 residual (los "mysql_" que quedan están dentro de
+   comentarios). $db no se usa tras comentar su asignación. Conversión
+   coherente: mysqli_query($conn,...), mysqli_error($conn), mysqli_close($conn).
+ - muestra_data.php: perfiles y fclose($fp) (archivo) intactos; mysqli OK.
+ - php -l OK.
+
+ HEADS-UP DE DESPLIEGUE: muestra_data.php depende de ../perfiles/getPerfiles.php
+ y ../perfiles/proceso.php (checkAccV2, etc.). Se dejaron intactos. En el
+ servidor deben existir en /var/www/procesos/php/perfiles/. (version_patch_modelo*
+ NO dependen de perfiles.)
+
+Prueba de campo: php -f version_patch_modelo.php  (revisar salida/INSERTs).
+========================================================================

@@ -1,0 +1,38 @@
+========================================================================
+ MIGRACIÓN POTENCIA_OPTICA  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/Potencia_Optica
+Migrado: .../Procesos OLT/php_8_0/Potencia_Optica_PHP8   (esta carpeta)
+Fecha  : 2026-07-25 · Misma receta que Alarmas.
+NOTA: la subcarpeta se llama "Proceso" (singular), tal cual el origen.
+
+CONVENCIONES DE SERVIDOR (a los 3 .php de Proceso/):
+ - date_default_timezone_set('America/Santiago'); al inicio.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes /u01/crontab127/conexion/...).
+ - No hay nohup ni .sh en esta carpeta.
+
+ARCHIVOS (todos en Proceso/):
+ - proceso_potencia_optica.php         TELNET monolítico (recorre OLTs).
+ - proceso_potencia_optica_repaso.php  TELNET (repaso/reintento).
+   Cambios PHP 8 (ambos): shim (require __DIR__.'/../expect_compat.php', están
+   en subcarpeta), eregi(2)->preg_replace, fwrite->expect_send(160),
+   ini_set->expect_set_timeout(5, valores 2/30/60), $b=0 (5 funcs). Sin fclose.
+ - proceso_potencia_week.php            SQL/batch. Solo date_default + include.
+
+Constantes definidas (superset ONT). Requisitos: mysqli + red a OLT puerto 23.
+Verificación: 3/3 php -l OK; date_default L2; require '/../expect_compat.php';
+0 restos de rutas viejas; runtime PHP 8 sin errores del shim.
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-25) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ - 0 vacíos; 0 require_once __DIR__; roto; 0 funciones eliminadas; 0 llaves.
+ - Los 2 telnet: 0 residuos; constantes usadas ⊆ definidas; define en scope
+   global (L7, antes de la 1ª función); require '/../expect_compat.php'
+   (correcto por estar en Proceso/); 0 ops crudas sobre $stream.
+   Runtime PHP 8: 0 errores del shim.
+ - proceso_potencia_week.php (SQL): runtime OK, 0 undefined.
+ - php -l OK. Único fallo local esperado: include de la BD.
+
+Prueba de campo: php -f Proceso/proceso_potencia_optica.php  (revisar salida).
+========================================================================

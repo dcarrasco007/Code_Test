@@ -1,0 +1,44 @@
+========================================================================
+ MIGRACIÓN FAN  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/FAN
+Migrado: .../Procesos OLT/php_8_0/FAN_PHP8   (esta carpeta)
+Fecha  : 2026-07-25 · Misma receta que Alarmas.
+
+CONVENCIONES DE SERVIDOR:
+ - date_default_timezone_set('America/Santiago'); al inicio de los 2 .php.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (proceso_fan.php venía de /u01/...; muestra_fan.php de ../../conexion/...).
+ - .sh actualizado: cd /var/www/procesos/php/FAN_PHP8 y log en esa base
+   (antes /var/www/html/OLT/FAN). No hay nohup en esta carpeta.
+
+ARCHIVOS:
+ - proceso_fan.php   TELNET (monolítico, se ejecuta por el .sh). Cambios PHP 8:
+                     shim (require __DIR__.'/expect_compat.php', está en la RAÍZ),
+                     eregi(1)->preg_replace, fwrite->expect_send(9),
+                     ini_set->expect_set_timeout(1), fclose($stream)->expect_close(1),
+                     $b=0 (1 func).
+ - muestra_fan.php   UI (HTML). Solo date_default + include de conexión.
+                     NO se tocaron sus include de ../perfiles/ ni su fclose($fp)
+                     (escritura de archivo, no telnet). Usa mysqli (no mysql_*).
+
+Verificación: 2/2 php -l OK; date_default L2; perfiles y fclose($fp) intactos;
+runtime PHP 8 sin errores del shim.
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-25) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ - 0 vacíos; 0 require_once __DIR__; roto; 0 funciones eliminadas; 0 llaves.
+ - proceso_fan.php (telnet): 0 residuos; constantes ⊆ definidas; define global
+   (L7 < función L92); require '/expect_compat.php'; fclose($stream)->
+   expect_close OK; 0 ops crudas sobre $stream. Runtime PHP 8: 0 errores shim.
+ - muestra_fan.php: perfiles y fclose($fp) (archivo) intactos.
+ - php -l OK.
+
+ HEADS-UP DE DESPLIEGUE: muestra_fan.php depende de ../perfiles/getPerfiles.php
+ y ../perfiles/proceso.php (checkAccV2, getUser, etc.). Se dejaron intactos
+ (correcto). En el servidor deben existir en /var/www/procesos/php/perfiles/,
+ si no, la página da "Call to undefined function checkAccV2()". (Los procesos
+ batch/telnet NO dependen de perfiles.)
+
+Prueba de campo: ./proceso_fan.sh  (o php -f proceso_fan.php)
+========================================================================

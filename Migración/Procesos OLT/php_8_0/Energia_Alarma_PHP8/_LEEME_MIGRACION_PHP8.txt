@@ -1,0 +1,36 @@
+========================================================================
+ MIGRACIÓN ENERGIA_ALARMA  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/Energia_Alarma
+Migrado: .../Procesos OLT/php_8_0/Energia_Alarma_PHP8   (esta carpeta)
+Fecha  : 2026-07-25 · Misma receta que Alarmas (conexión + nohup + date_default).
+
+CONVENCIONES DE SERVIDOR (aplicadas a los 2 .php):
+ - date_default_timezone_set('America/Santiago'); al inicio.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes /u01/crontab127/conexion/...).
+ - nohup -> /var/www/procesos/php/Energia_Alarma_PHP8/  (antes /u01/crontab127/OLT/Energia_Alarma/).
+   Afecta a proceso_energia.php (script hijo + log logs/logs-$ip-$server.log).
+
+ARCHIVOS:
+ - proceso_data.php     TELNET worker ($argv: ip, server, region, modelo, lote).
+                        Cambios PHP 8: shim (require __DIR__.'/expect_compat.php',
+                        está en la RAÍZ), eregi(2)->preg_replace, fwrite->expect_send(24),
+                        ini_set("expect.timeout")->expect_set_timeout(2), $b=0 (2 funcs).
+                        NO tiene fclose($stream).
+ - proceso_energia.php  dispatcher (nohup). Solo date_default + include + nohup.
+
+Constantes definidas (superset ONT). Requisitos: mysqli + red a OLT puerto 23.
+Verificación: 2/2 php -l OK; date_default L2; 0 restos de rutas viejas;
+runtime PHP 8 sin errores del shim (único fallo = include BD local inexistente).
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-25) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ - 0 vacíos; 0 require_once __DIR__; roto; 0 funciones eliminadas; 0 llaves.
+ - proceso_data.php (telnet): 0 residuos; constantes usadas ⊆ definidas;
+   define en scope global (L7 < función L338); require '/expect_compat.php';
+   0 ops crudas sobre $stream. Runtime PHP 8: 0 errores del shim.
+ - php -l OK. Único fallo local esperado: include de la BD (no existe local).
+
+Prueba de campo: php -f proceso_data.php <ip> <server> <region> <modelo> <lote>
+========================================================================
