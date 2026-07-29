@@ -1,0 +1,38 @@
+========================================================================
+ MIGRACIÓN ENERGIA_CPU  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/Energia_CPU
+Migrado: .../Procesos OLT/php_8_0/Energia_CPU_PHP8   (esta carpeta)
+Fecha  : 2026-07-28 · Misma receta (conexión + nohup + date_default).
+(No confundir con Energia_Alarma, ya migrada aparte.)
+
+CONVENCIONES DE SERVIDOR (a los 2 .php):
+ - date_default_timezone_set('America/Santiago'); al inicio.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes /var/www/html/OLT/crontab127/conexion/...).
+ - nohup -> /var/www/procesos/php/Energia_CPU_PHP8/  (antes /u01/crontab127/OLT/Energia_CPU/;
+   este ya traía la subcarpeta, así que fue reemplazo de base directo).
+   Log en log/ (singular): /var/www/procesos/php/Energia_CPU_PHP8/log/$server.log
+
+ARCHIVOS:
+ - shell_energia.php        dispatcher (nohup). Solo date_default + include + nohup.
+ - shell_energia_exped.php  TELNET worker ($argv: ip, server, region, modelo, lote).
+   Cambios PHP 8: shim (require __DIR__.'/expect_compat.php', RAÍZ),
+   eregi(4)->preg_replace, fwrite->expect_send(13), ini_set->expect_set_timeout(2),
+   fclose($stream)->expect_close(2), $b=0 (2 funcs).
+
+LOGS: log/ (singular, según el nohup original)
+Verificación: 2/2 php -l OK; date_default L2; 0 restos de rutas viejas;
+telnet 0 residuos, constantes OK, define global; runtime PHP 8 sin errores shim.
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-28) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ 0 vacíos · 0 require __DIR__; roto · 0 funciones eliminadas · 0 llaves ·
+ 2/2 php -l OK · date_default L2 · include nuevo (0 restos viejos) · 0 /u01.
+ nohup verificado (worker+log en la carpeta). shell_energia_exped.php (telnet):
+ 0 residuos; constantes case/array 0 faltantes; define scope global (L7<L125);
+ require '/expect_compat.php'; 0 ops crudas sobre $stream; runtime PHP 8: 0
+ errores del shim.
+
+Prueba de campo: php -f shell_energia_exped.php <ip> <server> <region> <modelo> <lote>
+========================================================================

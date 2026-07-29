@@ -1,0 +1,36 @@
+========================================================================
+ MIGRACIÓN MONITOREO  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/Monitoreo
+Migrado: .../Procesos OLT/php_8_0/Monitoreo_PHP8   (esta carpeta)
+Fecha  : 2026-07-28 · Misma receta (conexión + date_default).
+
+NINGÚN archivo es telnet: no requieren el shim (aun así se copió expect_compat.php
+por consistencia; no se usa). Ninguno usa mysql_*.
+
+CONVENCIONES DE SERVIDOR (a los 2 .php):
+ - date_default_timezone_set('America/Santiago'); al inicio.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes /u01/crontab127/conexion/...).
+
+ARCHIVOS:
+ - lectura_crontab.php    utilidad: lee el crontab del sistema con
+                          exec('crontab -l 2>&1', ...) y lo registra en BD.
+                          El exec() se dejó INTACTO (lee el crontab real, no es
+                          una ruta a corregir).
+ - monitoreo_metricas.php SQL/batch de métricas. Solo date_default + include.
+
+No hay nohup ni telnet. (El .log del origen no se copió: es salida de runtime.)
+
+Verificación: 2/2 php -l OK; date_default L2; include nuevo, 0 restos viejos;
+runtime PHP 8 sin errores (único fallo local: include de la BD inexistente).
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-28) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ 0 vacíos · 0 require __DIR__; roto · 0 funciones eliminadas · 0 llaves ·
+ 2/2 php -l OK · date_default L2 · include nuevo (0 restos viejos).
+ No hay telnet ni mysql_*. exec('crontab -l') intacto. Runtime PHP 8 OK
+ (sin undefined propio; único fallo local = include de la BD inexistente).
+
+Prueba de campo: php -f monitoreo_metricas.php  ·  php -f lectura_crontab.php
+========================================================================

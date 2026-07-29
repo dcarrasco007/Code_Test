@@ -1,0 +1,43 @@
+========================================================================
+ MIGRACIÓN UPLINK_STATE  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : .../Procesos OLT/Uplink_State
+Migrado: .../Procesos OLT/php_8_0/Uplink_State_PHP8   (esta carpeta)
+Fecha  : 2026-07-28 · Misma receta + conversión mysql_* -> mysqli.
+
+Un solo archivo: shell_uplinks_state.php (TELNET monolítico + mysqli).
+Recorre las OLT, hace telnet a cada una para leer el estado de uplinks y
+guarda en OLT_UPLINKS_STATE. No usa nohup (se ejecuta directo por cron).
+
+CONVENCIONES DE SERVIDOR:
+ - date_default_timezone_set('America/Santiago'); al inicio.
+ - include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (activo venía de /u01/...; comentado de /var/www/html/... también actualizado).
+
+** mysql_* -> mysqli (ELIMINADO en PHP 7, era fatal) **
+   mysql_connect(...)+mysql_select_db("Aden") -> mysqli_connect(...,"Aden")
+   mysql_set_charset('utf8') -> mysqli_set_charset($conn,'utf8')
+   mysql_query($q) -> mysqli_query($conn, $q)   (incluye los 3 dentro del bucle telnet)
+   mysql_fetch_array/close/error -> mysqli_*    ; $db no se usa (comentado seguro).
+
+CAMBIOS PHP 8 (telnet):
+   shim (require __DIR__.'/expect_compat.php', RAÍZ), eregi(4)->preg_replace,
+   fwrite->expect_send(23), ini_set->expect_set_timeout(3; incluye un valor 2500),
+   fclose($stream)->expect_close(2), $b=0 (2 funcs).
+
+Verificación: php -l OK; 0 mysql_* residual; date_default L2; 0 restos de rutas
+viejas; telnet 0 residuos, constantes OK, define global; runtime PHP 8 sin
+errores del shim ni mysql_* legacy.
+------------------------------------------------------------------------
+REVISIÓN FINAL PRE-PRODUCCIÓN (2026-07-28) — RESULTADO: LIMPIO
+------------------------------------------------------------------------
+ 0 vacíos · 0 require __DIR__; roto · 0 funciones eliminadas · 0 llaves ·
+ php -l OK · date_default L2 · include nuevo (0 restos viejos).
+ mysql_*->mysqli: 0 residual; $db sin uso; coherente (mysqli_query($conn,...),
+ mysqli_error($conn), mysqli_close($conn)), incluidos los 3 dentro del bucle telnet.
+ Telnet: 0 residuos; constantes case/array 0 faltantes; define scope global
+ (L7<L193); require '/expect_compat.php'; 0 ops crudas sobre $stream;
+ runtime PHP 8: 0 errores del shim, 0 mysql_* legacy.
+
+Prueba de campo: php -f shell_uplinks_state.php  (revisar INSERTs en OLT_UPLINKS_STATE).
+========================================================================
