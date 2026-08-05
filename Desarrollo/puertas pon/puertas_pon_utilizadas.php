@@ -11,23 +11,32 @@ $mysqli->set_charset("utf8");
 
 // Las puertas utilizadas se calculan con el trafico del dia anterior,
 // igual que en option_gpon.php (rama del if(isset($_POST['option']))).
+// Si el proceso diario aun no carga el dia anterior, se usa la ultima fecha disponible.
 $diaanterior = date("Y-m-d", strtotime("-1 day"));
 
+$query_fecha = "SELECT MAX(fecha) FROM OLT_TRAFICOGPON WHERE fecha <= '$diaanterior'";
+$res_fecha = $mysqli->query($query_fecha) or die("error puertas_pon_utilizadas.php $query_fecha");
+$row_fecha = $res_fecha->fetch_row();
+$fecha_trafico = $row_fecha[0] ? $row_fecha[0] : $diaanterior;
+
 $query = "SELECT
-        OLT_SERVER.`server`,
-        OLT_SERVER.region,
-        OLT_ONT_PCS.zs_comercial AS puertas_totales,
-        (
-            SELECT COUNT(DISTINCT OLT_TRAFICOGPON.port)
-            FROM OLT_TRAFICOGPON
-            WHERE OLT_TRAFICOGPON.ip_equipo = OLT_SERVER.ip
-              AND OLT_TRAFICOGPON.fecha = '$diaanterior'
-              AND OLT_TRAFICOGPON.up_mbps > 0
-        ) AS puertas_utilizadas
+        OLT_SERVER.`server`                     AS olt,
+        MAX(OLT_SERVER.region)                  AS region,
+        MAX(OLT_ONT_PCS.zs_comercial)           AS puertas_totales,
+        COALESCE(MAX(TRAFICO.utilizadas), 0)    AS puertas_utilizadas
         FROM OLT_SERVER
         LEFT JOIN OLT_ONT_PCS ON OLT_ONT_PCS.`server` = OLT_SERVER.`server`
+        LEFT JOIN (
+            SELECT
+                OLT_TRAFICOGPON.ip_equipo,
+                COUNT(DISTINCT OLT_TRAFICOGPON.port) AS utilizadas
+            FROM OLT_TRAFICOGPON
+            WHERE OLT_TRAFICOGPON.fecha = '$fecha_trafico'
+              AND OLT_TRAFICOGPON.up_mbps > 0
+            GROUP BY OLT_TRAFICOGPON.ip_equipo
+        ) AS TRAFICO ON TRAFICO.ip_equipo = OLT_SERVER.ip
         GROUP BY OLT_SERVER.`server`
-        ORDER BY OLT_SERVER.region, OLT_SERVER.`server`";
+        ORDER BY region, olt";
 $result = $mysqli->query($query) or die("error puertas_pon_utilizadas.php $query");
 
 //-------------------- Excel --------------------
@@ -41,6 +50,9 @@ $sheet->getColumnDimension('B')->setWidth(30);
 $sheet->getColumnDimension('C')->setWidth(20);
 $sheet->getColumnDimension('D')->setWidth(22);
 $sheet->getColumnDimension('E')->setWidth(24);
+
+$sheet->setCellValue('C1', 'Puertas PON Utilizadas por OLT');
+$sheet->setCellValue('C2', 'Trafico del dia: ' . $fecha_trafico);
 
 $sheet->setCellValue('A4', 'N°');
 $sheet->setCellValue('B4', 'OLT');
@@ -73,7 +85,7 @@ $fila_excel = 5;
 
 while ($row = $result->fetch_assoc()) {
 
-    $olt        = $row['server'];
+    $olt        = $row['olt'];
     $region     = $row['region'];
     $totales    = ($olt == 'OLT-IQUIQUE-1') ? 4 : (int)$row['puertas_totales'];
     $utilizadas = (int)$row['puertas_utilizadas'];
@@ -108,6 +120,7 @@ $objWriter->save($carpetaDestino . $nombreArchivo);
 $mysqli->close();
 
 echo "<h3><center>Informe Puertas PON Utilizadas por OLT.</center></h3>";
+echo "<h5><center>Tr&aacute;fico del d&iacute;a: $fecha_trafico</center></h5>";
 echo "<img src='/contingencia/OLT/menu/logonuevo.png' alt='Imagen fija' class='left-fixed-image'>";
 echo "<a href='" . $carpetaDestino . $nombreArchivo . "'>Exportar Archivo</a>";
 echo $tabla;
