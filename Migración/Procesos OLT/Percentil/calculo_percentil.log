@@ -1,0 +1,1161 @@
+2026-07-20
+:2026-07-26OLT-QUILICURA-1
+
+ indice: 657.58
+
+percentilGB: 1.1
+peakGB: 1.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-QUILICURA-1','10.99.25.82','10Gb',1093610,1664790,30, NOW(), '11%','17%','2026-07-20')
+OLT-HUECHURABA-2
+
+ indice: 658.56
+
+percentilGB: 4.3
+peakGB: 5.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-HUECHURABA-2','10.99.25.106','10Gb',4321560,5688010,30, NOW(), '43%','57%','2026-07-20')
+OLT-ZOFRI-1
+
+ indice: 658.56
+
+percentilGB: 2.4
+peakGB: 2.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ZOFRI-1','10.99.25.98','10Gb',2381630,2879220,30, NOW(), '24%','29%','2026-07-20')
+OLT-PUERTOVARAS-1
+
+ indice: 658.56
+
+percentilGB: 0.2
+peakGB: 0.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PUERTOVARAS-1','10.99.21.34','10Gb',164852,373052,30, NOW(), '2%','4%','2026-07-20')
+OLT-IQUIQUE-2
+
+ indice: 658.56
+
+percentilGB: 2.1
+peakGB: 2.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-IQUIQUE-2','10.99.2.18','20Gb',2081550,2703190,30, NOW(), '10.5%','13.5%','2026-07-20')
+OLT-CALLEJONDELOSPERROS2PCS-1
+
+ indice: 655.62
+
+percentilGB: 9.7
+peakGB: 11.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CALLEJONDELOSPERROS2PCS-1','10.99.26.30','20Gb',9680080,11071200,30, NOW(), '48.5%','55.5%','2026-07-20')
+OLT-CALLELIRCAYPCS-1
+
+ indice: 654.64
+
+percentilGB: 1
+peakGB: 1.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CALLELIRCAYPCS-1','10.99.26.6','10Gb',970401,1347980,30, NOW(), '10%','13%','2026-07-20')
+OLT-LOSANGELES-1
+
+ indice: 657.58
+
+percentilGB: 1
+peakGB: 1.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LOSANGELES-1','10.99.16.2','10Gb',1025570,1393610,30, NOW(), '10%','14%','2026-07-20')
+OLT-OSORNO-1
+
+ indice: 656.6
+
+percentilGB: 0.6
+peakGB: 1.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-OSORNO-1','10.99.20.10','10Gb',561667,1448790,30, NOW(), '6%','14%','2026-07-20')
+OLT-ANFIONMUNOZ-1
+
+ indice: 656.6
+
+percentilGB: 0.1
+peakGB: 0.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ANFIONMUNOZ-1','10.99.18.4','1Gb',74072.6,303199,30, NOW(), '10%','30%','2026-07-20')
+OLT-CARDONAL-1
+
+ indice: 658.56
+
+percentilGB: 0.2
+peakGB: 0.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CARDONAL-1','10.99.21.2','1Gb',175150,303721,30, NOW(), '20%','30%','2026-07-20')
+OLT-COSTANERA-1
+
+ indice: 652.68
+
+percentilGB: 1.5
+peakGB: 2.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COSTANERA-1','10.97.240.54','10Gb',1490380,2077600,30, NOW(), '15%','21%','2026-07-20')
+OLT-COSTANERA-2
+
+ indice: 656.6
+
+percentilGB: 2.7
+peakGB: 3.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COSTANERA-2','10.97.240.58','10Gb',2695170,3584020,30, NOW(), '27%','36%','2026-07-20')
+OLT-COSTANERA-3
+
+ indice: 656.6
+
+percentilGB: 1.4
+peakGB: 2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COSTANERA-3','10.99.24.148','10Gb',1357570,2032040,30, NOW(), '14%','20%','2026-07-20')
+OLT-COSTANERA-4
+
+ indice: 655.62
+
+percentilGB: 1.9
+peakGB: 4.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COSTANERA-4','10.99.24.149','10Gb',1921550,4534230,30, NOW(), '19%','45%','2026-07-20')
+OLT-DURZUA-1
+
+ indice: 657.58
+
+percentilGB: 2.7
+peakGB: 3.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-1','10.99.24.98','10Gb',2664800,3455990,30, NOW(), '27%','35%','2026-07-20')
+OLT-DURZUA-2
+
+ indice: 656.6
+
+percentilGB: 2.2
+peakGB: 3.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-2','10.99.24.66','10Gb',2153570,3822630,30, NOW(), '22%','38%','2026-07-20')
+OLT-DURZUA-3
+
+ indice: 656.6
+
+percentilGB: 1.2
+peakGB: 2.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-3','10.99.24.67','10Gb',1222410,2135180,30, NOW(), '12%','21%','2026-07-20')
+OLT-DURZUA-4
+
+ indice: 658.56
+
+percentilGB: 1.4
+peakGB: 1.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-4','10.99.24.68','10Gb',1384780,1815200,30, NOW(), '14%','18%','2026-07-20')
+OLT-DURZUA-5
+
+ indice: 655.62
+
+percentilGB: 3.5
+peakGB: 4.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-5','10.99.24.69','20Gb',3451150,4420770,30, NOW(), '17.5%','22%','2026-07-20')
+OLT-LASCONDES-1
+
+ indice: 657.58
+
+percentilGB: 1.6
+peakGB: 1.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASCONDES-1','10.99.24.114','10Gb',1583980,1871170,30, NOW(), '16%','19%','2026-07-20')
+OLT-LASCONDES-2
+
+ indice: 657.58
+
+percentilGB: 1.4
+peakGB: 1.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASCONDES-2','10.99.24.115','10Gb',1391200,1945620,30, NOW(), '14%','19%','2026-07-20')
+OLT-LASCONDES-3
+
+ indice: 658.56
+
+percentilGB: 2.3
+peakGB: 2.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASCONDES-3','10.99.24.116','10Gb',2325600,2708000,30, NOW(), '23%','27%','2026-07-20')
+OLT-LAUTARO-1
+
+ indice: 658.56
+
+percentilGB: 0.1
+peakGB: 0.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LAUTARO-1','10.99.18.3','1Gb',60739.6,163543,30, NOW(), '10%','20%','2026-07-20')
+OLT-MALLSPORT-1
+
+ indice: 657.58
+
+percentilGB: 2.4
+peakGB: 2.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-MALLSPORT-1','10.99.24.118','10Gb',2361590,2657580,30, NOW(), '24%','27%','2026-07-20')
+OLT-NVASANANTONIO-1
+
+ indice: 646.8
+
+percentilGB: 0
+peakGB: 0.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NVASANANTONIO-1','10.99.10.2','1Gb',20848.2,59528.8,30, NOW(), '0%','10%','2026-07-20')
+OLT-PFORESTAL-1
+
+ indice: 656.6
+
+percentilGB: 2.3
+peakGB: 3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PFORESTAL-1','10.99.24.18','10Gb',2344010,3040820,30, NOW(), '23%','30%','2026-07-20')
+OLT-SANTAJUANAPCS-1
+
+ indice: 641.9
+
+percentilGB: 0.1
+peakGB: 0.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SANTAJUANAPCS-1','10.99.17.21','1Gb',71353.8,109363,30, NOW(), '10%','10%','2026-07-20')
+OLT-VALDIVIA-1
+
+ indice: 655.62
+
+percentilGB: 0
+peakGB: 0
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-VALDIVIA-1','10.99.19.2','10Gb',3099.2,31184,30, NOW(), '0%','0%','2026-07-20')
+OLT-COPIAPO-1
+
+ indice: 640.92
+
+percentilGB: 1.1
+peakGB: 1.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COPIAPO-1','10.99.4.2','10Gb',1067980,1499190,30, NOW(), '11%','15%','2026-07-20')
+OLT-CURICO-1
+
+ indice: 658.56
+
+percentilGB: 1.4
+peakGB: 1.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CURICO-1','10.99.12.10','10Gb',1360800,1613600,30, NOW(), '14%','16%','2026-07-20')
+OLT-DURZUA-8
+
+ indice: 656.6
+
+percentilGB: 5.4
+peakGB: 7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-8','10.99.24.70','20Gb',5443980,6999180,30, NOW(), '27%','35%','2026-07-20')
+OLT-MALLTOBALABAPCS-1
+
+ indice: 658.56
+
+percentilGB: 13.6
+peakGB: 16.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-MALLTOBALABAPCS-1','10.99.26.94','100Gb',13572000,16085500,30, NOW(), '13.6%','16.1%','2026-07-20')
+OLT-DURZUA-10
+
+ indice: 658.56
+
+percentilGB: 20.3
+peakGB: 22.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-10','10.99.26.86','40Gb',20297900,22883700,30, NOW(), '50.8%','57.3%','2026-07-20')
+OLT-DURZUA-11
+
+ indice: 658.56
+
+percentilGB: 18.1
+peakGB: 20.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-11','10.99.26.90','40Gb',18080600,20932000,30, NOW(), '45.3%','52.3%','2026-07-20')
+OLT-MALLSPORT-2
+
+ indice: 658.56
+
+percentilGB: 14.8
+peakGB: 17.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-MALLSPORT-2','10.99.26.58','100Gb',14753200,17094700,30, NOW(), '14.8%','17.1%','2026-07-20')
+OLT-3PONIENTEPCS-1
+
+ indice: 658.56
+
+percentilGB: 24.6
+peakGB: 27.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-3PONIENTEPCS-1','10.99.26.62','100Gb',24582500,27482200,30, NOW(), '24.6%','27.5%','2026-07-20')
+OLT-LASPERDICESPCS-1
+
+ indice: 658.56
+
+percentilGB: 8.3
+peakGB: 10.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASPERDICESPCS-1','10.99.26.74','20Gb',8304490,10076100,30, NOW(), '41.5%','50.5%','2026-07-20')
+OLT-ROJASMAGALLANESPCS-1
+
+ indice: 658.56
+
+percentilGB: 38.4
+peakGB: 44.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ROJASMAGALLANESPCS-1','10.99.26.70','100Gb',38433000,44060900,30, NOW(), '38.4%','44.1%','2026-07-20')
+OLT-SIMONBOLIVARPCS-2
+
+ indice: 658.56
+
+percentilGB: 37.3
+peakGB: 41.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SIMONBOLIVARPCS-2','10.99.26.78','100Gb',37256000,41271400,30, NOW(), '37.3%','41.3%','2026-07-20')
+OLT-NUNOA-3
+
+ indice: 658.56
+
+percentilGB: 29.7
+peakGB: 33
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NUNOA-3','10.99.26.66','100Gb',29712300,33021200,30, NOW(), '29.7%','33%','2026-07-20')
+OLT-PARQUETITANIUM-2
+
+ indice: 658.56
+
+percentilGB: 9.3
+peakGB: 10.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PARQUETITANIUM-2','10.99.26.82','20Gb',9319740,10484700,30, NOW(), '46.5%','52.5%','2026-07-20')
+OLT-LOSJARDINESPCS-1
+
+ indice: 658.56
+
+percentilGB: 25.4
+peakGB: 27.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LOSJARDINESPCS-1','10.99.26.98','100Gb',25402200,27138100,30, NOW(), '25.4%','27.1%','2026-07-20')
+OLT-MCCDLVALLEPCS-1
+
+ indice: 658.56
+
+percentilGB: 7.3
+peakGB: 9.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-MCCDLVALLEPCS-1','10.99.29.2','20Gb',7274130,9122970,30, NOW(), '36.5%','45.5%','2026-07-20')
+OLT-RECREO-3
+
+ indice: 658.56
+
+percentilGB: 9.7
+peakGB: 11.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-RECREO-3','10.99.9.150','100Gb',9740300,11755800,30, NOW(), '9.7%','11.8%','2026-07-20')
+OLT-NVAARLEGUI-1
+
+ indice: 658.56
+
+percentilGB: 9
+peakGB: 10.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NVAARLEGUI-1','10.99.9.146','20Gb',9024920,10457200,30, NOW(), '45%','52.5%','2026-07-20')
+OLT-NVA13NORTE-3
+
+ indice: 658.56
+
+percentilGB: 9
+peakGB: 9.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NVA13NORTE-3','10.99.9.142','20Gb',9011280,9727090,30, NOW(), '45%','48.5%','2026-07-20')
+OLT-LAFLORIDA-2
+
+ indice: 658.56
+
+percentilGB: 12.4
+peakGB: 14.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LAFLORIDA-2','10.99.24.254','40Gb',12433600,14738900,30, NOW(), '31%','36.8%','2026-07-20')
+OLT-GRANAVENIDAPCS-2
+
+ indice: 658.56
+
+percentilGB: 17.7
+peakGB: 20
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-GRANAVENIDAPCS-2','10.99.26.230','100Gb',17738800,20003700,30, NOW(), '17.7%','20%','2026-07-20')
+OLT-TEMPLOVOTIVOPCS-2
+
+ indice: 658.56
+
+percentilGB: 32.8
+peakGB: 39.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TEMPLOVOTIVOPCS-2','10.99.26.134','100Gb',32775600,39717100,30, NOW(), '32.8%','39.7%','2026-07-20')
+OLT-CONCON2PCS-2
+
+ indice: 658.56
+
+percentilGB: 10.4
+peakGB: 11.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CONCON2PCS-2','10.99.9.138','20Gb',10381000,11429700,30, NOW(), '52%','57%','2026-07-20')
+OLT-AVPDTEBATLLEPCS-2
+
+ indice: 658.56
+
+percentilGB: 30.4
+peakGB: 34.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AVPDTEBATLLEPCS-2','10.99.26.146','100Gb',30405900,34091200,30, NOW(), '30.4%','34.1%','2026-07-20')
+OLT-GRANAVENIDAPCS-1
+
+ indice: 658.56
+
+percentilGB: 25.9
+peakGB: 28.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-GRANAVENIDAPCS-1','10.99.26.138','100Gb',25864000,28161200,30, NOW(), '25.9%','28.2%','2026-07-20')
+OLT-QUILICURA2PCS-1
+
+ indice: 654.64
+
+percentilGB: 1
+peakGB: 1.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-QUILICURA2PCS-1','10.99.26.226','10Gb',984013,1832010,30, NOW(), '10%','18%','2026-07-20')
+OLT-SANJOSEDELAESTRELLAPCS-1
+
+ indice: 658.56
+
+percentilGB: 12.5
+peakGB: 13.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SANJOSEDELAESTRELLAPCS-1','10.99.26.130','30Gb',12528900,13208500,30, NOW(), '41.7%','44%','2026-07-20')
+OLT-CNT-5
+
+ indice: 658.56
+
+percentilGB: 13.8
+peakGB: 16.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CNT-5','10.99.26.210','30Gb',13801600,16776100,30, NOW(), '46%','56%','2026-07-20')
+OLT-CNT-6
+
+ indice: 658.56
+
+percentilGB: 8.1
+peakGB: 9.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CNT-6','10.99.26.214','20Gb',8140670,9624450,30, NOW(), '40.5%','48%','2026-07-20')
+OLT-MAIPU-3
+
+ indice: 658.56
+
+percentilGB: 10.6
+peakGB: 12.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-MAIPU-3','10.99.26.158','30Gb',10583500,12236200,30, NOW(), '35.3%','40.7%','2026-07-20')
+OLT-ROJASMAGALLANESPCS-2
+
+ indice: 658.56
+
+percentilGB: 10.7
+peakGB: 11.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ROJASMAGALLANESPCS-2','10.99.26.242','30Gb',10673600,11922000,30, NOW(), '35.7%','39.7%','2026-07-20')
+OLT-CHICUREO3PCS-1
+
+ indice: 658.56
+
+percentilGB: 9
+peakGB: 10.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CHICUREO3PCS-1','10.99.26.106','100Gb',8972440,10294200,30, NOW(), '9%','10.3%','2026-07-20')
+OLT-LOSQUILLAYESPCS-1
+
+ indice: 658.56
+
+percentilGB: 23.2
+peakGB: 25.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LOSQUILLAYESPCS-1','10.99.26.150','100Gb',23161000,25130500,30, NOW(), '23.2%','25.1%','2026-07-20')
+OLT-QUILICURA-2
+
+ indice: 658.56
+
+percentilGB: 17.8
+peakGB: 20.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-QUILICURA-2','10.99.26.238','50Gb',17768800,20154400,30, NOW(), '35.6%','40.4%','2026-07-20')
+OLT-RENACANORTEPCS-1
+
+ indice: 658.56
+
+percentilGB: 10.1
+peakGB: 10.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-RENACANORTEPCS-1','10.99.26.154','30Gb',10054100,10772700,30, NOW(), '33.7%','36%','2026-07-20')
+OLT-GRALBONILLAPCS-2
+
+ indice: 658.56
+
+percentilGB: 37
+peakGB: 40.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-GRALBONILLAPCS-2','10.99.26.162','100Gb',36956900,40274200,30, NOW(), '37%','40.3%','2026-07-20')
+OLT-TEMPLOVOTIVOPCS-3
+
+ indice: 658.56
+
+percentilGB: 20.1
+peakGB: 21.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TEMPLOVOTIVOPCS-3','10.99.26.142','100Gb',20100700,21692100,30, NOW(), '20.1%','21.7%','2026-07-20')
+OLT-CNT-7
+
+ indice: 658.56
+
+percentilGB: 9.5
+peakGB: 11.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CNT-7','10.99.26.218','20Gb',9486280,11254500,30, NOW(), '47.5%','56.5%','2026-07-20')
+OLT-CNT-8
+
+ indice: 658.56
+
+percentilGB: 9.8
+peakGB: 11.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CNT-8','10.99.26.222','20Gb',9830820,11844300,30, NOW(), '49%','59%','2026-07-20')
+OLT-CVELBOSQUEPCS-1
+
+ indice: 658.56
+
+percentilGB: 30.2
+peakGB: 34.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CVELBOSQUEPCS-1','10.99.26.166','100Gb',30241700,34163200,30, NOW(), '30.2%','34.2%','2026-07-20')
+OLT-QUILPUEPCS-1
+
+ indice: 658.56
+
+percentilGB: 11.5
+peakGB: 14
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-QUILPUEPCS-1','10.99.9.154','30Gb',11525500,13998100,30, NOW(), '38.3%','46.7%','2026-07-20')
+OLT-ELENCUENTROPCS-2
+
+ indice: 658.56
+
+percentilGB: 23.1
+peakGB: 27.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ELENCUENTROPCS-2','10.99.30.2','100Gb',23095700,27079100,30, NOW(), '23.1%','27.1%','2026-07-20')
+OLT-LASCONDES-7
+
+ indice: 658.56
+
+percentilGB: 24.7
+peakGB: 28.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASCONDES-7','10.99.26.250','50Gb',24718400,28175200,30, NOW(), '49.4%','56.4%','2026-07-20')
+OLT-LATADIAPCS-2
+
+ indice: 658.56
+
+percentilGB: 27.7
+peakGB: 31.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LATADIAPCS-2','10.99.26.246','100Gb',27699500,31865100,30, NOW(), '27.7%','31.9%','2026-07-20')
+OLT-DRRENEANZIETAPCS-2
+
+ indice: 658.56
+
+percentilGB: 16.4
+peakGB: 18.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DRRENEANZIETAPCS-2','10.99.26.254','100Gb',16420100,18279800,30, NOW(), '16.4%','18.3%','2026-07-20')
+OLT-SBOTICELLI-1
+
+ indice: 658.56
+
+percentilGB: 32.8
+peakGB: 37.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SBOTICELLI-1','10.99.30.6','100Gb',32755100,37211500,30, NOW(), '32.8%','37.2%','2026-07-20')
+OLT-PJARAQUEMADA-1
+
+ indice: 658.56
+
+percentilGB: 12.6
+peakGB: 13.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PJARAQUEMADA-1','10.99.29.10','30Gb',12551300,13761300,30, NOW(), '42%','46%','2026-07-20')
+OLT-VILLAALEMANA-1
+
+ indice: 658.56
+
+percentilGB: 12.7
+peakGB: 13.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-VILLAALEMANA-1','10.99.9.158','30Gb',12718800,13685000,30, NOW(), '42.3%','45.7%','2026-07-20')
+OLT-VILLAALEMANA-2
+
+ indice: 658.56
+
+percentilGB: 7.8
+peakGB: 8.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-VILLAALEMANA-2','10.99.9.170','20Gb',7826240,8662460,30, NOW(), '39%','43.5%','2026-07-20')
+OLT-QUILPUEPCS-2
+
+ indice: 658.56
+
+percentilGB: 12.6
+peakGB: 14.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-QUILPUEPCS-2','10.99.9.162','40Gb',12562500,14760200,30, NOW(), '31.5%','37%','2026-07-20')
+OLT-QUILPUEPCS-3
+
+ indice: 658.56
+
+percentilGB: 9.3
+peakGB: 11.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-QUILPUEPCS-3','10.99.9.166','30Gb',9331820,11200700,30, NOW(), '31%','37.3%','2026-07-20')
+OLT-PJARAQUEMADA-2
+
+ indice: 658.56
+
+percentilGB: 3.3
+peakGB: 4.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PJARAQUEMADA-2','10.99.29.14','20Gb',3348320,4481780,30, NOW(), '16.5%','22.5%','2026-07-20')
+OLT-TEMUCO-2
+
+ indice: 658.56
+
+percentilGB: 3.3
+peakGB: 4.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TEMUCO-2','10.99.18.250','20Gb',3349040,4127420,30, NOW(), '16.5%','20.5%','2026-07-20')
+OLT-NVACURAUMA-1
+
+ indice: 658.56
+
+percentilGB: 7.9
+peakGB: 9.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NVACURAUMA-1','10.99.9.174','30Gb',7874500,9408650,30, NOW(), '26.3%','31.3%','2026-07-20')
+OLT-NUNOA-4
+
+ indice: 658.56
+
+percentilGB: 24.7
+peakGB: 27.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NUNOA-4','10.99.29.50','100Gb',24747000,27102900,30, NOW(), '24.7%','27.1%','2026-07-20')
+OLT-CLAMONTANAPCS-1
+
+ indice: 658.56
+
+percentilGB: 18.7
+peakGB: 20.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CLAMONTANAPCS-1','10.99.29.54','100Gb',18696500,20383200,30, NOW(), '18.7%','20.4%','2026-07-20')
+OLT-ANTOFAGASTA-2
+
+ indice: 658.56
+
+percentilGB: 1.4
+peakGB: 2.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ANTOFAGASTA-2','10.99.3.38','10Gb',1445590,2149970,30, NOW(), '14%','21%','2026-07-20')
+OLT-CHILLAN-2
+
+ indice: 658.56
+
+percentilGB: 1
+peakGB: 1.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CHILLAN-2','10.99.16.18','10Gb',955967,1261220,30, NOW(), '10%','13%','2026-07-20')
+OLT-LOSJARDINESPCS-2
+
+ indice: 658.56
+
+percentilGB: 15
+peakGB: 17.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LOSJARDINESPCS-2','10.99.30.14','100Gb',14996900,17419200,30, NOW(), '15%','17.4%','2026-07-20')
+OLT-GRANAVENIDAPCS-3
+
+ indice: 658.56
+
+percentilGB: 9.7
+peakGB: 11.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-GRANAVENIDAPCS-3','10.99.30.18','30Gb',9687040,11729200,30, NOW(), '32.3%','39%','2026-07-20')
+OLT-COLON-2
+
+ indice: 658.56
+
+percentilGB: 0.7
+peakGB: 1.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COLON-2','10.99.31.6','10Gb',653789,1177130,30, NOW(), '7%','12%','2026-07-20')
+OLT-PUENTEALTO-2
+
+ indice: 658.56
+
+percentilGB: 5.9
+peakGB: 7.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PUENTEALTO-2','10.99.30.22','20Gb',5928480,7148740,30, NOW(), '29.5%','35.5%','2026-07-20')
+OLT-LASERENA-1
+
+ indice: 658.56
+
+percentilGB: 7.5
+peakGB: 8.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASERENA-1','10.99.5.146','20Gb',7504880,8703570,30, NOW(), '37.5%','43.5%','2026-07-20')
+OLT-SANTAELENA-2
+
+ indice: 658.56
+
+percentilGB: 17.6
+peakGB: 21
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SANTAELENA-2','10.99.30.26','40Gb',17600400,20967900,30, NOW(), '44%','52.5%','2026-07-20')
+OLT-SANTAELENA-3
+
+ indice: 658.56
+
+percentilGB: 2.1
+peakGB: 3.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SANTAELENA-3','10.99.30.50','10Gb',2110560,3522940,30, NOW(), '21%','35%','2026-07-20')
+OLT-CONCEPCION-3
+
+ indice: 658.56
+
+percentilGB: 7.1
+peakGB: 8.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CONCEPCION-3','10.99.17.38','20Gb',7063460,8558870,30, NOW(), '35.5%','43%','2026-07-20')
+OLT-CONCEPCION-4
+
+ indice: 658.56
+
+percentilGB: 5.1
+peakGB: 6.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CONCEPCION-4','10.99.17.46','20Gb',5148010,6443710,30, NOW(), '25.5%','32%','2026-07-20')
+OLT-BOMBEROSCOLLAO-1
+
+ indice: 658.56
+
+percentilGB: 3.3
+peakGB: 4.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-BOMBEROSCOLLAO-1','10.99.17.50','20Gb',3275360,4308160,30, NOW(), '16.5%','21.5%','2026-07-20')
+OLT-HERNANCIUDADPCS-2
+
+ indice: 658.56
+
+percentilGB: 14.3
+peakGB: 16.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-HERNANCIUDADPCS-2','10.99.1.10','30Gb',14276200,16843200,30, NOW(), '47.7%','56%','2026-07-20')
+OLT-HERNANCIUDADPCS-3
+
+ indice: 658.56
+
+percentilGB: 7.1
+peakGB: 9.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-HERNANCIUDADPCS-3','10.99.1.14','20Gb',7078150,9090910,30, NOW(), '35.5%','45.5%','2026-07-20')
+OLT-RANCAGUA-3
+
+ indice: 658.56
+
+percentilGB: 14
+peakGB: 15.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-RANCAGUA-3','10.99.1.2','30Gb',13968400,15187400,30, NOW(), '46.7%','50.7%','2026-07-20')
+OLT-RANCAGUA-4
+
+ indice: 658.56
+
+percentilGB: 2.2
+peakGB: 3.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-RANCAGUA-4','10.99.1.6','40Gb',2236300,3254250,30, NOW(), '5.5%','8.3%','2026-07-20')
+OLT-COQUIMBO-2
+
+ indice: 658.56
+
+percentilGB: 16.1
+peakGB: 17.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COQUIMBO-2','10.99.5.154','30Gb',16078700,17926200,30, NOW(), '53.7%','59.7%','2026-07-20')
+OLT-SBOTICELLI-2
+
+ indice: 658.56
+
+percentilGB: 1.2
+peakGB: 1.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SBOTICELLI-2','10.99.30.42','20Gb',1207710,1639560,30, NOW(), '6%','8%','2026-07-20')
+OLT-ALTOPENUELAS-2
+
+ indice: 658.56
+
+percentilGB: 15.4
+peakGB: 16.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ALTOPENUELAS-2','10.99.5.150','30Gb',15420300,16803100,30, NOW(), '51.3%','56%','2026-07-20')
+OLT-ESTRELLADELSUR-1
+
+ indice: 658.56
+
+percentilGB: 5.4
+peakGB: 6.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ESTRELLADELSUR-1','10.99.30.58','20Gb',5389210,6705740,30, NOW(), '27%','33.5%','2026-07-20')
+OLT-PADREHURTADOPCS-1
+
+ indice: 658.56
+
+percentilGB: 5.3
+peakGB: 5.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PADREHURTADOPCS-1','10.99.30.54','20Gb',5303970,5942460,30, NOW(), '26.5%','29.5%','2026-07-20')
+OLT-AVPHURTADONORTEPCS-2
+
+ indice: 658.56
+
+percentilGB: 12.4
+peakGB: 13.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AVPHURTADONORTEPCS-2','10.99.30.74','20Gb',12408500,13406400,30, NOW(), '62%','67%','2026-07-20')
+OLT-GRALBONILLAPCS-3
+
+ indice: 658.56
+
+percentilGB: 0.5
+peakGB: 0.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-GRALBONILLAPCS-3','10.99.30.10','20Gb',495214,854617,30, NOW(), '2.5%','4.5%','2026-07-20')
+OLT-CALAMA-3
+
+ indice: 658.56
+
+percentilGB: 23
+peakGB: 25.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CALAMA-3','10.99.28.6','40Gb',22953900,25063300,30, NOW(), '57.5%','62.8%','2026-07-20')
+OLT-CALAMA-4
+
+ indice: 658.56
+
+percentilGB: 20.9
+peakGB: 22
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CALAMA-4','10.99.28.10','40Gb',20922100,21951700,30, NOW(), '52.3%','55%','2026-07-20')
+OLT-CINCOPINOSPCS-1
+
+ indice: 658.56
+
+percentilGB: 6.3
+peakGB: 7.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CINCOPINOSPCS-1','10.99.30.66','20Gb',6296490,7729760,30, NOW(), '31.5%','38.5%','2026-07-20')
+OLT-TEMUCOPONIENTEPCS-1
+
+ indice: 658.56
+
+percentilGB: 8.2
+peakGB: 9.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TEMUCOPONIENTEPCS-1','10.99.18.18','20Gb',8218320,9410890,30, NOW(), '41%','47%','2026-07-20')
+OLT-SIMONBOLIVARPCS-3
+
+ indice: 658.56
+
+percentilGB: 0
+peakGB: 0
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SIMONBOLIVARPCS-3','10.99.30.46','20Gb',35,49.5,30, NOW(), '0%','0%','2026-07-20')
+OLT-CVELBOSQUEPCS-2
+
+ indice: 658.56
+
+percentilGB: 0.6
+peakGB: 1.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CVELBOSQUEPCS-2','10.99.30.30','20Gb',647636,1301920,30, NOW(), '3%','6.5%','2026-07-20')
+OLT-TALCASWPCS-1
+
+ indice: 658.56
+
+percentilGB: 8.5
+peakGB: 10.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TALCASWPCS-1','10.99.13.134','20Gb',8460940,10339500,30, NOW(), '42.5%','51.5%','2026-07-20')
+OLT-TALCASWPCS-2
+
+ indice: 658.56
+
+percentilGB: 1.4
+peakGB: 2.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TALCASWPCS-2','10.99.13.138','20Gb',1354210,2063520,30, NOW(), '7%','10.5%','2026-07-20')
+OLT-NUNOA-5
+
+ indice: 658.56
+
+percentilGB: 7.1
+peakGB: 8.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NUNOA-5','10.99.30.38','30Gb',7115490,8522170,30, NOW(), '23.7%','28.3%','2026-07-20')
+OLT-AVPDTEBATLLEPCS-3
+
+ indice: 658.56
+
+percentilGB: 1.1
+peakGB: 1.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AVPDTEBATLLEPCS-3','10.99.30.78','10Gb',1056620,1538060,30, NOW(), '11%','15%','2026-07-20')
+OLT-VALPARAISO-2
+
+ indice: 658.56
+
+percentilGB: 5.4
+peakGB: 6.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-VALPARAISO-2','10.99.9.182','30Gb',5380520,6788630,30, NOW(), '18%','22.7%','2026-07-20')
+OLT-AVDELMARPCS-1
+
+ indice: 658.56
+
+percentilGB: 15.2
+peakGB: 17.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AVDELMARPCS-1','10.99.5.158','30Gb',15174200,17295900,30, NOW(), '50.7%','57.7%','2026-07-20')
+OLT-AVDELMARPCS-2
+
+ indice: 658.56
+
+percentilGB: 0.6
+peakGB: 1.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AVDELMARPCS-2','10.99.5.162','20Gb',585340,1075110,30, NOW(), '3%','5.5%','2026-07-20')
+OLT-SSBERNARDOPCS-1
+
+ indice: 658.56
+
+percentilGB: 2
+peakGB: 3.4
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SSBERNARDOPCS-1','10.99.9.186','20Gb',1979560,3395840,30, NOW(), '10%','17%','2026-07-20')
+OLT-LCARRERA-3
+
+ indice: 658.56
+
+percentilGB: 5.2
+peakGB: 6.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LCARRERA-3','10.99.5.166','30Gb',5153280,6588780,30, NOW(), '17.3%','22%','2026-07-20')
+OLT-BUIN-1
+
+ indice: 658.56
+
+percentilGB: 4
+peakGB: 4.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-BUIN-1','10.99.30.82','20Gb',4025150,4739140,30, NOW(), '20%','23.5%','2026-07-20')
+OLT-INDEPENDENCIA-1
+
+ indice: 658.56
+
+percentilGB: 0.4
+peakGB: 0.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-INDEPENDENCIA-1','10.99.30.62','10Gb',433246,830890,30, NOW(), '4%','8%','2026-07-20')
+OLT-NVATALCAHUANO-1
+
+ indice: 658.56
+
+percentilGB: 2
+peakGB: 2.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NVATALCAHUANO-1','10.99.17.58','20Gb',2016420,2648860,30, NOW(), '10%','13%','2026-07-20')
+OLT-LOSLIRIOSPCS-1
+
+ indice: 658.56
+
+percentilGB: 10.3
+peakGB: 11.5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LOSLIRIOSPCS-1','10.99.17.62','30Gb',10278700,11512600,30, NOW(), '34.3%','38.3%','2026-07-20')
+OLT-LOSLIRIOSPCS-2
+
+ indice: 658.56
+
+percentilGB: 0.5
+peakGB: 1.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LOSLIRIOSPCS-2','10.99.17.66','20Gb',485401,1265030,30, NOW(), '2.5%','6.5%','2026-07-20')
+OLT-TOME2PCS-2
+
+ indice: 658.56
+
+percentilGB: 1.2
+peakGB: 2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TOME2PCS-2','10.99.17.74','20Gb',1164230,1959970,30, NOW(), '6%','10%','2026-07-20')
+OLT-AVDACOLONPCS-1
+
+ indice: 658.56
+
+percentilGB: 6.3
+peakGB: 8.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AVDACOLONPCS-1','10.99.17.70','20Gb',6265080,8093020,30, NOW(), '31.5%','40.5%','2026-07-20')
+OLT-PENCOPCS-2
+
+ indice: 658.56
+
+percentilGB: 4.1
+peakGB: 5
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PENCOPCS-2','10.99.17.78','20Gb',4101830,5013770,30, NOW(), '20.5%','25%','2026-07-20')
+OLT-LASCONDES-8
+
+ indice: 658.56
+
+percentilGB: 21.3
+peakGB: 23.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LASCONDES-8','10.99.26.50','60Gb',21261400,23743700,30, NOW(), '35.5%','39.5%','2026-07-20')
+OLT-ECACORDOVAPCS-2
+
+ indice: 658.56
+
+percentilGB: 13.9
+peakGB: 16.6
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-ECACORDOVAPCS-2','10.99.30.70','100Gb',13915300,16629900,30, NOW(), '13.9%','16.6%','2026-07-20')
+OLT-PARQUETITANIUM-3
+
+ indice: 658.56
+
+percentilGB: 11.5
+peakGB: 14.9
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PARQUETITANIUM-3','10.99.30.86','20Gb',11543800,14852500,30, NOW(), '57.5%','74.5%','2026-07-20')
+OLT-TALCAORIENTEPCS-1
+
+ indice: 658.56
+
+percentilGB: 6.3
+peakGB: 7.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-TALCAORIENTEPCS-1','10.99.13.142','20Gb',6304480,7148740,30, NOW(), '31.5%','35.5%','2026-07-20')
+OLT-CALAMA-5
+
+ indice: 658.56
+
+percentilGB: 1.6
+peakGB: 2.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CALAMA-5','10.99.28.14','20Gb',1647880,2270980,30, NOW(), '8%','11.5%','2026-07-20')
+OLT-COQUIMBO-3
+
+ indice: 658.56
+
+percentilGB: 0.5
+peakGB: 1.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-COQUIMBO-3','10.99.5.170','20Gb',529096,1204640,30, NOW(), '2.5%','6%','2026-07-20')
+OLT-SANPEDRO3PCS-2
+
+ indice: 658.56
+
+percentilGB: 2.7
+peakGB: 3.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-SANPEDRO3PCS-2','10.99.17.82','20Gb',2723210,3725360,30, NOW(), '13.5%','18.5%','2026-07-20')
+OLT-CNT-9
+
+ indice: 658.56
+
+percentilGB: 0.9
+peakGB: 1.3
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-CNT-9','10.99.30.98','20Gb',915728,1252550,30, NOW(), '4.5%','6.5%','2026-07-20')
+OLT-VITACURA-5
+
+ indice: 658.56
+
+percentilGB: 9.3
+peakGB: 10.7
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-VITACURA-5','10.99.30.94','30Gb',9341420,10744800,30, NOW(), '31%','35.7%','2026-07-20')
+OLT-DURZUA-12
+
+ indice: 658.56
+
+percentilGB: 19.2
+peakGB: 22.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-DURZUA-12','10.99.25.90','40Gb',19221300,22151600,30, NOW(), '48%','55.5%','2026-07-20')
+OLT-VITACURA-4
+
+ indice: 658.56
+
+percentilGB: 3.6
+peakGB: 4.2
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-VITACURA-4','10.99.30.90','40Gb',3626180,4199200,30, NOW(), '9%','10.5%','2026-07-20')
+OLT-NVA13NORTE-4
+
+ indice: 658.56
+
+percentilGB: 0
+peakGB: 0
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-NVA13NORTE-4','10.99.9.178','20Gb',29.4,64.4,30, NOW(), '0%','0%','2026-07-20')
+OLT-PAINE-1
+
+ indice: 658.56
+
+percentilGB: 2.2
+peakGB: 3.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-PAINE-1','10.99.24.182','20Gb',2247860,3755590,30, NOW(), '11%','19%','2026-07-20')
+OLT-AORIENTALNORPCS-1
+
+ indice: 658.56
+
+percentilGB: 0.8
+peakGB: 1.1
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-AORIENTALNORPCS-1','10.99.3.42','10Gb',770765,1094730,30, NOW(), '8%','11%','2026-07-20')
+OLT-LAFARFANAPCS-3
+
+ indice: 658.56
+
+percentilGB: 22.3
+peakGB: 23.8
+INSERT INTO OLT_PERCENTIL_98 (olt,ip,capacidad,percentil98,peak,week,fecha_registro,porcentaje98,porcentajePeak,fecha_inicio_semana) 
+    VALUES ('OLT-LAFARFANAPCS-3','10.99.30.102','100Gb',22330500,23778800,30, NOW(), '22.3%','23.8%','2026-07-20')
