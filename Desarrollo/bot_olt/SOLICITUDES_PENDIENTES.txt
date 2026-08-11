@@ -1,0 +1,53 @@
+SOLICITUDES PENDIENTES — bot_olt
+==================================================================
+Datos o decisiones que faltan para completar el proyecto. Cada entrada
+corresponde a un TODO dejado en el codigo. Ver README_LIMITES.md.
+
+
+[2026-08-11] Modulo/archivo: BD/OLT_BOT_USUARIOS.sql
+Falta: ejecutar el DDL de la tabla OLT_BOT_USUARIOS en el esquema Aden y
+       dar de alta los primeros chat_id autorizados.
+Motivo: sin esa tabla el bot rechaza a todos los usuarios. El agente no
+        ejecuta DDL ni escrituras contra la base.
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: .env
+Falta: BOT_TOKEN del bot de Telegram y las credenciales reales de
+       CONECTION_ADEN (usuario y password de MySQL).
+Motivo: el bot no arranca sin token, y no consulta sin conexion. El host
+        172.29.159.57:3306/Aden se tomo de BD/OLT_MENU_1.sql; falta
+        confirmar si es el mismo servidor que usan los PHP (host144_geret).
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: robot/model/consultas.py (SQL_PUERTAS_PON)
+Falta: confirmar las reglas de negocio de la ocupacion de puertas PON.
+       1. "Puerto utilizado" = up_mbps > 1 en la fecha consultada.
+       2. Que valores de OLT_PUERTOS_UPLINKS.marca corresponden a uplink.
+          El PHP original (Desarrollo/puertas pon/option_gpon.php:59) escribe
+          "WHERE marca = '2' OR '1'", que en MySQL siempre evalua verdadero y
+          excluye todos los puertos. Aqui se escribio IN (1, 2) como
+          interpretacion probable, pendiente de confirmar.
+       3. Que OLT_ONT_PCS.zs_comercial sea efectivamente el total de puertas.
+Motivo: de esas tres reglas depende el porcentaje de ocupacion que reporta
+        el bot; si estan mal, el dato entregado es incorrecto.
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: ecosystem.config.js
+Falta: ruta real de despliegue en el servidor (cwd, interpreter, logs) y
+       version de Python del servidor destino.
+Motivo: la plantilla asume /var/www/bot_olt y Python del venv local. Si el
+        servidor usa Python 3.6 (caso servidor 140), hay que ajustar las
+        versiones de requirements.txt.
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: robot/scripts/alarmas.py
+Falta: definir si el bot debe enviar alarmas automaticamente por horario
+       (como bot_crm) o solo responder a demanda.
+Motivo: hoy el modulo solo responde a demanda. El envio programado requiere
+        agregar la tarea periodica en bot.py (post_init) y la lista de
+        suscriptores.
+Responsable sugerido: sin definir

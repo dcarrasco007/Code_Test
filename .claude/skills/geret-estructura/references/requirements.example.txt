@@ -1,0 +1,46 @@
+# =============================================================
+# requirements.example.txt — Plantilla de dependencias GERET
+# -------------------------------------------------------------
+# Copia este archivo como requirements.txt en tu proyecto y
+# deja solo las librerias que realmente uses.
+# Las versiones son las usadas hoy en los proyectos; ajustalas
+# segun el ambiente (ver README_LIBRERIAS.md, caso servidor 140).
+# Detalle de cada libreria: README_LIBRERIAS.md
+# =============================================================
+
+# ---- Framework API / servidor web (solo proyectos API) ------
+fastapi==0.75.2
+uvicorn==0.17.6
+starlette==0.17.1
+python-multipart==0.0.5
+
+# ---- Validacion de datos (API) ------------------------------
+pydantic==1.9.2
+
+# ---- Autenticacion y seguridad (API) ------------------------
+PyJWT==2.4.0
+passlib==1.7.4
+bcrypt==4.0.1
+cryptography==37.0.1
+
+# ---- Conexion a base de datos -------------------------------
+SQLAlchemy==2.0.41            # API usa 1.4.36; script usa 2.0.41
+PyMySQL==1.1.1                # driver MySQL (Python puro)
+mysql-connector-python==9.3.0 # inserciones masivas (scripts)
+pyodbc==5.2.0                # Sybase/ENIQ via FreeTDS (scripts)
+pymssql==2.3.5               # SQL Server / Sybase (scripts)
+
+# ---- Procesamiento de datos (scripts) -----------------------
+polars==1.27.1
+# numpy==2.0.2               # descomentar si se necesita
+
+# ---- Configuracion / entorno (todos) ------------------------
+python-dotenv==1.0.1
+
+# ---- Logs (todos) -------------------------------------------
+loguru==0.7.3
+
+# ---- Cliente HTTP / integraciones (API) ---------------------
+requests==2.6.0
+xmltodict==0.13.0
+# enm-client-scripting       # instalar desde package/ local .whl (Ericsson ENM)

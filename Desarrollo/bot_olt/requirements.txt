@@ -1,0 +1,13 @@
+# Dependencias del bot OLT — fijadas por version.
+# Detalle de cada libreria en README_LIBRERIAS.md del repo de convenciones.
+
+python-telegram-bot==20.7   # rama 20.x async
+SQLAlchemy==2.0.36
+PyMySQL==1.1.1              # driver MySQL (Python puro)
+pandas==2.1.4
+openpyxl==3.1.5             # necesario para to_excel()
+loguru==0.7.3
+python-dotenv==1.0.0
+
+# matplotlib==3.8.4         # descomentar cuando se agreguen graficos
+# pillow==11.3.0            # descomentar junto con matplotlib
