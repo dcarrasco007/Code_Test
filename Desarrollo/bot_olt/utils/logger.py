@@ -31,8 +31,18 @@ class _InterceptHandler(logging.Handler):
 def setup_logging(log_file: str = "log/bot.log") -> None:
     Path(log_file).parent.mkdir(parents=True, exist_ok=True)
 
+    # diagnose=False es obligatorio: con el valor por defecto (True) loguru
+    # vuelca el contenido de cada variable del stack en el traceback, lo que
+    # deja el BOT_TOKEN y las credenciales de la base escritos en el log.
     logger.remove()
-    logger.add(sys.stderr, level="INFO", colorize=True, format=_FORMATO_CONSOLA)
+    logger.add(
+        sys.stderr,
+        level="INFO",
+        colorize=True,
+        format=_FORMATO_CONSOLA,
+        backtrace=True,
+        diagnose=False,
+    )
     logger.add(
         log_file,
         level="DEBUG",
@@ -40,6 +50,8 @@ def setup_logging(log_file: str = "log/bot.log") -> None:
         retention="7 days",
         encoding="utf-8",
         format=_FORMATO_ARCHIVO,
+        backtrace=True,
+        diagnose=False,
     )
 
     logging.basicConfig(handlers=[_InterceptHandler()], level=0, force=True)

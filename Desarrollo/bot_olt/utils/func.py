@@ -53,6 +53,19 @@ def validar_fecha(texto: str) -> Optional[str]:
         return None
 
 
+def a_entero(valor) -> int:
+    """Convierte a entero un valor que puede venir como texto o nulo.
+
+    Varias columnas de las tablas OLT estan declaradas como varchar aunque
+    guarden numeros (por ejemplo OLT_ONT_PCS.zs_comercial), asi que no se
+    puede operar con ellas directamente.
+    """
+    try:
+        return int(float(valor))
+    except (TypeError, ValueError):
+        return 0
+
+
 def a_dataframe(filas: list) -> pd.DataFrame:
     """Convierte la lista de dicts que entrega la capa de datos en DataFrame."""
     return pd.DataFrame(filas)
