@@ -33,6 +33,26 @@ def fecha_ayer() -> str:
     return (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
+def validar_fecha(texto: str) -> Optional[str]:
+    """Normaliza la fecha que escribe el usuario a YYYY-MM-DD.
+
+    Acepta ademas los atajos 'hoy' y 'ayer'. Retorna None si el texto no es
+    una fecha valida, para que el handler la vuelva a pedir en vez de mandar
+    un parametro basura a la base.
+    """
+    texto = (texto or "").strip().lower()
+
+    if texto in ("", "ayer"):
+        return fecha_ayer()
+    if texto == "hoy":
+        return datetime.now().strftime("%Y-%m-%d")
+
+    try:
+        return datetime.strptime(texto, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError:
+        return None
+
+
 def a_dataframe(filas: list) -> pd.DataFrame:
     """Convierte la lista de dicts que entrega la capa de datos en DataFrame."""
     return pd.DataFrame(filas)

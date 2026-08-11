@@ -28,7 +28,7 @@ from telegram.ext import (
 
 from robot.model import consultas
 from robot.scripts import alarmas, gpon, inventario, trafico
-from utils.func import exportar, marker_errors, resumen_texto
+from utils.func import exportar, marker_errors, resumen_texto, validar_fecha
 
 # =============================================================
 # Autorizacion
@@ -134,6 +134,33 @@ def _consulta_simple(obtener):
     return handler
 
 
+_TEXTO_FECHA = (
+    "Ingresa la fecha a consultar en formato *AAAA-MM-DD* (ej. 2026-08-10).\n"
+    "Tambien puedes escribir _hoy_ o _ayer_."
+)
+
+
+async def pedir_fecha_puertas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """OLT_TRAFICOGPON es una tabla grande: se acota siempre por fecha."""
+    context.user_data["esperando"] = "puertas_fecha"
+    await update.effective_message.reply_text(_TEXTO_FECHA, parse_mode=ParseMode.MARKDOWN)
+
+
+async def _recibir_fecha_puertas(update: Update, context: ContextTypes.DEFAULT_TYPE, texto: str):
+    fecha = validar_fecha(texto)
+    if not fecha:
+        # Fecha invalida: se vuelve a pedir en vez de consultar con basura.
+        context.user_data["esperando"] = "puertas_fecha"
+        await update.effective_message.reply_text(
+            f"No entendi la fecha.\n\n{_TEXTO_FECHA}", parse_mode=ParseMode.MARKDOWN
+        )
+        return
+
+    await update.effective_chat.send_action("typing")
+    titulo, filas = await gpon.obtener(fecha)
+    await _responder_resultado(update, context, titulo, filas)
+
+
 async def pedir_ip_trafico(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """El trafico PON necesita una OLT: se pide la IP y se espera la respuesta."""
     context.user_data["esperando"] = "trafico_ip"
@@ -148,13 +175,14 @@ async def _recibir_ip_trafico(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 OPCIONES: dict = {
     "🗄 Inventario OLT": _consulta_simple(inventario.obtener),
-    "🔌 Puertas PON": _consulta_simple(gpon.obtener),
+    "🔌 Puertas PON": pedir_fecha_puertas,
     "🚨 Alarmas criticas": _consulta_simple(alarmas.obtener),
     "📈 Trafico PON": pedir_ip_trafico,
 }
 
 # Entradas que esperan un dato del usuario antes de consultar.
 ENTRADAS_PENDIENTES: dict = {
+    "puertas_fecha": _recibir_fecha_puertas,
     "trafico_ip": _recibir_ip_trafico,
 }
 
@@ -185,24 +213,32 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Routing por diccionario: no se edita al agregar opciones nuevas."""
     texto = (update.effective_message.text or "").strip()
 
-    pendiente = context.user_data.pop("esperando", None)
-    if pendiente and pendiente in ENTRADAS_PENDIENTES:
-        await ENTRADAS_PENDIENTES[pendiente](update, context, texto)
-        return
-
+    # El menu tiene prioridad sobre un dato pendiente: si el usuario toca otra
+    # opcion mientras se le pedia una fecha o una IP, cambia de consulta en vez
+    # de quedar atrapado en la pregunta anterior.
     handler = OPCIONES.get(texto)
-    if not handler:
-        await update.effective_message.reply_text(
-            "Opcion no reconocida. Elige una del menu.",
-            reply_markup=_teclado_menu(),
-        )
+    if handler:
+        context.user_data.pop("esperando", None)
+        try:
+            await handler(update, context)
+        except Exception as e:
+            marker_errors(f"Error al procesar la opcion '{texto}': {e}")
+            await update.effective_message.reply_text("Ocurrio un error al procesar la consulta.")
         return
 
-    try:
-        await handler(update, context)
-    except Exception as e:
-        marker_errors(f"Error al procesar la opcion '{texto}': {e}")
-        await update.effective_message.reply_text("Ocurrio un error al procesar la consulta.")
+    pendiente = context.user_data.pop("esperando", None)
+    if pendiente in ENTRADAS_PENDIENTES:
+        try:
+            await ENTRADAS_PENDIENTES[pendiente](update, context, texto)
+        except Exception as e:
+            marker_errors(f"Error al procesar la entrada '{pendiente}': {e}")
+            await update.effective_message.reply_text("Ocurrio un error al procesar la consulta.")
+        return
+
+    await update.effective_message.reply_text(
+        "Opcion no reconocida. Elige una del menu.",
+        reply_markup=_teclado_menu(),
+    )
 
 
 def register_handlers(application: Application) -> None:

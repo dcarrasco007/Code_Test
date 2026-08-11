@@ -43,6 +43,7 @@ bot_olt/
 |---|---|---|
 | 🗄 Inventario OLT | `OLT_SERVER` | `inventario.py` |
 | 🔌 Puertas PON | `OLT_SERVER`, `OLT_ONT_PCS`, `OLT_TRAFICOGPON`, `OLT_PUERTOS_UPLINKS` | `gpon.py` |
+| ↳ pide fecha | `OLT_TRAFICOGPON` es grande: la consulta siempre se acota por fecha | |
 | 🚨 Alarmas criticas | `OLT_ALARMA_CRITICAL_LOS` | `alarmas.py` |
 | 📈 Trafico PON | `OLT_TRAFICOGPON` | `trafico.py` |
 

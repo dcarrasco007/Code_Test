@@ -44,6 +44,18 @@ Motivo: la plantilla asume /var/www/bot_olt y Python del venv local. Si el
 Responsable sugerido: sin definir
 
 
+[2026-08-11] Modulo/archivo: requirements.txt — version de Python de desarrollo
+Falta: dejar documentado que este proyecto requiere Python 3.9 a 3.12.
+Motivo: el PC de desarrollo tenia Python 3.14.6, donde pandas==2.1.4 (version
+        que fija README_PYTHON_BOT.md) no tiene wheels: pip intenta compilar
+        numpy desde fuente y falla por falta de compilador de C en Windows.
+        Subir pandas arrastraria tambien a SQLAlchemy y alejaria el proyecto
+        de la convencion y de la version del servidor. Se opto por instalar
+        Python 3.12 en desarrollo y mantener los pines documentados.
+        Conviene agregar el rango de Python soportado a README_PYTHON_BOT.md.
+Responsable sugerido: sin definir
+
+
 [2026-08-11] Modulo/archivo: robot/scripts/alarmas.py
 Falta: definir si el bot debe enviar alarmas automaticamente por horario
        (como bot_crm) o solo responder a demanda.

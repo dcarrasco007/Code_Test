@@ -4,7 +4,7 @@
 python-telegram-bot==20.7   # rama 20.x async
 SQLAlchemy==2.0.36
 PyMySQL==1.1.1              # driver MySQL (Python puro)
-pandas==2.1.4
+pandas==2.1.4              # requiere Python 3.9 a 3.12 (no hay wheels para 3.13+)
 openpyxl==3.1.5             # necesario para to_excel()
 loguru==0.7.3
 python-dotenv==1.0.0

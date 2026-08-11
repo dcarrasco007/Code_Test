@@ -125,29 +125,43 @@ SQL_REGIONES = text(
 #      lo tanto excluye TODOS los puertos; aqui se corrigio a IN (1, 2), pero
 #      falta confirmar cuales marcas son realmente uplink.
 #   3. `OLT_ONT_PCS.zs_comercial` se usa como total de puertas de la OLT.
+# El conteo de puertos utilizados va en una tabla derivada y no en una
+# subconsulta correlacionada: MySQL no admite funciones de agregacion
+# (MAX) dentro del WHERE de una subconsulta, y ademas asi se recorre
+# OLT_TRAFICOGPON una sola vez en lugar de una vez por OLT.
 SQL_PUERTAS_PON = text(
     """
     SELECT
-        OLT_SERVER.`server`           AS olt,
-        MAX(OLT_SERVER.ip)            AS ip,
-        MAX(OLT_SERVER.region)        AS region,
-        MAX(OLT_ONT_PCS.zs_comercial) AS puertas_totales,
-        (
-            SELECT COUNT(DISTINCT OLT_TRAFICOGPON.port)
-            FROM OLT_TRAFICOGPON
-            WHERE OLT_TRAFICOGPON.ip_equipo = MAX(OLT_SERVER.ip)
-              AND OLT_TRAFICOGPON.fecha     = :fecha
-              AND OLT_TRAFICOGPON.up_mbps   > 1
-              AND OLT_TRAFICOGPON.port NOT IN (
-                    SELECT DISTINCT OLT_PUERTOS_UPLINKS.puerto
-                    FROM OLT_PUERTOS_UPLINKS
-                    WHERE OLT_PUERTOS_UPLINKS.marca IN (1, 2)
-              )
-        ) AS puertas_utilizadas
-    FROM OLT_SERVER
-    LEFT JOIN OLT_ONT_PCS ON OLT_ONT_PCS.`server` = OLT_SERVER.`server`
-    GROUP BY OLT_SERVER.`server`
-    ORDER BY region, olt
+        olt.olt                        AS olt,
+        olt.ip                         AS ip,
+        olt.region                     AS region,
+        olt.puertas_totales            AS puertas_totales,
+        COALESCE(uso.puertas_utilizadas, 0) AS puertas_utilizadas
+    FROM (
+        SELECT
+            OLT_SERVER.`server`           AS olt,
+            MAX(OLT_SERVER.ip)            AS ip,
+            MAX(OLT_SERVER.region)        AS region,
+            MAX(OLT_ONT_PCS.zs_comercial) AS puertas_totales
+        FROM OLT_SERVER
+        LEFT JOIN OLT_ONT_PCS ON OLT_ONT_PCS.`server` = OLT_SERVER.`server`
+        GROUP BY OLT_SERVER.`server`
+    ) olt
+    LEFT JOIN (
+        SELECT
+            OLT_TRAFICOGPON.ip_equipo            AS ip,
+            COUNT(DISTINCT OLT_TRAFICOGPON.port) AS puertas_utilizadas
+        FROM OLT_TRAFICOGPON
+        WHERE OLT_TRAFICOGPON.fecha   = :fecha
+          AND OLT_TRAFICOGPON.up_mbps > 1
+          AND OLT_TRAFICOGPON.port NOT IN (
+                SELECT DISTINCT OLT_PUERTOS_UPLINKS.puerto
+                FROM OLT_PUERTOS_UPLINKS
+                WHERE OLT_PUERTOS_UPLINKS.marca IN (1, 2)
+          )
+        GROUP BY OLT_TRAFICOGPON.ip_equipo
+    ) uso ON uso.ip = olt.ip
+    ORDER BY olt.region, olt.olt
     """
 )
 
