@@ -4,6 +4,16 @@ Datos o decisiones que faltan para completar el proyecto. Cada entrada
 corresponde a un TODO dejado en el codigo. Ver README_LIMITES.md.
 
 
+[2026-08-11] Modulo/archivo: BD/OLT_BOT_AUDITORIA.sql
+Falta: ejecutar el DDL de la tabla OLT_BOT_AUDITORIA en el esquema Aden y
+       confirmar que el usuario de la aplicacion tenga permiso INSERT sobre
+       ella.
+Motivo: sin la tabla, cada evento cae al respaldo en log/bot.log con el
+        prefijo "AUDITORIA NO REGISTRADA" y no queda rastro auditable. El
+        bot sigue funcionando, pero sin auditoria.
+Responsable sugerido: sin definir
+
+
 [2026-08-11] Modulo/archivo: BD/OLT_BOT_USUARIOS.sql
 Falta: ejecutar el DDL de la tabla OLT_BOT_USUARIOS en el esquema Aden y
        dar de alta los primeros chat_id autorizados.
@@ -53,6 +63,34 @@ Motivo: el PC de desarrollo tenia Python 3.14.6, donde pandas==2.1.4 (version
         de la convencion y de la version del servidor. Se opto por instalar
         Python 3.12 en desarrollo y mantener los pines documentados.
         Conviene agregar el rango de Python soportado a README_PYTHON_BOT.md.
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: .env (PERFILES_ADMIN)
+Falta: que valor(es) de OLT_BOT_USUARIOS.perfil corresponden a administrador.
+Motivo: el reseteo de contrasenas solo se ofrece a esos perfiles. Mientras
+        PERFILES_ADMIN este vacio, la opcion no aparece para nadie (default
+        deliberadamente restrictivo). En el repo solo se pudo confirmar que
+        OLT_USUARIOS.perfil existe, no que valores significa cada uno.
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: robot/scripts/usuarios.py (_hash_password)
+Falta: decidir si se migra el hash de contrasenas del portal.
+Motivo: el reseteo usa MD5 porque es lo que aplica el portal PHP
+        (md5('123456')) y el hash debe coincidir para que el usuario pueda
+        entrar. MD5 no es apto para contrasenas. Cambiarlo obliga a migrar
+        tambien el login del portal y los hashes existentes, no solo el bot.
+Responsable sugerido: sin definir
+
+
+[2026-08-11] Modulo/archivo: BD — OLT_USUARIOS
+Falta: confirmar si la columna `usuario` tiene indice UNIQUE.
+Motivo: el bot busca por nombre exacto y cancela si aparece mas de una
+        coincidencia. Con un UNIQUE esa rama es imposible y el reseteo es
+        seguro por construccion; sin el, la proteccion depende del chequeo
+        en codigo. Tambien conviene evaluar una tabla de auditoria de
+        reseteos (hoy solo queda registro en log/bot.log).
 Responsable sugerido: sin definir
 
 

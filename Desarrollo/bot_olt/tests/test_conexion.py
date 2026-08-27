@@ -43,6 +43,15 @@ async def main():
         contenido, nombre = exportar(filas, formato, "Inventario OLT")
         print(f"   {formato}: {nombre} ({len(contenido)} bytes)")
 
+    print("5. Tablas propias del bot...")
+    for tabla in ("OLT_BOT_USUARIOS", "OLT_BOT_AUDITORIA"):
+        try:
+            with engine_aden.connect() as conn:
+                total = conn.execute(text(f"SELECT COUNT(*) FROM {tabla}")).scalar()
+            print(f"   {tabla}: OK ({total} filas)")
+        except Exception as e:
+            print(f"   {tabla}: FALTA — ejecuta BD/{tabla}.sql  ({type(e).__name__})")
+
     print("\nEntorno verificado.")
 
 

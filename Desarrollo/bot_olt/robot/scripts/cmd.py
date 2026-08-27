@@ -13,6 +13,8 @@ No hay que tocar el routing ni el armado del teclado.
 
 import asyncio
 import functools
+import os
+from typing import Optional
 
 from loguru import logger
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
@@ -27,31 +29,121 @@ from telegram.ext import (
 )
 
 from robot.model import consultas
-from robot.scripts import alarmas, gpon, inventario, trafico
-from utils.func import exportar, marker_errors, resumen_texto, validar_fecha
+from robot.scripts import alarmas, auditoria, gpon, inventario, trafico, usuarios
+from utils import limites
+from utils.func import (
+    exportar,
+    marker_errors,
+    resumen_texto,
+    validar_fecha,
+    validar_ip,
+    validar_texto,
+)
 
 # =============================================================
 # Autorizacion
 # =============================================================
 
 
+def _perfiles_admin() -> set:
+    """Perfiles habilitados para las opciones privilegiadas, desde el .env.
+
+    Si PERFILES_ADMIN no esta configurado retorna un conjunto vacio: nadie es
+    administrador y las opciones privilegiadas no aparecen en el menu. Es el
+    default deliberado — una mala configuracion deja el bot mas restrictivo,
+    no mas permisivo.
+    """
+    crudo = os.getenv("PERFILES_ADMIN", "")
+    perfiles = set()
+    for parte in crudo.split(","):
+        parte = parte.strip()
+        if parte:
+            try:
+                perfiles.add(int(parte))
+            except ValueError:
+                logger.warning(f"PERFILES_ADMIN ignora el valor no numerico '{parte}'")
+    return perfiles
+
+
+def es_admin(usuario: dict) -> bool:
+    """True si el perfil del usuario esta en PERFILES_ADMIN."""
+    perfiles = _perfiles_admin()
+    if not perfiles:
+        return False
+    try:
+        return int((usuario or {}).get("perfil")) in perfiles
+    except (TypeError, ValueError):
+        return False
+
+
+async def _autorizar(chat_id: int, refrescar: bool = False) -> Optional[dict]:
+    """Verifica al usuario apoyandose en el cache.
+
+    Cachea tambien el resultado negativo: sin eso, quien no esta autorizado
+    generaria una query contra produccion por cada mensaje que envie.
+
+    Con `refrescar=True` ignora el cache y va a la base. Se usa antes de
+    ejecutar operaciones privilegiadas, para no depender de un permiso que
+    pudo revocarse dentro de la ventana del TTL.
+    """
+    if not refrescar:
+        hay_dato, usuario = limites.auth_en_cache(chat_id)
+        if hay_dato:
+            return usuario
+
+    usuario = await consultas.verificar_usuario(chat_id)
+    limites.guardar_auth(chat_id, usuario)
+    return usuario
+
+
 def requiere_autorizacion(func):
-    """Deja pasar solo a los chat_id registrados y activos en OLT_BOT_USUARIOS."""
+    """Filtra cada mensaje antes de que llegue a la base.
+
+    El orden importa: primero lo que no cuesta nada (silenciados), luego el
+    limite de peticiones, y solo al final la verificacion —que es la que
+    puede terminar en una consulta a produccion.
+    """
 
     @functools.wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         chat_id = update.effective_chat.id
-        usuario = await consultas.verificar_usuario(chat_id)
 
-        if not usuario:
-            logger.warning(f"Acceso denegado al chat_id {chat_id}")
-            await update.effective_message.reply_text(
-                "No estas autorizado para usar este bot.\n"
-                f"Solicita el acceso indicando tu ID: `{chat_id}`",
-                parse_mode=ParseMode.MARKDOWN,
-            )
+        # 1. A quien ya insistio de mas no se le responde ni se le consulta.
+        if limites.esta_silenciado(chat_id):
             return
 
+        # 2. Limite de peticiones, antes de tocar la base.
+        permitido, avisar = limites.permitir(chat_id)
+        if not permitido:
+            if avisar:
+                espera = limites.segundos_para_reintentar(chat_id)
+                logger.warning(f"Rate limit alcanzado por chat_id {chat_id}")
+                await update.effective_message.reply_text(
+                    f"Demasiadas consultas seguidas. Reintenta en {espera} segundos."
+                )
+            return
+
+        # 3. Autorizacion (cacheada).
+        usuario = await _autorizar(chat_id)
+
+        if not usuario:
+            responder = limites.registrar_no_autorizado(chat_id)
+            logger.warning(f"Acceso denegado al chat_id {chat_id}")
+            # Se audita solo mientras no este silenciado: el silenciado acota
+            # cuantas filas puede generar alguien insistiendo.
+            await auditoria.registrar(
+                chat_id, None, auditoria.ACCESO_DENEGADO,
+                detalle=(update.effective_message.text or "")[:150],
+            )
+            if responder:
+                await update.effective_message.reply_text(
+                    "No estas autorizado para usar este bot.\n"
+                    f"Solicita el acceso indicando tu ID: `{chat_id}`",
+                    parse_mode=ParseMode.MARKDOWN,
+                )
+            return
+
+        limites.limpiar_intentos(chat_id)
         context.user_data["usuario"] = usuario
         return await func(update, context, *args, **kwargs)
 
@@ -109,6 +201,11 @@ async def descargar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     titulo, filas = resultado
     formato = query.data.split(":", 1)[1]
 
+    await auditoria.registrar(
+        update.effective_chat.id, context.user_data.get("usuario"),
+        auditoria.DESCARGA, detalle=titulo, parametro=formato,
+    )
+
     try:
         # pandas y openpyxl son sincronicos y pesados: van en un thread aparte.
         contenido, nombre = await asyncio.to_thread(exportar, filas, formato, titulo)
@@ -134,44 +231,166 @@ def _consulta_simple(obtener):
     return handler
 
 
+def _consulta_con_dato(clave: str, pregunta: str, validador, obtener, error: str):
+    """Arma el par (preguntar, recibir) para una consulta que necesita un dato.
+
+    Generico a proposito: recibe el validador y la funcion de negocio, asi que
+    sirve para cualquier menu futuro que pida una fecha, una IP, un nombre o
+    lo que sea. El dato invalido nunca llega a la base — se vuelve a pedir.
+
+    Devuelve dos funciones que se registran en OPCIONES y ENTRADAS_PENDIENTES.
+    """
+
+    async def preguntar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        context.user_data["esperando"] = clave
+        await update.effective_message.reply_text(pregunta, parse_mode=ParseMode.MARKDOWN)
+
+    async def recibir(update: Update, context: ContextTypes.DEFAULT_TYPE, texto: str):
+        valor = validador(texto)
+        if valor is None:
+            context.user_data["esperando"] = clave  # se vuelve a preguntar
+            await update.effective_message.reply_text(
+                f"{error}\n\n{pregunta}", parse_mode=ParseMode.MARKDOWN
+            )
+            return
+
+        await update.effective_chat.send_action("typing")
+        titulo, filas = await obtener(valor)
+        await _responder_resultado(update, context, titulo, filas)
+
+    return preguntar, recibir
+
+
 _TEXTO_FECHA = (
     "Ingresa la fecha a consultar en formato *AAAA-MM-DD* (ej. 2026-08-10).\n"
     "Tambien puedes escribir _hoy_ o _ayer_."
 )
 
+_TEXTO_IP = "Ingresa la *IP* de la OLT (ej. 10.99.24.68):"
 
-async def pedir_fecha_puertas(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """OLT_TRAFICOGPON es una tabla grande: se acota siempre por fecha."""
-    context.user_data["esperando"] = "puertas_fecha"
-    await update.effective_message.reply_text(_TEXTO_FECHA, parse_mode=ParseMode.MARKDOWN)
+# OLT_TRAFICOGPON es una tabla grande: la consulta se acota siempre por fecha.
+pedir_fecha_puertas, _recibir_fecha_puertas = _consulta_con_dato(
+    "puertas_fecha", _TEXTO_FECHA, validar_fecha, gpon.obtener, "No entendi la fecha."
+)
+
+pedir_ip_trafico, _recibir_ip_trafico = _consulta_con_dato(
+    "trafico_ip", _TEXTO_IP, validar_ip, trafico.obtener, "Esa no es una IP valida."
+)
 
 
-async def _recibir_fecha_puertas(update: Update, context: ContextTypes.DEFAULT_TYPE, texto: str):
-    fecha = validar_fecha(texto)
-    if not fecha:
-        # Fecha invalida: se vuelve a pedir en vez de consultar con basura.
-        context.user_data["esperando"] = "puertas_fecha"
-        await update.effective_message.reply_text(
-            f"No entendi la fecha.\n\n{_TEXTO_FECHA}", parse_mode=ParseMode.MARKDOWN
+# =============================================================
+# Reseteo de contrasena (opcion privilegiada, escribe en la base)
+# =============================================================
+
+
+async def pedir_usuario_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data["esperando"] = "reset_usuario"
+    await update.effective_message.reply_text(
+        "Ingresa el *nombre de usuario* del portal a resetear.\n"
+        "Debe escribirse completo y exacto.",
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+async def _recibir_usuario_reset(update: Update, context: ContextTypes.DEFAULT_TYPE, texto: str):
+    """Busca el usuario y pide confirmacion antes de tocar nada."""
+    mensaje = update.effective_message
+
+    nombre = validar_texto(texto, largo_maximo=60)
+    if not nombre:
+        context.user_data["esperando"] = "reset_usuario"
+        await mensaje.reply_text(
+            "Nombre de usuario invalido (vacio o demasiado largo). Intenta de nuevo."
         )
         return
 
     await update.effective_chat.send_action("typing")
-    titulo, filas = await gpon.obtener(fecha)
-    await _responder_resultado(update, context, titulo, filas)
+    resultado, fila = await usuarios.buscar(nombre)
+
+    if resultado == usuarios.NO_EXISTE:
+        await mensaje.reply_text(f"El usuario '{texto}' no existe. Solicitud cancelada.")
+        return
+
+    if resultado == usuarios.DUPLICADO:
+        await mensaje.reply_text(
+            f"'{texto}' devolvio mas de una coincidencia. "
+            "Solicitud cancelada por seguridad: revisalo en el portal."
+        )
+        return
+
+    # Una sola coincidencia: se guarda el candidato y se pide confirmacion.
+    context.user_data["reset_candidato"] = fila["usuario"]
+
+    botones = InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Confirmar", callback_data="reset:confirmar"),
+        InlineKeyboardButton("❌ Cancelar", callback_data="reset:cancelar"),
+    ]])
+
+    await mensaje.reply_text(
+        f"*{usuarios.TITULO}*\n\n"
+        f"Usuario: `{fila['usuario']}`\n"
+        f"Estado actual: {usuarios.describir_estado(fila.get('estado'))}\n"
+        f"Ultima conexion: {fila.get('last_connection') or 'sin registro'}\n\n"
+        f"Se dejara la clave en `{usuarios.PASSWORD_POR_DEFECTO}` y el usuario quedara *activo*.\n"
+        "¿Confirmas?",
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=botones,
+    )
 
 
-async def pedir_ip_trafico(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """El trafico PON necesita una OLT: se pide la IP y se espera la respuesta."""
-    context.user_data["esperando"] = "trafico_ip"
-    await update.effective_message.reply_text("Ingresa la IP de la OLT (ej. 10.99.24.68):")
+@requiere_autorizacion
+async def confirmar_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Ejecuta o cancela el reseteo segun el boton que se toco."""
+    query = update.callback_query
+    await query.answer()
+
+    candidato = context.user_data.pop("reset_candidato", None)
+    accion = query.data.split(":", 1)[1]
+
+    if accion == "cancelar":
+        await query.edit_message_text("Solicitud cancelada. No se modifico nada.")
+        return
+
+    if not candidato:
+        await query.edit_message_text(
+            "La solicitud expiro o ya fue procesada. Vuelve a iniciarla desde el menu."
+        )
+        return
+
+    # Se revalida contra la base ignorando el cache: es una escritura
+    # privilegiada, y no debe apoyarse en un permiso que pudo revocarse
+    # dentro de la ventana del TTL.
+    solicitante = await _autorizar(update.effective_chat.id, refrescar=True) or {}
+
+    if not es_admin(solicitante):
+        logger.warning(
+            f"Intento de reseteo sin permisos: chat_id {update.effective_chat.id} sobre '{candidato}'"
+        )
+        await query.edit_message_text("No tienes permisos para ejecutar esta operacion.")
+        return
+
+    ok = await usuarios.resetear(candidato, solicitante)
+
+    await auditoria.registrar(
+        update.effective_chat.id, solicitante, auditoria.RESETEO_PASSWORD,
+        detalle="OK" if ok else "SIN EFECTO", parametro=candidato,
+    )
+
+    if ok:
+        await query.edit_message_text(
+            f"Contrasena de `{candidato}` cambiada a `{usuarios.PASSWORD_POR_DEFECTO}`.\n"
+            "El usuario quedo activo y debera cambiarla al ingresar.",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+    else:
+        await query.edit_message_text(
+            f"No se pudo resetear a '{candidato}': la base no reporto cambios. Revisa el log."
+        )
 
 
-async def _recibir_ip_trafico(update: Update, context: ContextTypes.DEFAULT_TYPE, ip: str):
-    await update.effective_chat.send_action("typing")
-    titulo, filas = await trafico.obtener(ip)
-    await _responder_resultado(update, context, titulo, filas)
-
+# =============================================================
+# Opciones del menu
+# =============================================================
 
 OPCIONES: dict = {
     "🗄 Inventario OLT": _consulta_simple(inventario.obtener),
@@ -180,16 +399,33 @@ OPCIONES: dict = {
     "📈 Trafico PON": pedir_ip_trafico,
 }
 
+# Opciones privilegiadas: solo se muestran y se aceptan a los perfiles
+# listados en PERFILES_ADMIN del .env.
+OPCIONES_ADMIN: dict = {
+    "🔑 Resetear contrasena": pedir_usuario_reset,
+}
+
 # Entradas que esperan un dato del usuario antes de consultar.
 ENTRADAS_PENDIENTES: dict = {
     "puertas_fecha": _recibir_fecha_puertas,
     "trafico_ip": _recibir_ip_trafico,
+    "reset_usuario": _recibir_usuario_reset,
 }
 
+# Entradas pendientes que solo pueden continuar los perfiles admin.
+ENTRADAS_ADMIN: set = {"reset_usuario"}
 
-def _teclado_menu() -> ReplyKeyboardMarkup:
-    """El teclado se dibuja solo a partir de las llaves de OPCIONES."""
-    etiquetas = list(OPCIONES)
+
+def _opciones_para(usuario: dict) -> dict:
+    """Opciones visibles para este usuario, segun su perfil."""
+    if es_admin(usuario):
+        return {**OPCIONES, **OPCIONES_ADMIN}
+    return OPCIONES
+
+
+def _teclado_menu(usuario: Optional[dict] = None) -> ReplyKeyboardMarkup:
+    """El teclado se dibuja solo a partir de las opciones del usuario."""
+    etiquetas = list(_opciones_para(usuario or {}))
     filas = [etiquetas[i:i + 2] for i in range(0, len(etiquetas), 2)]
     return ReplyKeyboardMarkup(filas, resize_keyboard=True)
 
@@ -201,10 +437,17 @@ def _teclado_menu() -> ReplyKeyboardMarkup:
 
 @requiere_autorizacion
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    nombre = context.user_data["usuario"].get("nombre") or "usuario"
+    usuario = context.user_data["usuario"]
+    nombre = usuario.get("nombre") or "usuario"
+
+    await auditoria.registrar(
+        update.effective_chat.id, usuario, auditoria.INICIO_SESION,
+        detalle=(update.effective_message.text or "/start"),
+    )
+
     await update.effective_message.reply_text(
         f"Hola {nombre}. Elige una consulta del menu.",
-        reply_markup=_teclado_menu(),
+        reply_markup=_teclado_menu(usuario),
     )
 
 
@@ -212,13 +455,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Routing por diccionario: no se edita al agregar opciones nuevas."""
     texto = (update.effective_message.text or "").strip()
+    usuario = context.user_data["usuario"]
 
     # El menu tiene prioridad sobre un dato pendiente: si el usuario toca otra
     # opcion mientras se le pedia una fecha o una IP, cambia de consulta en vez
     # de quedar atrapado en la pregunta anterior.
-    handler = OPCIONES.get(texto)
+    handler = _opciones_para(usuario).get(texto)
     if handler:
         context.user_data.pop("esperando", None)
+        # Punto unico de auditoria del menu: cualquier opcion que se agregue
+        # a OPCIONES en el futuro queda registrada sin tocar nada mas.
+        await auditoria.registrar(
+            update.effective_chat.id, usuario, auditoria.CONSULTA, detalle=texto
+        )
         try:
             await handler(update, context)
         except Exception as e:
@@ -228,6 +477,19 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     pendiente = context.user_data.pop("esperando", None)
     if pendiente in ENTRADAS_PENDIENTES:
+        # Revalidacion: una entrada privilegiada no continua si el perfil ya
+        # no corresponde, aunque la pregunta se haya iniciado antes.
+        if pendiente in ENTRADAS_ADMIN and not es_admin(usuario):
+            logger.warning(f"Entrada '{pendiente}' bloqueada para chat_id {update.effective_chat.id}")
+            await update.effective_message.reply_text("No tienes permisos para esta operacion.")
+            return
+
+        # Segundo punto unico: aqui se registra el dato que acompana a la
+        # consulta (la fecha, la IP, el usuario a resetear).
+        await auditoria.registrar(
+            update.effective_chat.id, usuario, auditoria.CONSULTA,
+            detalle=pendiente, parametro=texto,
+        )
         try:
             await ENTRADAS_PENDIENTES[pendiente](update, context, texto)
         except Exception as e:
@@ -237,7 +499,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.effective_message.reply_text(
         "Opcion no reconocida. Elige una del menu.",
-        reply_markup=_teclado_menu(),
+        reply_markup=_teclado_menu(usuario),
     )
 
 
@@ -245,5 +507,16 @@ def register_handlers(application: Application) -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("menu", start))
     application.add_handler(CallbackQueryHandler(descargar, pattern=r"^descargar:"))
+    application.add_handler(CallbackQueryHandler(confirmar_reset, pattern=r"^reset:"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    logger.info(f"Handlers registrados. Opciones del menu: {len(OPCIONES)}")
+
+    perfiles = _perfiles_admin()
+    logger.info(
+        f"Handlers registrados. Opciones: {len(OPCIONES)} generales, "
+        f"{len(OPCIONES_ADMIN)} privilegiadas. PERFILES_ADMIN={sorted(perfiles) or 'sin configurar'}"
+    )
+    if not perfiles:
+        logger.warning(
+            "PERFILES_ADMIN no esta configurado en el .env: "
+            "las opciones privilegiadas no estaran disponibles para nadie."
+        )

@@ -5,6 +5,7 @@ y se invocan desde los scripts con `asyncio.to_thread`, para no bloquear el
 event loop de Telegram.
 """
 
+import ipaddress
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Optional
@@ -51,6 +52,39 @@ def validar_fecha(texto: str) -> Optional[str]:
         return datetime.strptime(texto, "%Y-%m-%d").strftime("%Y-%m-%d")
     except ValueError:
         return None
+
+
+def validar_ip(texto: str) -> Optional[str]:
+    """Normaliza una direccion IP (v4 o v6). Retorna None si no es valida.
+
+    Se apoya en `ipaddress` de la libreria estandar en vez de una expresion
+    regular: rechaza casos que un regex ingenuo deja pasar (octetos > 255,
+    ceros a la izquierda, cantidad de segmentos incorrecta) y admite IPv6 sin
+    esfuerzo extra.
+
+    Es generica a proposito: sirve para cualquier menu que pida una IP, no
+    solo para el trafico PON. Se usa igual que `validar_fecha`.
+    """
+    texto = (texto or "").strip()
+    if not texto:
+        return None
+
+    try:
+        return str(ipaddress.ip_address(texto))
+    except ValueError:
+        return None
+
+
+def validar_texto(texto: str, largo_maximo: int = 100) -> Optional[str]:
+    """Valida una entrada de texto libre: no vacia y acotada en largo.
+
+    Telegram admite mensajes de hasta 4096 caracteres; sin un tope explicito
+    esa cadena entera terminaria viajando a la base como parametro.
+    """
+    texto = (texto or "").strip()
+    if not texto or len(texto) > largo_maximo:
+        return None
+    return texto
 
 
 def a_entero(valor) -> int:

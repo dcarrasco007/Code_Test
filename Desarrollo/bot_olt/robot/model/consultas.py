@@ -279,31 +279,105 @@ async def consultar_trafico_pon(ip: str, fecha: str) -> list:
 
 
 # =============================================================
-# Escrituras (etapa futura)
+# Escrituras
 # =============================================================
 #
-# El bot hoy es de solo lectura. Cuando se habiliten inserciones, las
-# funciones van en esta seccion con el prefijo `registrar_*` y siguen el
-# mismo patron: SQL con parametros :nombre, `async` + asyncio.to_thread,
-# y @_safe(False) para retornar el resultado de la operacion.
-#
-# Plantilla de referencia:
-#
-#   SQL_REGISTRAR_ALGO = text(
-#       "INSERT INTO TABLA (campo_a, campo_b) VALUES (:campo_a, :campo_b)"
-#   )
-#
-#   def _execute(engine, sql, params=None) -> int:
-#       with engine.begin() as conn:              # begin() hace commit solo
-#           return conn.execute(sql, params or {}).rowcount
-#
-#   @_safe(False)
-#   async def registrar_algo(campo_a, campo_b) -> bool:
-#       filas = await asyncio.to_thread(
-#           _execute, engine_aden, SQL_REGISTRAR_ALGO,
-#           {"campo_a": campo_a, "campo_b": campo_b},
-#       )
-#       return filas > 0
-#
-# La tabla destino y sus campos deben existir antes: el DDL se entrega como
-# archivo .sql en BD/ para que lo ejecute el responsable, no el bot ni el agente.
+# Las funciones de escritura usan `_execute` (con engine.begin(), que hace
+# commit solo) y retornan la cantidad de filas afectadas. Siguen el mismo
+# patron que las lecturas: parametros :nombre, async + to_thread y @_safe.
+
+
+def _execute(engine, sql, params=None) -> int:
+    """Ejecuta una sentencia de escritura y retorna las filas afectadas."""
+    with engine.begin() as conn:  # begin() hace commit al salir sin error
+        return conn.execute(sql, params or {}).rowcount
+
+
+# --- Usuarios del portal OLT ---------------------------------
+
+SQL_BUSCAR_USUARIO_PORTAL = text(
+    """
+    SELECT
+        OLT_USUARIOS.usuario         AS usuario,
+        OLT_USUARIOS.perfil          AS perfil,
+        OLT_USUARIOS.estado          AS estado,
+        OLT_USUARIOS.last_connection AS last_connection
+    FROM OLT_USUARIOS
+    WHERE OLT_USUARIOS.usuario = :usuario
+    """
+)
+
+# Replica exactamente lo que hace el portal (case "changePassw"): resetea la
+# clave, actualiza last_connection y deja el usuario activo.
+SQL_RESETEAR_PASSWORD = text(
+    """
+    UPDATE OLT_USUARIOS
+    SET pass            = :pass,
+        last_connection = NOW(),
+        estado          = 1
+    WHERE OLT_USUARIOS.usuario = :usuario
+    """
+)
+
+
+@_safe(list)
+async def buscar_usuario_portal(usuario: str) -> list:
+    """Busca un usuario del portal por nombre exacto.
+
+    Retorna una lista para que la capa de negocio pueda distinguir entre
+    ninguna, una y varias coincidencias antes de tocar nada.
+    """
+    return await asyncio.to_thread(
+        _fetch, engine_aden, SQL_BUSCAR_USUARIO_PORTAL, {"usuario": usuario}
+    )
+
+
+@_safe(0)
+async def resetear_password(usuario: str, pass_hash: str) -> int:
+    """Resetea la clave del usuario y lo deja activo. Retorna filas afectadas."""
+    return await asyncio.to_thread(
+        _execute,
+        engine_aden,
+        SQL_RESETEAR_PASSWORD,
+        {"usuario": usuario, "pass": pass_hash},
+    )
+
+
+# --- Auditoria ------------------------------------------------
+
+SQL_REGISTRAR_AUDITORIA = text(
+    """
+    INSERT INTO OLT_BOT_AUDITORIA
+        (fecha, chat_id, usuario, accion, detalle, parametro)
+    VALUES
+        (NOW(), :chat_id, :usuario, :accion, :detalle, :parametro)
+    """
+)
+
+
+@_safe(0)
+async def registrar_auditoria(
+    chat_id: Optional[int],
+    usuario: Optional[str],
+    accion: str,
+    detalle: Optional[str] = None,
+    parametro: Optional[str] = None,
+) -> int:
+    """Deja constancia de un evento del bot. Retorna filas insertadas.
+
+    Va decorada con @_safe(0): si la auditoria falla, el error queda en el log
+    y la operacion del usuario continua. Un problema en la tabla de auditoria
+    no debe dejar el bot inutilizable.
+    """
+    return await asyncio.to_thread(
+        _execute,
+        engine_aden,
+        SQL_REGISTRAR_AUDITORIA,
+        {
+            "chat_id": chat_id,
+            "usuario": usuario,
+            "accion": accion,
+            "detalle": detalle,
+            "parametro": parametro,
+        },
+    )
