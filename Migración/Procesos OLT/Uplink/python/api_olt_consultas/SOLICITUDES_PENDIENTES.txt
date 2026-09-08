@@ -1,0 +1,151 @@
+========================================================================
+ SOLICITUDES PENDIENTES — api_olt_consultas
+------------------------------------------------------------------------
+ Datos o decisiones que NO se inventan (convencion GERET README_LIMITES.md).
+ Cada entrada bloquea una fase concreta del PLAN_API_OLT.md.
+========================================================================
+
+[2026-08-01] Modulo/archivo: .env (OLT_TELNET_API_USER / OLT_TELNET_API_PASS)
+Falta: Crear el usuario telnet dedicado 'geretapi' en TODAS las OLT y entregar
+       su clave para cargarla en el .env del servidor.
+Motivo: Sin usuario dedicado la API comparte los usuarios de los crons
+       (geret2016 / geretproceso / geretont) y debe autolimitarse a 1 sesion
+       por (OLT, usuario) para no agotar el cupo de 3 del equipo. Con el
+       usuario dedicado puede usar las 3 sesiones sin afectar a los crons.
+       Verificable en GET /health -> telnet.cupo_por_olt_usuario.
+Bloquea: F3 (cupo 3) — no bloquea el desarrollo, solo el rendimiento.
+Responsable sugerido: Administrador de red / responsable de las OLT
+
+[2026-08-01] Modulo/archivo: utils/telnet_olt.py (deteccion de rechazo por limite)
+Falta: Texto EXACTO que devuelve cada modelo de OLT (MA5800-X15, MA5600T,
+       MA5603T, MA5680T) al intentar una 4a sesion telnet con el mismo usuario.
+Motivo: El circuit-breaker debe reconocer ese mensaje para bloquear la OLT
+       BLOQUEO_OLT_SEG segundos en vez de reintentar y arriesgar un bloqueo
+       del usuario. Se obtiene abriendo 3 sesiones manuales y una cuarta.
+Bloquea: F3 (afinamiento) y F9 (validacion real).
+Responsable sugerido: Se captura en F9 junto con el responsable de red
+
+[2026-08-01] Modulo/archivo: sql/02_seed_consultas_comandos.sql (OLT_API_CLIENTES)
+Falta: Nombre del "otro sistema interno" que consumira la API, si existe.
+Motivo: Clientes confirmados para el seed inicial: Portal web OLT (PHP) y los
+       crons Python (uplink_trafico*). El bot_olt queda para mas adelante.
+       Si hay un cuarto consumidor interno, definir su nombre y scopes.
+Bloquea: F1 (seed) — se puede dar de alta despues con scripts/crear_cliente.py.
+Responsable sugerido: sin definir
+
+[2026-08-01] Modulo/archivo: .env (CONECTION_ADEN)
+Falta: Credenciales reales de la BD Aden para el servidor procesos-pgpon.
+Motivo: La API lee las tablas OLT_* y escribe las tablas nuevas OLT_API_*.
+Bloquea: F1 en adelante (todo lo que toque BD).
+Responsable sugerido: Responsable del proyecto (mismas credenciales que usan
+       los crons; ver conexion_db.php en el servidor)
+
+[2026-08-01] Modulo/archivo: sql/01_tablas_api.sql, sql/02_seed_consultas_comandos.sql, sql/03_purga_logs.sql
+Falta: Ejecucion del DDL/seed por parte del responsable, EN ESE ORDEN (01 -> 02 -> 03).
+Motivo: El agente NO ejecuta CREATE/INSERT/ALTER (README_LIMITES.md seccion 3).
+       Los 3 archivos ya estan escritos y verificados lexicamente (F1 completa):
+       01 crea las 9 tablas OLT_API_*, 02 puebla el catalogo de 20 consultas +
+       comandos telnet, 03 crea el EVENT de purga diaria. Cada archivo trae su
+       propia seccion de VERIFICACION y ROLLBACK al final.
+       03 ademas requiere confirmar 'SET GLOBAL event_scheduler = ON;' si esta
+       en OFF (afecta a todo el servidor MySQL, coordinar con el DBA).
+Bloquea: F1 (cierre real, hoy solo esta el codigo listo) y todo lo que
+       persista datos (F2 en adelante necesita las tablas para funcionar
+       de verdad, aunque el codigo se puede seguir escribiendo sin ellas).
+Responsable sugerido: Responsable del proyecto / DBA
+
+[2026-09-08] Modulo/archivo: utils/ejecutor.py (RESOLVEDORES_LISTA)
+Falta: Confirmar con datos reales el significado exacto de 3 fuente_lista:
+       - OLT_PUERTAS_UPLINKS_GB: se asume 'SELECT puerta WHERE olt=:server'.
+       - OLT_VLAN_SERVICIOS: se asume el catalogo COMPLETO (no filtra por OLT,
+         igual que la tabla de origen).
+       - OLT_VOLTAJE_TARJETA: se asume que la columna 'tarjetas' (longtext)
+         trae un CSV de slots ya detectados en la ultima corrida, y se
+         reutiliza tal cual como fuente de slots.
+       (OLT_SERVER.pto1_12 SI esta confirmado: mismo query ya validado en
+       uplink_trafico_15m/model/.../get_puertos_pto1_12.)
+Motivo: No hay una migracion Python previa de estas 3 fuentes para copiar el
+       criterio exacto (a diferencia de pto1_12). Marcado como CONFIANZA
+       MEDIA/BAJA en el codigo (ver comentarios en utils/ejecutor.py).
+Bloquea: F9 (validacion en produccion) para las consultas potencia_optica_uplink,
+       vlan_trafico y tarjetas/energia_estado. No bloquea seguir desarrollando
+       F5/F6 (la firma de los resolvedores no cambia si el criterio se ajusta).
+Responsable sugerido: Responsable del proyecto (confirmar con una consulta
+       SELECT de verificacion contra Aden antes de F9)
+
+[2026-09-08] Modulo/archivo: package/parsers/*.py (los 20 parsers)
+Falta: Transcripciones REALES (telnet contra una OLT de cada modelo) para
+       confirmar el layout exacto de columnas de cada comando. Hoy los tests
+       (tests/test_parsers.py) usan transcripciones SINTETICAS inventadas a
+       partir del formato tipico Huawei, no capturas reales.
+Motivo: El propio PLAN_API_OLT.md (F4) preve esto: "tests con transcripciones
+       sintéticas ahora, reales en F9". Confianza marcada por archivo:
+       ALTA (uplink_trafico.py, pon_trafico.py: port directo de codigo ya
+       validado en uplink_trafico_15m) / MEDIA (la mayoria: tablas Huawei
+       genericas conocidas) / BAJA (vlan_trafico.py, ont_detalle.py,
+       uplink_state.py: sin referencia previa a un formato exacto).
+Bloquea: F9 (validacion en produccion) — no bloquea F5/F6, que pueden
+       exponer el log crudo ('con_log=true') junto al 'dato' ya parseado
+       para que el consumidor compare mientras se ajustan los regex.
+Responsable sugerido: Se captura en F9 (checklist ya previsto en el plan)
+
+[2026-09-08] Modulo/archivo: docs/VALIDACION_F9.md (ejecucion de la Fase 9)
+Falta: Ejecutar el checklist docs/VALIDACION_F9.md contra la BD Aden real y
+       las OLT (1 por modelo + DURZUA-4 / LAFLORIDA-1 / CONCEPCION-3). El
+       agente dejo listo el codigo (F1-F8), el checklist, y 2 scripts de apoyo:
+         - scripts/f9_paridad.py  (dato telnet en vivo vs dato del cron)
+         - scripts/f9_cupo.py     (prueba de 5 sesiones concurrentes)
+       y tests/test_parsers_reales.py que auto-descubre las capturas que se
+       vayan dejando en tests/transcripciones/.
+Motivo: F9 requiere acceso a produccion (BD, telnet, 'display users' en el
+       equipo) — fuera de lo que hace el agente (README_LIMITES.md).
+       Al completar la matriz de VALIDACION_F9.md se cierran DE UNA VEZ las
+       3 entradas de abajo (transcripciones reales de los 20 parsers, texto
+       exacto del rechazo por limite de sesiones por modelo, y las 3
+       fuente_lista de confianza media/baja de utils/ejecutor.py).
+Bloquea: F10 (despliegue) — no empezar F10 sin la matriz F9 sin bloqueantes.
+Responsable sugerido: Responsable del proyecto (+ un administrador de red para
+       la prueba de cupo y la captura del texto de rechazo)
+
+[2026-09-08] Modulo/archivo: python/uplink_trafico_15m/.env (LOG_API_TELNET)
+Falta: Activar LOG_API_TELNET=true en el .env de uplink_trafico_15m (en el
+       servidor de crons), DESPUES de que existan las tablas OLT_API_* (correr
+       api_olt_consultas/sql/01_tablas_api.sql). Opcional: replicar
+       uplink_trafico_15m/utils/log_api.py en los demas crons OLT.
+Motivo: F7 nivel A (log compartido) esta implementado pero nace INERTE
+       (flag en false). Con el flag activo, cada sesion telnet de trafico deja
+       su log crudo en OLT_API_LOG_TELNET (origen='cron') y el endpoint
+       GET /uplink/trafico/{server}?con_log=true de la API pasa a devolver
+       ese log. Es best-effort: si la tabla no existe el cron sigue igual.
+       Ver api_olt_consultas/docs/INTEGRACION_CRONS.md.
+Bloquea: nada (mejora de observabilidad; el dato de F5 funciona sin esto).
+Responsable sugerido: Responsable del proyecto / DBA (mismo momento en que se
+       corre sql/01_tablas_api.sql)
+
+[2026-09-08] Modulo/archivo: model/lectura/m_lectura_model.py (_CATALOGO_LECTURA)
+Falta: Confirmar, con un SELECT contra la BD Aden real, para las 20 tablas
+       'tabla_dato' del seed (OLT_TRAFICO_UPLINK_HORA, OLT_ALARMAS,
+       OLT_CANTIDAD_ALARMAS_DETALLE, OLT_ALARMA_CRITICAL_LOS, OLT_ALARMA_LOS_ONT,
+       OLT_POTENCIA_OPTICA_UPLINK, OLT_DETALLE_TARJETA, OLT_FAN_ESTADO,
+       OLT_CANTIDAD_VLAN, OLT_VLAN_TRAFICO, OLT_VLAN_SERVICIO_CANTIDAD,
+       OLT_ALARMA_ENERGIA, OLT_ESTADO_ENERGIA, OLT_TRAFICOGPON_HORA, OLT_TEMP_CPU,
+       OLT_UPTIME, OLT_UPLINKS_STATE, OLT_INFORMACION_ONT_DETALLE_COMPLETO,
+       OLT_ONT_DETALLE_2, OLT_VERSION_PARCHE_MODELO):
+         (a) el nombre EXACTO de la columna que identifica la OLT (unas usan
+             'server', otras 'equipo', OLT_TRAFICOGPON_HORA solo 'ip_equipo')
+             y si guarda el NOMBRE o la IP de la OLT.
+         (b) el nombre y el TIPO real de la columna de fecha del lote
+             (DATETIME vs VARCHAR). Hoy el catalogo lo marca segun
+             BD/ESTRUCTURA_OLT.sql: las VARCHAR ('alarmas_activas',
+             'alarmas_detalle', 'tarjetas', 'fan', 'vlan_cantidad',
+             'pon_trafico', 'temperatura_cpu', 'uptime_gpon', 'uplink_state',
+             'ont_reporte', 'version') NO ofrecen ?desde&hasta (responden 422);
+             si en produccion alguna resultara ser DATETIME, basta cambiar
+             fecha_es_datetime=True en esa fila del catalogo.
+Motivo: El catalogo se dedujo del dump de estructura, no de la BD viva. Un
+       nombre de columna equivocado haria que el endpoint devuelva siempre
+       'sin registros'; un tipo de fecha equivocado daria un rango silenciosamente
+       incorrecto (por eso, ante la duda, se eligio 422).
+Bloquea: F9 (paridad dato API vs tabla del cron). No bloquea F6.
+Responsable sugerido: Responsable del proyecto / DBA (un 'DESCRIBE <tabla>' por
+       cada una basta; ajustar _CATALOGO_LECTURA con el resultado)

@@ -1,0 +1,20 @@
+# Entorno virtual
+.venv/
+env/
+
+# Credenciales (NUNCA versionar)
+.env
+
+# Logs generados en ejecucion
+logs/*.log
+logs/*/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.pytest_cache/

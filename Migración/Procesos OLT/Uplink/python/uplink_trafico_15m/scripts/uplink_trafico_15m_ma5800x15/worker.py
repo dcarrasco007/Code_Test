@@ -16,6 +16,7 @@
 # ============================================================================
 
 import logging
+import time
 from datetime import datetime
 
 from app.db import get_engine
@@ -26,6 +27,7 @@ from model.uplink_trafico_15m_ma5800x15.uplink_trafico_15m_ma5800x15_model impor
     insert_hora,
 )
 from utils import monitoreo
+from utils.log_api import expandir_comandos, registrar_log_telnet
 from utils.parser_trafico import parsear_trafico
 from utils.telnet_olt import leer_trafico_puertos, respuesta_valida
 
@@ -111,11 +113,21 @@ def procesar_olt(server, ip, fecha, lote_id=None):
         #               (cada una con su propio login/enable/config/logout) si la
         #               respuesta contiene el error de comando desconocido.
         texto = ""
+        _t0 = time.monotonic()
         for intento in range(_MAX_INTENTOS):
             texto = leer_trafico_puertos(ip, comandos)
             if respuesta_valida(texto):
                 break
             logging.warning(f"[{server}] Respuesta invalida en intento {intento + 1}")
+
+        # [F7] Log crudo compartido con api_olt_consultas (best-effort, no-op si
+        #      LOG_API_TELNET != true). Transacción propia: no afecta a los
+        #      INSERT de tráfico de este 'with conn'.
+        registrar_log_telnet(
+            engine, olt=server, ip=ip, log_crudo=texto,
+            duracion_ms=int((time.monotonic() - _t0) * 1000),
+            exito=respuesta_valida(texto), comandos=expandir_comandos(comandos),
+        )
 
         # [SQL] Parseo + inserción de detalle por puerto, en el orden de 'slots_orden'.
         lecturas = parsear_trafico(texto)

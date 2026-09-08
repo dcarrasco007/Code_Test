@@ -27,14 +27,17 @@ bot_olt/
 |       |-- alarmas.py      logica: alarmas criticas
 |       |-- trafico.py      logica: trafico por puerto PON
 |       |-- usuarios.py     logica: reseteo de contrasena (escritura)
+|       |-- sesion.py       logica: login, clave del bot y bloqueo
 |       `-- auditoria.py    registro de eventos en OLT_BOT_AUDITORIA
 |-- utils/
 |   |-- func.py             validadores, formateo y exportacion (excel/csv/txt)
 |   |-- limites.py          cache de autorizacion, rate limit y silenciado
+|   |-- seguridad.py        hash PBKDF2 de la clave del bot
 |   `-- logger.py           configuracion de loguru
 |-- BD/
-|   |-- OLT_BOT_USUARIOS.sql   DDL: usuarios autorizados
-|   `-- OLT_BOT_AUDITORIA.sql  DDL: registro de auditoria
+|   |-- OLT_BOT_USUARIOS.sql     DDL: usuarios autorizados
+|   |-- OLT_BOT_USUARIOS_v2.sql  ALTER: clave del bot y sesion
+|   `-- OLT_BOT_AUDITORIA.sql    DDL: registro de auditoria
 |-- tests/
 |   `-- test_conexion.py
 |-- log/
@@ -59,6 +62,9 @@ Cada resultado se muestra como vista previa en el chat y se puede descargar en
 | Opcion | Tabla | Modulo |
 |---|---|---|
 | 🔑 Resetear contrasena | `OLT_USUARIOS` (escritura) | `usuarios.py` |
+| 🆕 Asignar clave del bot | `OLT_BOT_USUARIOS` (escritura) | `sesion.py` |
+
+Ademas, todo usuario autenticado tiene **Cambiar mi clave** y **Cerrar sesion**.
 
 Solo la ven los perfiles listados en `PERFILES_ADMIN` del `.env`. Replica el
 `case "changePassw"` del portal: deja la clave en `123456`, actualiza
@@ -71,13 +77,40 @@ reseteo ejecutado queda registrado en `log/bot.log` con quien lo solicito.
 
 ## Acceso
 
-El bot solo responde a los `chat_id` registrados y activos en `OLT_BOT_USUARIOS`.
-Si alguien escribe sin estar autorizado, el bot le responde con su `chat_id` para
-que lo solicite. El alta la hace el responsable con el `.sql` de `BD/`.
+Son dos capas. Primero, el `chat_id` debe estar registrado y activo en
+`OLT_BOT_USUARIOS`; el alta la hace el responsable con el `.sql` de `BD/`.
+Segundo, la persona debe autenticarse con su **clave propia del bot**.
 
-Las opciones privilegiadas necesitan ademas que el `perfil` del usuario este en
-`PERFILES_ADMIN`. Si esa variable esta vacia, nadie las ve: el default es el
-mas restrictivo, para que un `.env` mal configurado no abra permisos.
+### Clave del bot
+
+Es **independiente de la del portal**: la clave del portal nunca viaja por
+Telegram, y si la del bot se filtra, la cuenta del portal no se ve afectada.
+Por eso tampoco usa MD5 sino PBKDF2-SHA256 con salt por usuario
+(`utils/seguridad.py`, solo libreria estandar).
+
+El login pide unicamente la clave — el `chat_id` ya identifica a la persona —
+y **el mensaje que la contiene se borra del chat apenas se procesa**.
+
+| Situacion | Que hace el bot |
+|---|---|
+| Sin clave asignada | Pide solicitarla a un administrador |
+| Sin sesion vigente | Pide la clave |
+| Clave temporal | Obliga a cambiarla antes de mostrar el menu |
+| Clave incorrecta | Avisa cuantos intentos quedan |
+| Intentos agotados | Bloquea la cuenta por `BLOQUEO_LOGIN_MINUTOS` |
+
+La sesion dura `SESION_HORAS` y se guarda en la base, asi que sobrevive a un
+reinicio del bot. El contador de intentos fallidos tambien vive en la base:
+reiniciar el proceso o cambiar de chat no lo reinicia.
+
+### Permisos
+
+El `perfil` sale de **`OLT_USUARIOS`** (el del portal), no de la tabla del bot,
+para que los permisos queden siempre alineados con los de la web. En el portal
+el perfil `1` es administrador, de ahi `PERFILES_ADMIN=1`.
+
+Si esa variable esta vacia, nadie ve las opciones privilegiadas: el default es
+el mas restrictivo, para que un `.env` mal configurado no abra permisos.
 
 ## Proteccion de la base
 
@@ -114,6 +147,11 @@ Todo evento queda en `OLT_BOT_AUDITORIA` (DDL y consultas de auditoria en
 | `DESCARGA` | Se descarga un Excel, CSV o TXT |
 | `RESETEO_PASSWORD` | Se confirma un reseteo (guarda a quien) |
 | `ACCESO_DENEGADO` | Escribe un `chat_id` no autorizado |
+| `LOGIN_OK` / `LOGIN_FALLIDO` | Resultado de cada intento de login |
+| `CUENTA_BLOQUEADA` | Se agotaron los intentos permitidos |
+| `LOGOUT` | El usuario cierra su sesion |
+| `CAMBIO_CLAVE_BOT` | El usuario cambia su propia clave |
+| `ASIGNACION_CLAVE_BOT` | Un admin asigna la clave inicial a alguien |
 
 **Es transversal por construccion.** Las consultas se auditan en el punto de
 despacho de `handle_text`, no dentro de cada handler: una opcion nueva en

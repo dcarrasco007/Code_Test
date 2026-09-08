@@ -4,7 +4,7 @@ Datos o decisiones que faltan para completar el proyecto. Cada entrada
 corresponde a un TODO dejado en el codigo. Ver README_LIMITES.md.
 
 
-[2026-08-11] Modulo/archivo: BD/OLT_BOT_AUDITORIA.sql
+[2026-09-01] Modulo/archivo: BD/OLT_BOT_AUDITORIA.sql
 Falta: ejecutar el DDL de la tabla OLT_BOT_AUDITORIA en el esquema Aden y
        confirmar que el usuario de la aplicacion tenga permiso INSERT sobre
        ella.
@@ -14,7 +14,7 @@ Motivo: sin la tabla, cada evento cae al respaldo en log/bot.log con el
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: BD/OLT_BOT_USUARIOS.sql
+[2026-09-01] Modulo/archivo: BD/OLT_BOT_USUARIOS.sql
 Falta: ejecutar el DDL de la tabla OLT_BOT_USUARIOS en el esquema Aden y
        dar de alta los primeros chat_id autorizados.
 Motivo: sin esa tabla el bot rechaza a todos los usuarios. El agente no
@@ -22,7 +22,7 @@ Motivo: sin esa tabla el bot rechaza a todos los usuarios. El agente no
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: .env
+[2026-09-01] Modulo/archivo: .env
 Falta: BOT_TOKEN del bot de Telegram y las credenciales reales de
        CONECTION_ADEN (usuario y password de MySQL).
 Motivo: el bot no arranca sin token, y no consulta sin conexion. El host
@@ -31,7 +31,7 @@ Motivo: el bot no arranca sin token, y no consulta sin conexion. El host
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: robot/model/consultas.py (SQL_PUERTAS_PON)
+[2026-09-01] Modulo/archivo: robot/model/consultas.py (SQL_PUERTAS_PON)
 Falta: confirmar las reglas de negocio de la ocupacion de puertas PON.
        1. "Puerto utilizado" = up_mbps > 1 en la fecha consultada.
        2. Que valores de OLT_PUERTOS_UPLINKS.marca corresponden a uplink.
@@ -45,7 +45,7 @@ Motivo: de esas tres reglas depende el porcentaje de ocupacion que reporta
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: ecosystem.config.js
+[2026-09-01] Modulo/archivo: ecosystem.config.js
 Falta: ruta real de despliegue en el servidor (cwd, interpreter, logs) y
        version de Python del servidor destino.
 Motivo: la plantilla asume /var/www/bot_olt y Python del venv local. Si el
@@ -54,7 +54,7 @@ Motivo: la plantilla asume /var/www/bot_olt y Python del venv local. Si el
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: requirements.txt — version de Python de desarrollo
+[2026-09-01] Modulo/archivo: requirements.txt — version de Python de desarrollo
 Falta: dejar documentado que este proyecto requiere Python 3.9 a 3.12.
 Motivo: el PC de desarrollo tenia Python 3.14.6, donde pandas==2.1.4 (version
         que fija README_PYTHON_BOT.md) no tiene wheels: pip intenta compilar
@@ -66,16 +66,26 @@ Motivo: el PC de desarrollo tenia Python 3.14.6, donde pandas==2.1.4 (version
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: .env (PERFILES_ADMIN)
-Falta: que valor(es) de OLT_BOT_USUARIOS.perfil corresponden a administrador.
-Motivo: el reseteo de contrasenas solo se ofrece a esos perfiles. Mientras
-        PERFILES_ADMIN este vacio, la opcion no aparece para nadie (default
-        deliberadamente restrictivo). En el repo solo se pudo confirmar que
-        OLT_USUARIOS.perfil existe, no que valores significa cada uno.
+[2026-09-01] Modulo/archivo: BD/OLT_BOT_USUARIOS_v2.sql
+Falta: ejecutar el ALTER TABLE y, en el PASO 2, reemplazar 'tu_usuario' por el
+       usuario administrador real antes de correrlo.
+Motivo: sin el PASO 2 nadie puede entrar: todas las claves las asigna un
+        administrador desde el bot, y no habria ninguno con clave inicial.
+        Tras el ALTER, el resto de los usuarios queda con pass_bot en NULL y
+        debera pedir su clave a ese administrador.
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: robot/scripts/usuarios.py (_hash_password)
+[2026-09-01] Modulo/archivo: robot/model/consultas.py (SQL_VERIFICAR_USUARIO)
+Falta: decidir si un usuario inactivo en el portal (OLT_USUARIOS.estado = 0)
+       debe perder el acceso al bot.
+Motivo: hoy el bot solo valida OLT_BOT_USUARIOS.activo. Alguien dado de baja
+        en el portal conserva el acceso al bot mientras no se le desactive
+        tambien alli. No se agrego la validacion por no haber sido pedida.
+Responsable sugerido: sin definir
+
+
+[2026-09-01] Modulo/archivo: robot/scripts/usuarios.py (_hash_password)
 Falta: decidir si se migra el hash de contrasenas del portal.
 Motivo: el reseteo usa MD5 porque es lo que aplica el portal PHP
         (md5('123456')) y el hash debe coincidir para que el usuario pueda
@@ -84,7 +94,7 @@ Motivo: el reseteo usa MD5 porque es lo que aplica el portal PHP
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: BD — OLT_USUARIOS
+[2026-09-01] Modulo/archivo: BD — OLT_USUARIOS
 Falta: confirmar si la columna `usuario` tiene indice UNIQUE.
 Motivo: el bot busca por nombre exacto y cancela si aparece mas de una
         coincidencia. Con un UNIQUE esa rama es imposible y el reseteo es
@@ -94,7 +104,7 @@ Motivo: el bot busca por nombre exacto y cancela si aparece mas de una
 Responsable sugerido: sin definir
 
 
-[2026-08-11] Modulo/archivo: robot/scripts/alarmas.py
+[2026-09-01] Modulo/archivo: robot/scripts/alarmas.py
 Falta: definir si el bot debe enviar alarmas automaticamente por horario
        (como bot_crm) o solo responder a demanda.
 Motivo: hoy el modulo solo responde a demanda. El envio programado requiere

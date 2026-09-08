@@ -62,6 +62,20 @@ OLT_TELNET_PASS = os.getenv("OLT_TELNET_PASS", "")
 TELNET_TIMEOUT = int(os.getenv("TELNET_TIMEOUT", "2"))
 
 # =============================================================================
+# Integración opcional con api_olt_consultas (F7 de ese proyecto)
+# =============================================================================
+# [CONFIG] Si LOG_API_TELNET=true, cada sesión telnet de tráfico deja además su
+#          log crudo en la tabla OLT_API_LOG_TELNET (origen='cron'), para que el
+#          endpoint GET /uplink/trafico/{server}?con_log=true de la API tenga
+#          algo que mostrar. Es 100% best-effort: si la tabla no existe o el
+#          INSERT falla, el proceso de tráfico sigue igual (nunca se altera ni
+#          se revierte un insert real por esto). Ver utils/log_api.py y
+#          api_olt_consultas/docs/INTEGRACION_CRONS.md.
+#          Default OFF: inerte hasta que el responsable cree las tablas
+#          OLT_API_* (sql/01_tablas_api.sql) y active la variable.
+LOG_API_TELNET = os.getenv("LOG_API_TELNET", "false").strip().lower() == "true"
+
+# =============================================================================
 # IDs de proceso — ya registrados en MONITOREO_PROCESOS_EJECUCIONES
 # =============================================================================
 # [CONFIG] Cada proceso PHP tiene un proceso_id fijo asignado en la BD.

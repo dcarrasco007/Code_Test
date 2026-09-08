@@ -8,7 +8,7 @@ Uso:
 
 import time
 
-from utils import limites
+from utils import limites, seguridad
 from utils.func import a_entero, validar_fecha, validar_ip, validar_texto
 
 _fallos = []
@@ -127,12 +127,42 @@ def test_silenciado():
     check(not limites.esta_silenciado(chat), "autorizarse limpia el silencio")
 
 
+def test_seguridad():
+    print("clave del bot (PBKDF2)")
+    # Iteraciones bajas solo para que la prueba sea rapida.
+    h = seguridad.hashear("miClave123", iteraciones=1000)
+
+    check(seguridad.verificar("miClave123", h), "verifica la clave correcta")
+    check(not seguridad.verificar("miClave124", h), "rechaza una clave distinta")
+    check(not seguridad.verificar("", h), "rechaza clave vacia")
+    check(not seguridad.verificar("miClave123", None), "rechaza hash nulo")
+    check(not seguridad.verificar("x", "formato-invalido"), "rechaza hash corrupto")
+    check(not seguridad.verificar("x", "md5$1$a$b"), "rechaza otro algoritmo")
+
+    h2 = seguridad.hashear("miClave123", iteraciones=1000)
+    check(h != h2, "dos hashes de la misma clave difieren (salt distinto)")
+    check(seguridad.verificar("miClave123", h2), "ambos hashes verifican igual")
+
+    check(h.startswith("pbkdf2_sha256$1000$"), "el formato incluye algoritmo e iteraciones")
+
+    print("politica de claves")
+    check(seguridad.validar_clave_nueva("claveSegura") is None, "clave valida")
+    check(seguridad.validar_clave_nueva("abc") is not None, "rechaza demasiado corta")
+    check(seguridad.validar_clave_nueva("x" * 80) is not None, "rechaza demasiado larga")
+    check(seguridad.validar_clave_nueva("con espacio") is not None, "rechaza espacios")
+    check(seguridad.validar_clave_nueva("123456", "123456") is not None,
+          "rechaza mantener la clave inicial")
+    check(seguridad.validar_clave_nueva("123456") is None,
+          "acepta 123456 si no se declara como inicial")
+
+
 if __name__ == "__main__":
     for prueba in (
         test_validar_ip,
         test_validar_fecha,
         test_validar_texto,
         test_a_entero,
+        test_seguridad,
         test_cache_auth,
         test_rate_limit,
         test_silenciado,

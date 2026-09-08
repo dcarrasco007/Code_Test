@@ -13,6 +13,7 @@
 # ============================================================================
 
 import logging
+import time
 from datetime import datetime
 
 from app.db import get_engine
@@ -28,6 +29,7 @@ from model.uplink_trafico_15m_ma5600t.uplink_trafico_15m_ma5600t_model import (
     insert_hora,
 )
 from utils import monitoreo
+from utils.log_api import expandir_comandos, registrar_log_telnet
 from utils.parser_trafico import parsear_trafico
 from utils.ping import es_alcanzable, ping_ip
 from utils.telnet_olt import leer_trafico_puertos, respuesta_valida
@@ -86,6 +88,18 @@ def _comandos(conteo, slot_a, slot_b, tipo):
         (f"interface {tipo} {slot_a}", conteo[slot_a]),
         (f"interface {tipo} {slot_b}", conteo[slot_b]),
     ]
+
+
+def _comandos_para_log(server, conteo):
+    """Pares (interface_cmd, n_puertos) del PRIMER intento según el server —
+    solo para dejarlos legibles en OLT_API_LOG_TELNET.comandos_enviados. La
+    fuente de verdad del log es siempre el texto crudo. Refleja el mismo
+    dispatch inicial de _ejecutar_con_reintentos()."""
+    if server == SERVER_MA5600T_GIU_19_20:
+        return _comandos(conteo, "0/19", "0/20", "giu")
+    if server in SERVERS_MA5600T_SCU_7_8:
+        return _comandos(conteo, "0/7", "0/8", "scu")
+    return _comandos(conteo, "0/17", "0/18", "giu")
 
 
 def _ejecutar_con_reintentos(ip, server, conteo):
@@ -169,7 +183,17 @@ def procesar_olt(server, ip, fecha, lote_id=None):
         filas_puertos = get_puertos_gb(conn, _MODELO, server)
         conteo = _contar_puertos(filas_puertos)
 
+        _t0 = time.monotonic()
         texto, fallo = _ejecutar_con_reintentos(ip, server, conteo)
+        # [F7] Log crudo compartido con api_olt_consultas (best-effort, no-op si
+        #      LOG_API_TELNET != true). Abre su PROPIA transacción (otra
+        #      conexión del pool): un fallo aquí no revierte los INSERT de
+        #      tráfico de este 'with conn'.
+        registrar_log_telnet(
+            engine, olt=server, ip=ip, log_crudo=texto,
+            duracion_ms=int((time.monotonic() - _t0) * 1000), exito=not fallo,
+            comandos=expandir_comandos(_comandos_para_log(server, conteo)),
+        )
 
         if fallo:
             # [PARIDAD-PHP] Marcador de fallo (modelo='MA5600T2', peak=0). El PHP

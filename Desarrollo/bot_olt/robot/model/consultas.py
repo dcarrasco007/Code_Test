@@ -69,15 +69,35 @@ def _safe(default):
 # SQL — Autorizacion
 # =============================================================
 
+# El perfil sale de OLT_USUARIOS (el del portal), no de OLT_BOT_USUARIOS: asi
+# los permisos del bot quedan siempre alineados con los de la web. El JOIN es
+# por `usuario`, que tiene el mismo valor en ambas tablas.
+#
+# Se usa LEFT JOIN a proposito: si el usuario no existe en el portal, sigue
+# pudiendo consultar (esta dado de alta en el bot) pero queda sin perfil y por
+# lo tanto sin permisos de administrador. Falla hacia el lado restrictivo.
 SQL_VERIFICAR_USUARIO = text(
     """
     SELECT
         OLT_BOT_USUARIOS.chat_id,
         OLT_BOT_USUARIOS.usuario,
         OLT_BOT_USUARIOS.nombre,
-        OLT_BOT_USUARIOS.perfil,
-        OLT_BOT_USUARIOS.activo
+        OLT_USUARIOS.perfil               AS perfil,
+        OLT_BOT_USUARIOS.activo,
+        OLT_BOT_USUARIOS.pass_bot,
+        OLT_BOT_USUARIOS.pass_temporal,
+        OLT_BOT_USUARIOS.intentos_fallidos,
+        OLT_BOT_USUARIOS.bloqueado_hasta,
+        OLT_BOT_USUARIOS.sesion_expira,
+        CASE WHEN OLT_BOT_USUARIOS.sesion_expira IS NOT NULL
+                  AND OLT_BOT_USUARIOS.sesion_expira > NOW()
+             THEN 1 ELSE 0 END            AS sesion_vigente,
+        CASE WHEN OLT_BOT_USUARIOS.bloqueado_hasta IS NOT NULL
+                  AND OLT_BOT_USUARIOS.bloqueado_hasta > NOW()
+             THEN 1 ELSE 0 END            AS bloqueado,
+        TIMESTAMPDIFF(MINUTE, NOW(), OLT_BOT_USUARIOS.bloqueado_hasta) AS minutos_bloqueo
     FROM OLT_BOT_USUARIOS
+    LEFT JOIN OLT_USUARIOS ON OLT_USUARIOS.usuario = OLT_BOT_USUARIOS.usuario
     WHERE OLT_BOT_USUARIOS.chat_id = :chat_id
       AND OLT_BOT_USUARIOS.activo = 1
     """
@@ -340,6 +360,135 @@ async def resetear_password(usuario: str, pass_hash: str) -> int:
         engine_aden,
         SQL_RESETEAR_PASSWORD,
         {"usuario": usuario, "pass": pass_hash},
+    )
+
+
+# --- Sesion y clave del bot -----------------------------------
+
+SQL_ABRIR_SESION = text(
+    """
+    UPDATE OLT_BOT_USUARIOS
+    SET sesion_expira     = DATE_ADD(NOW(), INTERVAL :horas HOUR),
+        intentos_fallidos = 0,
+        bloqueado_hasta   = NULL
+    WHERE chat_id = :chat_id
+    """
+)
+
+SQL_CERRAR_SESION = text(
+    "UPDATE OLT_BOT_USUARIOS SET sesion_expira = NULL WHERE chat_id = :chat_id"
+)
+
+SQL_SUMAR_INTENTO = text(
+    """
+    UPDATE OLT_BOT_USUARIOS
+    SET intentos_fallidos = intentos_fallidos + 1
+    WHERE chat_id = :chat_id
+    """
+)
+
+SQL_BLOQUEAR = text(
+    """
+    UPDATE OLT_BOT_USUARIOS
+    SET bloqueado_hasta   = DATE_ADD(NOW(), INTERVAL :minutos MINUTE),
+        intentos_fallidos = 0,
+        sesion_expira     = NULL
+    WHERE chat_id = :chat_id
+    """
+)
+
+# La asigna un administrador: queda temporal y cierra cualquier sesion abierta.
+SQL_ASIGNAR_CLAVE = text(
+    """
+    UPDATE OLT_BOT_USUARIOS
+    SET pass_bot          = :pass_bot,
+        pass_temporal     = 1,
+        fecha_cambio_pass = NOW(),
+        intentos_fallidos = 0,
+        bloqueado_hasta   = NULL,
+        sesion_expira     = NULL
+    WHERE usuario = :usuario
+    """
+)
+
+# La cambia el propio usuario: deja de ser temporal.
+SQL_CAMBIAR_CLAVE = text(
+    """
+    UPDATE OLT_BOT_USUARIOS
+    SET pass_bot          = :pass_bot,
+        pass_temporal     = 0,
+        fecha_cambio_pass = NOW()
+    WHERE chat_id = :chat_id
+    """
+)
+
+SQL_BUSCAR_USUARIO_BOT = text(
+    """
+    SELECT
+        OLT_BOT_USUARIOS.usuario,
+        OLT_BOT_USUARIOS.nombre,
+        OLT_BOT_USUARIOS.chat_id,
+        OLT_BOT_USUARIOS.activo,
+        OLT_USUARIOS.perfil AS perfil,
+        CASE WHEN OLT_BOT_USUARIOS.pass_bot IS NULL THEN 0 ELSE 1 END AS tiene_clave,
+        OLT_BOT_USUARIOS.pass_temporal
+    FROM OLT_BOT_USUARIOS
+    LEFT JOIN OLT_USUARIOS ON OLT_USUARIOS.usuario = OLT_BOT_USUARIOS.usuario
+    WHERE OLT_BOT_USUARIOS.usuario = :usuario
+    """
+)
+
+
+@_safe(0)
+async def abrir_sesion(chat_id: int, horas: int) -> int:
+    """Marca la sesion como vigente por N horas y limpia los intentos."""
+    return await asyncio.to_thread(
+        _execute, engine_aden, SQL_ABRIR_SESION, {"chat_id": chat_id, "horas": horas}
+    )
+
+
+@_safe(0)
+async def cerrar_sesion(chat_id: int) -> int:
+    return await asyncio.to_thread(
+        _execute, engine_aden, SQL_CERRAR_SESION, {"chat_id": chat_id}
+    )
+
+
+@_safe(0)
+async def sumar_intento_fallido(chat_id: int) -> int:
+    return await asyncio.to_thread(
+        _execute, engine_aden, SQL_SUMAR_INTENTO, {"chat_id": chat_id}
+    )
+
+
+@_safe(0)
+async def bloquear_cuenta(chat_id: int, minutos: int) -> int:
+    return await asyncio.to_thread(
+        _execute, engine_aden, SQL_BLOQUEAR, {"chat_id": chat_id, "minutos": minutos}
+    )
+
+
+@_safe(0)
+async def asignar_clave_bot(usuario: str, pass_bot: str) -> int:
+    return await asyncio.to_thread(
+        _execute, engine_aden, SQL_ASIGNAR_CLAVE,
+        {"usuario": usuario, "pass_bot": pass_bot},
+    )
+
+
+@_safe(0)
+async def cambiar_clave_bot(chat_id: int, pass_bot: str) -> int:
+    return await asyncio.to_thread(
+        _execute, engine_aden, SQL_CAMBIAR_CLAVE,
+        {"chat_id": chat_id, "pass_bot": pass_bot},
+    )
+
+
+@_safe(list)
+async def buscar_usuario_bot(usuario: str) -> list:
+    """Busca un usuario dado de alta en el bot, para asignarle clave."""
+    return await asyncio.to_thread(
+        _fetch, engine_aden, SQL_BUSCAR_USUARIO_BOT, {"usuario": usuario}
     )
 
 

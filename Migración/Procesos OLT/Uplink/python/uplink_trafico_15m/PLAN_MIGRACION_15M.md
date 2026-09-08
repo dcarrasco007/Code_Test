@@ -416,6 +416,23 @@ solo restaura el aislamiento de fallos por-target en el modo de conveniencia "to
   `--server`/`--ip`, `--worker` sobre el proceso monolítico) siguen respondiendo correcto.
 - Suite completa (43 tests) sigue pasando sin regresiones.
 
+### Añadido posterior — Integración con `api_olt_consultas` (F7 de ese proyecto) ✅
+
+Fuera del alcance original de esta migración, pero implementado aquí porque el telnet
+vive en este proyecto. `utils/log_api.py` (nuevo) deja el **log crudo** de cada sesión
+telnet de tráfico en la tabla `OLT_API_LOG_TELNET` (`origen='cron'`), para que el
+endpoint `GET /uplink/trafico/{server}?con_log=true` de esa API tenga algo que mostrar.
+
+- **Opt-in y best-effort**: no hace nada salvo que `LOG_API_TELNET=true` en el `.env`
+  (default `false`). Usa su propia transacción; si la tabla no existe o el `INSERT`
+  falla, el proceso de tráfico **sigue exactamente igual** — no revierte ningún insert
+  real ni propaga excepciones.
+- Cableado en los 3 procesos: una llamada tras la sesión telnet (con `time.monotonic()`
+  para la duración). No toca la lógica de paridad-PHP ni los INSERT de `OLT_TRAFICO_*`.
+- Tests: `tests/test_log_api.py` (5). Suite completa: **48 tests**.
+- Detalle y contrato: `python/api_olt_consultas/docs/INTEGRACION_CRONS.md`.
+- **Pendiente responsable**: activar el flag tras crear las tablas `OLT_API_*`.
+
 ### Fase 9 — Validación y paridad
 
 > Todo lo de esta fase requiere **acceso al servidor Linux de producción** (BD real y OLT

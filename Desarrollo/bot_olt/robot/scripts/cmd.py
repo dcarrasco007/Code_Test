@@ -29,8 +29,8 @@ from telegram.ext import (
 )
 
 from robot.model import consultas
-from robot.scripts import alarmas, auditoria, gpon, inventario, trafico, usuarios
-from utils import limites
+from robot.scripts import alarmas, auditoria, gpon, inventario, sesion, trafico, usuarios
+from utils import limites, seguridad
 from utils.func import (
     exportar,
     marker_errors,
@@ -123,8 +123,10 @@ def requiere_autorizacion(func):
                 )
             return
 
-        # 3. Autorizacion (cacheada).
-        usuario = await _autorizar(chat_id)
+        # 3. Autorizacion. Durante un flujo de clave se consulta sin cache: los
+        # intentos fallidos y la vigencia de la sesion cambian en cada paso.
+        en_flujo = bool(context.user_data.get("flujo_sesion"))
+        usuario = await _autorizar(chat_id, refrescar=en_flujo)
 
         if not usuario:
             responder = limites.registrar_no_autorizado(chat_id)
@@ -145,9 +147,199 @@ def requiere_autorizacion(func):
 
         limites.limpiar_intentos(chat_id)
         context.user_data["usuario"] = usuario
+
+        # 4. Sesion: capa extra de login con la clave propia del bot.
+        if not await _gestionar_sesion(update, context, usuario):
+            return
+
         return await func(update, context, *args, **kwargs)
 
     return wrapper
+
+
+# =============================================================
+# Sesion: login con la clave propia del bot
+# =============================================================
+#
+# La clave del bot es independiente de la del portal. El login pide solo la
+# clave: el chat_id ya identifica a la persona.
+#
+# Los mensajes que contienen una clave se borran del chat apenas se procesan.
+
+FLUJO_LOGIN = "login"
+FLUJO_CAMBIO_ACTUAL = "cambio_actual"
+FLUJO_CAMBIO_NUEVA = "cambio_nueva"
+FLUJO_CAMBIO_REPETIR = "cambio_repetir"
+
+_TEXTO_PEDIR_CLAVE = "Ingresa tu *clave del bot* para continuar:"
+_TEXTO_PEDIR_NUEVA = (
+    "Define tu nueva clave del bot (minimo %d caracteres, sin espacios):"
+    % seguridad.LARGO_MINIMO
+)
+
+
+async def _borrar_mensaje(update: Update) -> None:
+    """Borra del chat el mensaje que contenia una clave."""
+    try:
+        await update.effective_message.delete()
+    except Exception as e:  # el bot puede no tener permiso o ser muy antiguo
+        logger.warning(f"No se pudo borrar el mensaje con la clave: {e}")
+
+
+def _limpiar_flujo(context: ContextTypes.DEFAULT_TYPE) -> None:
+    context.user_data.pop("flujo_sesion", None)
+    context.user_data.pop("clave_nueva", None)
+
+
+async def _gestionar_sesion(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                            usuario: dict) -> bool:
+    """Decide si el usuario puede operar. True = puede seguir."""
+    chat_id = usuario["chat_id"]
+    flujo = context.user_data.get("flujo_sesion")
+
+    # Un mensaje de texto durante un flujo de clave es la respuesta a lo pedido.
+    if flujo and update.callback_query is None and update.effective_message:
+        texto = update.effective_message.text or ""
+        await _borrar_mensaje(update)
+        await _paso_flujo(update, context, usuario, flujo, texto.strip())
+        return False
+
+    estado = sesion.estado(usuario)
+
+    if estado == sesion.ACTIVO:
+        return True
+
+    # Desde un boton no se inicia un flujo de clave: se pide volver al chat.
+    if update.callback_query is not None:
+        await update.callback_query.answer()
+        await update.effective_message.reply_text(
+            "Tu sesion expiro. Escribe cualquier mensaje para volver a ingresar."
+        )
+        return False
+
+    if estado == sesion.BLOQUEADO:
+        await update.effective_message.reply_text(
+            "Tu cuenta esta bloqueada por intentos fallidos.\n"
+            "Reintenta en %d minutos o pide a un administrador que te reasigne la clave."
+            % sesion.minutos_restantes_bloqueo(usuario)
+        )
+        return False
+
+    if estado == sesion.SIN_CLAVE:
+        await update.effective_message.reply_text(
+            "Aun no tienes clave del bot asignada.\n"
+            "Solicitala a un administrador."
+        )
+        return False
+
+    if estado == sesion.REQUIERE_CAMBIO:
+        context.user_data["flujo_sesion"] = FLUJO_CAMBIO_NUEVA
+        await update.effective_message.reply_text(
+            "Estas usando una clave temporal. Debes cambiarla antes de continuar.\n\n"
+            + _TEXTO_PEDIR_NUEVA,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        return False
+
+    context.user_data["flujo_sesion"] = FLUJO_LOGIN
+    await update.effective_message.reply_text(_TEXTO_PEDIR_CLAVE,
+                                              parse_mode=ParseMode.MARKDOWN)
+    return False
+
+
+async def _paso_flujo(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                      usuario: dict, flujo: str, texto: str) -> None:
+    """Procesa un paso de los flujos de login y de cambio de clave."""
+    chat_id = usuario["chat_id"]
+    mensaje = update.effective_message
+
+    # ---------------------------------------------------- login
+    if flujo == FLUJO_LOGIN:
+        resultado, dato = await sesion.intentar_login(usuario, texto)
+        limites.invalidar_auth(chat_id)
+
+        if resultado == "bloqueado":
+            _limpiar_flujo(context)
+            await auditoria.registrar(chat_id, usuario, auditoria.CUENTA_BLOQUEADA)
+            await mensaje.reply_text(
+                "Demasiados intentos fallidos. Tu cuenta quedo bloqueada por %d minutos."
+                % dato
+            )
+            return
+
+        if resultado == "incorrecta":
+            await auditoria.registrar(chat_id, usuario, auditoria.LOGIN_FALLIDO,
+                                      detalle="intentos restantes: %d" % dato)
+            await mensaje.reply_text(
+                "Clave incorrecta. Te quedan %d intentos.\n\n%s" % (dato, _TEXTO_PEDIR_CLAVE),
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        await auditoria.registrar(chat_id, usuario, auditoria.LOGIN_OK)
+
+        if resultado == "temporal":
+            context.user_data["flujo_sesion"] = FLUJO_CAMBIO_NUEVA
+            await mensaje.reply_text(
+                "Ingreso correcto, pero tu clave es temporal y debes cambiarla.\n\n"
+                + _TEXTO_PEDIR_NUEVA,
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        _limpiar_flujo(context)
+        await mensaje.reply_text(
+            "Sesion iniciada por %d horas." % sesion.horas_sesion(),
+            reply_markup=_teclado_menu(usuario),
+        )
+        return
+
+    # ------------------------------- cambio: clave actual
+    if flujo == FLUJO_CAMBIO_ACTUAL:
+        valida = await asyncio.to_thread(seguridad.verificar, texto, usuario.get("pass_bot"))
+        if not valida:
+            await mensaje.reply_text("Clave actual incorrecta. Ingresala de nuevo:")
+            return
+        context.user_data["flujo_sesion"] = FLUJO_CAMBIO_NUEVA
+        await mensaje.reply_text(_TEXTO_PEDIR_NUEVA, parse_mode=ParseMode.MARKDOWN)
+        return
+
+    # ------------------------------- cambio: clave nueva
+    if flujo == FLUJO_CAMBIO_NUEVA:
+        error = seguridad.validar_clave_nueva(texto, sesion.CLAVE_INICIAL)
+        if error:
+            await mensaje.reply_text("%s\n\n%s" % (error, _TEXTO_PEDIR_NUEVA),
+                                     parse_mode=ParseMode.MARKDOWN)
+            return
+        context.user_data["clave_nueva"] = texto
+        context.user_data["flujo_sesion"] = FLUJO_CAMBIO_REPETIR
+        await mensaje.reply_text("Repite la clave nueva para confirmar:")
+        return
+
+    # ------------------------------- cambio: repetir
+    if flujo == FLUJO_CAMBIO_REPETIR:
+        nueva = context.user_data.get("clave_nueva")
+        if texto != nueva:
+            context.user_data.pop("clave_nueva", None)
+            context.user_data["flujo_sesion"] = FLUJO_CAMBIO_NUEVA
+            await mensaje.reply_text("Las claves no coinciden.\n\n" + _TEXTO_PEDIR_NUEVA,
+                                     parse_mode=ParseMode.MARKDOWN)
+            return
+
+        ok = await sesion.cambiar_clave(chat_id, nueva)
+        _limpiar_flujo(context)  # descarta la clave en claro de la memoria
+        limites.invalidar_auth(chat_id)
+
+        if not ok:
+            await mensaje.reply_text("No se pudo guardar la clave. Revisa el log.")
+            return
+
+        await auditoria.registrar(chat_id, usuario, auditoria.CAMBIO_CLAVE_BOT)
+        await mensaje.reply_text("Clave actualizada.",
+                                 reply_markup=_teclado_menu(usuario))
+        return
+
+    _limpiar_flujo(context)
 
 
 # =============================================================
@@ -389,6 +581,138 @@ async def confirmar_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =============================================================
+# Menus de sesion y clave
+# =============================================================
+
+
+async def pedir_cambio_clave(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Cambio voluntario: se pide la clave actual antes de la nueva.
+
+    Aunque la sesion este vigente, exigir la clave actual evita que alguien
+    que tome el telefono desbloqueado se apropie de la cuenta cambiandola.
+    """
+    context.user_data["flujo_sesion"] = FLUJO_CAMBIO_ACTUAL
+    await update.effective_message.reply_text("Ingresa tu clave actual del bot:")
+
+
+async def cerrar_sesion(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    usuario = context.user_data.get("usuario")
+
+    await sesion.cerrar(chat_id)
+    limites.invalidar_auth(chat_id)
+    _limpiar_flujo(context)
+
+    await auditoria.registrar(chat_id, usuario, auditoria.LOGOUT)
+    await update.effective_message.reply_text(
+        "Sesion cerrada. Escribe cualquier mensaje para volver a ingresar."
+    )
+
+
+async def pedir_usuario_clave_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Menu de administrador: asignar la clave inicial del bot a alguien."""
+    context.user_data["esperando"] = "clave_bot_usuario"
+    await update.effective_message.reply_text(
+        "Ingresa el *usuario* al que le asignaras la clave del bot.\n"
+        "Debe estar dado de alta previamente en el bot.",
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+async def _recibir_usuario_clave_bot(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                                     texto: str):
+    mensaje = update.effective_message
+
+    nombre = validar_texto(texto, largo_maximo=60)
+    if not nombre:
+        context.user_data["esperando"] = "clave_bot_usuario"
+        await mensaje.reply_text("Usuario invalido. Intenta de nuevo.")
+        return
+
+    await update.effective_chat.send_action("typing")
+    fila = await sesion.buscar_para_asignar(nombre)
+
+    if not fila:
+        await mensaje.reply_text(
+            "El usuario '%s' no esta dado de alta en el bot.\n"
+            "Primero hay que registrarlo en OLT_BOT_USUARIOS." % nombre
+        )
+        return
+
+    context.user_data["clave_bot_candidato"] = fila["usuario"]
+
+    estado_clave = "sin clave"
+    if int(fila.get("tiene_clave") or 0):
+        estado_clave = "temporal" if int(fila.get("pass_temporal") or 0) else "definitiva"
+
+    botones = InlineKeyboardMarkup([[
+        InlineKeyboardButton("Confirmar", callback_data="clavebot:confirmar"),
+        InlineKeyboardButton("Cancelar", callback_data="clavebot:cancelar"),
+    ]])
+
+    await mensaje.reply_text(
+        "*Asignar clave del bot*\n\n"
+        "Usuario: `%s`\n"
+        "Nombre: %s\n"
+        "Perfil (portal): %s\n"
+        "Clave actual: %s\n\n"
+        "Se le asignara la clave inicial `%s` y debera cambiarla al ingresar.\n"
+        "Si tenia una sesion abierta, se cerrara.\n"
+        "¿Confirmas?"
+        % (fila["usuario"], fila.get("nombre") or "sin registro",
+           fila.get("perfil") if fila.get("perfil") is not None else "sin perfil",
+           estado_clave, sesion.CLAVE_INICIAL),
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=botones,
+    )
+
+
+@requiere_autorizacion
+async def confirmar_clave_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    candidato = context.user_data.pop("clave_bot_candidato", None)
+    accion = query.data.split(":", 1)[1]
+
+    if accion == "cancelar":
+        await query.edit_message_text("Solicitud cancelada. No se modifico nada.")
+        return
+
+    if not candidato:
+        await query.edit_message_text("La solicitud expiro. Vuelve a iniciarla.")
+        return
+
+    admin = await _autorizar(update.effective_chat.id, refrescar=True) or {}
+    if not es_admin(admin):
+        logger.warning(
+            "Intento de asignar clave sin permisos: chat_id %s sobre '%s'"
+            % (update.effective_chat.id, candidato)
+        )
+        await query.edit_message_text("No tienes permisos para esta operacion.")
+        return
+
+    ok = await sesion.asignar_clave_inicial(candidato, admin)
+
+    await auditoria.registrar(
+        update.effective_chat.id, admin, auditoria.ASIGNACION_CLAVE_BOT,
+        detalle="OK" if ok else "SIN EFECTO", parametro=candidato,
+    )
+
+    if ok:
+        await query.edit_message_text(
+            "Clave del bot asignada a `%s`.\n"
+            "Debe ingresar con `%s` y cambiarla de inmediato."
+            % (candidato, sesion.CLAVE_INICIAL),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+    else:
+        await query.edit_message_text(
+            "No se pudo asignar la clave a '%s'. Revisa el log." % candidato
+        )
+
+
+# =============================================================
 # Opciones del menu
 # =============================================================
 
@@ -397,12 +721,15 @@ OPCIONES: dict = {
     "🔌 Puertas PON": pedir_fecha_puertas,
     "🚨 Alarmas criticas": _consulta_simple(alarmas.obtener),
     "📈 Trafico PON": pedir_ip_trafico,
+    "🔒 Cambiar mi clave": pedir_cambio_clave,
+    "🚪 Cerrar sesion": cerrar_sesion,
 }
 
 # Opciones privilegiadas: solo se muestran y se aceptan a los perfiles
 # listados en PERFILES_ADMIN del .env.
 OPCIONES_ADMIN: dict = {
     "🔑 Resetear contrasena": pedir_usuario_reset,
+    "🆕 Asignar clave del bot": pedir_usuario_clave_bot,
 }
 
 # Entradas que esperan un dato del usuario antes de consultar.
@@ -410,10 +737,11 @@ ENTRADAS_PENDIENTES: dict = {
     "puertas_fecha": _recibir_fecha_puertas,
     "trafico_ip": _recibir_ip_trafico,
     "reset_usuario": _recibir_usuario_reset,
+    "clave_bot_usuario": _recibir_usuario_clave_bot,
 }
 
 # Entradas pendientes que solo pueden continuar los perfiles admin.
-ENTRADAS_ADMIN: set = {"reset_usuario"}
+ENTRADAS_ADMIN: set = {"reset_usuario", "clave_bot_usuario"}
 
 
 def _opciones_para(usuario: dict) -> dict:
@@ -508,6 +836,7 @@ def register_handlers(application: Application) -> None:
     application.add_handler(CommandHandler("menu", start))
     application.add_handler(CallbackQueryHandler(descargar, pattern=r"^descargar:"))
     application.add_handler(CallbackQueryHandler(confirmar_reset, pattern=r"^reset:"))
+    application.add_handler(CallbackQueryHandler(confirmar_clave_bot, pattern=r"^clavebot:"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     perfiles = _perfiles_admin()

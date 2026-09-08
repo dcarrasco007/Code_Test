@@ -12,6 +12,7 @@
 # ============================================================================
 
 import logging
+import time
 from datetime import datetime, timedelta
 
 from app.db import get_engine
@@ -28,6 +29,7 @@ from model.uplink_trafico_15m_otros.uplink_trafico_15m_otros_model import (
     insert_hora,
 )
 from utils import monitoreo
+from utils.log_api import expandir_comandos, registrar_log_telnet
 from utils.parser_trafico import parsear_trafico
 from utils.ping import es_alcanzable, ping_ip
 from utils.telnet_olt import leer_trafico_puertos, respuesta_valida
@@ -202,7 +204,16 @@ def run(fecha=None):
                 )
                 continue
 
+            _t0 = time.monotonic()
             texto, fallo = _ejecutar_con_reintento(ip, comandos)
+            # [F7] Log crudo compartido con api_olt_consultas (best-effort, no-op
+            #      si LOG_API_TELNET != true). Transacción propia: no afecta a
+            #      los INSERT de tráfico de este 'with conn'.
+            registrar_log_telnet(
+                engine, olt=server, ip=ip, log_crudo=texto,
+                duracion_ms=int((time.monotonic() - _t0) * 1000), exito=not fallo,
+                comandos=expandir_comandos(comandos),
+            )
             # [PARIDAD-PHP] A diferencia de MA5600T, aquí NO hay marcador de fallo
             #               (modelo='...2') ni se limpia $texto tras un fallo
             #               definitivo — el PHP simplemente sigue parseando lo
