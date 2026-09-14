@@ -1,0 +1,72 @@
+========================================================================
+ MIGRACIÓN GRAFICOS (suma servicios 3Play)  ·  PHP 5.3 -> PHP 8.0
+========================================================================
+Origen : panel_olt/OLT/Graficos  (app web; también existían copias en
+         contingencia y contingencia_v3)
+Migrado: .../Procesos OLT/php_8_0/Graficos_PHP8   (esta carpeta)
+Fecha  : 2026-09-14
+
+Son los 3 jobs de cron que alimentan las tablas de tráfico por servicio 3Play.
+Se MUEVEN desde el servidor web (/var/www/html/OLT/Graficos) al árbol de
+procesos php_8_0 (/var/www/procesos/php/Graficos_PHP8), ya no viven en la web.
+NO son telnet (no usan expect); son solo SQL/reporte.
+
+------------------------------------------------------------------------
+LOS 3 PROCESOS (y su cron)
+------------------------------------------------------------------------
+ - data_servicios.php            semana + mes actual -> tabla OLT_TRAFICO_SERVICIOS
+   (era la query "que se solapaba": DISTINCT SUM(REPLACE(down_mbps)) por pop)
+ - datos_servicios_por_semana.php consolidado semanal -> OLT_TRAFICO_SERVICIOS_SEMANA
+   (usa OLT_TRAFICOGPON2)
+ - datos_servicios_por_mes.php    consolidado mensual -> OLT_TRAFICO_SERVICIOS(_MES)
+
+CRON NUEVO (ajustar las rutas a la nueva ubicación):
+  ## Carga data graficos de suma servicios 3Play ##
+  00 7 * * *   /var/www/procesos/php/Graficos_PHP8/data_servicios.sh
+  00 5 * * 1   /var/www/procesos/php/Graficos_PHP8/datos_servicios_por_semana.sh
+  00 7 1 * *   /var/www/procesos/php/Graficos_PHP8/datos_servicios_por_mes.sh
+(antes apuntaban a /var/www/html/OLT/Graficos/...)
+
+------------------------------------------------------------------------
+CAMBIOS APLICADOS (a los 3 .php)
+------------------------------------------------------------------------
+1. date_default_timezone_set('America/Santiago'); al inicio (la ventana
+   semanal/mensual se calcula con date()/mktime()).
+2. include de conexión -> /var/www/procesos/php/conexion/conexion_db.php
+   (antes relativo '../../conexion/...'; cambia porque el archivo se movió de
+   carpeta y ya no le cuadraba la ruta relativa).
+3. mysql_* -> mysqli (ELIMINADO en PHP 7, era fatal):
+     mysql_connect(...)+mysql_select_db("Aden") -> mysqli_connect(...,"Aden")
+     mysql_query($q)        -> mysqli_query($conn, $q)
+     mysql_fetch_array($r,MYSQL_NUM) -> mysqli_fetch_array($r, MYSQLI_NUM)
+     mysql_error()          -> mysqli_error($conn) / mysqli_connect_error()
+   ** OJO: MYSQL_NUM (constante del viejo ext. mysql) también se eliminó ->
+      MYSQLI_NUM. Es fácil de pasar por alto. (data_servicios: 4 usos;
+      por_semana: 3; por_mes: 2). $db no se usa (se comentó su asignación).
+
+CAMBIOS A LOS 3 .sh
+ - cd -> /var/www/procesos/php/Graficos_PHP8
+ - CANDADO (Opción A, flock por-script) para que no se solapen consigo mismos:
+     flock -n /tmp/<script>.lock php -f <script>.php
+   -n = si ya hay una corriendo, se salta (no encola). Resuelve el apilamiento
+   que se veía en data_servicios (peor caso 37 min con corridas cada 5 min).
+
+------------------------------------------------------------------------
+NO SE TOCÓ / PENDIENTE
+------------------------------------------------------------------------
+- Las copias en panel_olt/contingencia/contingencia_v3 quedaron migradas a
+  mysqli + flock en su sitio (edición previa), pero el plan es que estos 3
+  jobs corran desde AQUÍ (Graficos_PHP8), no desde la web. Al desplegar,
+  actualizar el crontab a las rutas nuevas de arriba y (opcional) retirar los
+  .sh del árbol web para no duplicar corridas.
+- Requiere: extensión mysqli y que exista /var/www/procesos/php/conexion/conexion_db.php.
+
+------------------------------------------------------------------------
+VERIFICACIÓN
+------------------------------------------------------------------------
+- php -l: 3/3 "No syntax errors".
+- 0 mysql_*/MYSQL_NUM residual (lo que queda son comentarios).
+- include nuevo en los 3; date_default en L2; flock en los 3 .sh.
+- NOTA: no se ejecutaron los .php porque hacen TRUNCATE/INSERT (efectos
+  colaterales); se validó con lint + revisión estática.
+========================================================================
