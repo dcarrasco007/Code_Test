@@ -10,13 +10,14 @@ include '../../js/PHPExcel/Classes/PHPExcel/IOFactory.php';
 define('ODF_BATCH_SIZE', 500);
 
 // Inserta/actualiza un lote en una sola query, usando el indice unico
-// (equipo, puerto, odf): misma fibra fisica -> actualiza comentario/gabinete;
-// fibra/odf distinto en el mismo puerto -> fila nueva (splitter GPON legitimo).
+// (equipo, puerto): la clave real es el puerto fisico. Si ya existe una fila
+// para ese equipo+puerto, se actualiza odf y comentario (corrige el valor
+// anterior); no se crean filas nuevas por variar el odf en el mismo puerto.
 function flush_batch_odf($mysqli, $rows) {
     if (empty($rows)) return;
     $sql = "INSERT INTO OLT_POS_ODF (equipo,puerto,odf,comentario) VALUES "
          . implode(',', $rows)
-         . " ON DUPLICATE KEY UPDATE comentario = VALUES(comentario)";
+         . " ON DUPLICATE KEY UPDATE odf = VALUES(odf), comentario = VALUES(comentario)";
     if (!$mysqli->query($sql)) {
         error_log("Error batch OLT_POS_ODF: " . $mysqli->error);
         throw new Exception($mysqli->error);
