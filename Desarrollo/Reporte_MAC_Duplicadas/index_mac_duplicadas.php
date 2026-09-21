@@ -36,9 +36,18 @@ function generarReporte() {
     $.post('tabla_mac_duplicadas.php', {}, function(data) {
         $('#cont_mac_dup').html(data);
         $('#btnExportar').show();
-        $('#tblMacDup').tablesorter({
+        var $tabla = $('#tblMacDup');
+        $tabla.tablesorter({
             theme: 'blue',
             widgets: ["zebra", "stickyHeaders", "filter"]
+        });
+        $('.btn-filtro-estado').on('click', function() {
+            var clase = $(this).data('clase');
+            var filtros = ($tabla.data('lastSearch') || []).slice();
+            filtros[8] = clase;
+            $tabla.trigger('search', [filtros]);
+            $('.btn-filtro-estado').removeClass('activo');
+            $(this).addClass('activo');
         });
     });
 }
