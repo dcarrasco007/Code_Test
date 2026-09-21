@@ -51,4 +51,22 @@ function generarReporte() {
         });
     });
 }
+
+$('#btnExportar').on('click', function(e) {
+    var $btn = $(this);
+    if ($btn.hasClass('exportando')) {
+        e.preventDefault();
+        return false;
+    }
+    $btn.addClass('exportando');
+    $btn.css('pointer-events', 'none');
+    $btn.css('opacity', '0.6');
+    $btn.text('Generando Excel...');
+    setTimeout(function() {
+        $btn.removeClass('exportando');
+        $btn.css('pointer-events', 'auto');
+        $btn.css('opacity', '1');
+        $btn.text('Exportar Excel');
+    }, 8000);
+});
 </script>
