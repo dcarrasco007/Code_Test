@@ -22,7 +22,8 @@ checkAccV2(getUser(),$idPag2); */
             </div>
         </div><br />
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-1"></div>
+            <div class="col-md-10">
                 <div id="cont_mac_dup" class="aling-left"></div>
             </div>
         </div>

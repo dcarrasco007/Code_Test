@@ -90,7 +90,7 @@ $tabla .= "<table align='center' id='tblMacDup' class='table table-bordered tabl
         <tbody>";
 
 foreach ($filas as $f) {
-    $tabla .= "<tr bgcolor='" . $f['color'] . "'>";
+    $tabla .= "<tr style='background-color:" . $f['color'] . " !important;'>";
     $tabla .= "<td>" . $f['sn_mac'] . "</td>";
     $tabla .= "<td><center>" . $f['veces'] . "</center></td>";
     $tabla .= "<td>" . $f['onu_names'] . "</td>";
