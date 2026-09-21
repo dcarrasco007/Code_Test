@@ -80,8 +80,8 @@ $tabla = "<style>
         .badge-offline{background:#FFCCCC;color:#B71C1C;}
         .btn-filtro-estado{border:1px solid #CFD8DC;background:#FFFFFF;color:#455A64;padding:5px 14px;border-radius:4px;font-size:13px;margin-right:6px;cursor:pointer;opacity:0.6;}
         .btn-filtro-estado.activo{opacity:1;font-weight:700;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.15);}
-        #tblMacDup th:nth-child(9), #tblMacDup td:nth-child(9){display:none;}
-        #tblMacDup thead th{background:#37474F !important;color:#FFFFFF;}
+        #tblMacDup th:nth-child(9), #tblMacDup td:nth-child(9){width:1px;max-width:1px;overflow:hidden;padding:0;font-size:0;line-height:0;border-left:0;}
+        #tblMacDup thead th, .tablesorter-stickyHeader thead th{background:#37474F !important;color:#FFFFFF;}
         </style>";
 
 $tabla .= "<div id='panelMacDup'>
