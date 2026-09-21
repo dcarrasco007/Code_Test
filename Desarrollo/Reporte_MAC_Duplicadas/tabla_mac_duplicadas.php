@@ -90,15 +90,16 @@ $tabla .= "<table align='center' id='tblMacDup' class='table table-bordered tabl
         <tbody>";
 
 foreach ($filas as $f) {
-    $tabla .= "<tr style='background-color:" . $f['color'] . " !important;'>";
-    $tabla .= "<td>" . $f['sn_mac'] . "</td>";
-    $tabla .= "<td><center>" . $f['veces'] . "</center></td>";
-    $tabla .= "<td>" . $f['onu_names'] . "</td>";
-    $tabla .= "<td>" . $f['puertos'] . "</td>";
-    $tabla .= "<td>" . $f['olts'] . "</td>";
-    $tabla .= "<td>" . $f['estados'] . "</td>";
-    $tabla .= "<td>" . $f['profiles'] . "</td>";
-    $tabla .= "<td>" . $f['terminales'] . "</td>";
+    $bg = "style='background-color:" . $f['color'] . "'";
+    $tabla .= "<tr>";
+    $tabla .= "<td $bg>" . $f['sn_mac'] . "</td>";
+    $tabla .= "<td $bg><center>" . $f['veces'] . "</center></td>";
+    $tabla .= "<td $bg>" . $f['onu_names'] . "</td>";
+    $tabla .= "<td $bg>" . $f['puertos'] . "</td>";
+    $tabla .= "<td $bg>" . $f['olts'] . "</td>";
+    $tabla .= "<td $bg>" . $f['estados'] . "</td>";
+    $tabla .= "<td $bg>" . $f['profiles'] . "</td>";
+    $tabla .= "<td $bg>" . $f['terminales'] . "</td>";
     $tabla .= "</tr>";
 }
 $tabla .= "</tbody></table>";
