@@ -10,18 +10,18 @@ $mysqli->set_charset("utf8");
 
 $mysqli->query("SET SESSION group_concat_max_len = 1000000");
 
-$sql = "SELECT sn_mac, COUNT(*) AS veces,
-        GROUP_CONCAT(onu_name ORDER BY id SEPARATOR ' | ') AS onu_names,
-        GROUP_CONCAT(CONCAT(equipo,' F',frame_id,'/S',slot_id,'/P',port_id) ORDER BY id SEPARATOR ' | ') AS puertos,
-        GROUP_CONCAT(equipo ORDER BY id SEPARATOR ' | ') AS olts,
-        GROUP_CONCAT(estado ORDER BY id SEPARATOR ' | ') AS estados_run,
-        GROUP_CONCAT(DISTINCT line_profile_name ORDER BY line_profile_name SEPARATOR ' | ') AS profiles,
-        GROUP_CONCAT(DISTINCT modelo ORDER BY modelo SEPARATOR ' | ') AS terminales
-        FROM OLT_INFORMACION_ONT_DETALLE_COMPLETO
-        INNER JOIN OLT_SERVER_ONNET ON OLT_SERVER_ONNET.server = OLT_INFORMACION_ONT_DETALLE_COMPLETO.equipo
-        GROUP BY sn_mac
+$sql = "SELECT d.sn_mac, COUNT(*) AS veces,
+        GROUP_CONCAT(d.onu_name ORDER BY d.id SEPARATOR ' | ') AS onu_names,
+        GROUP_CONCAT(CONCAT(d.equipo,' F',d.frame_id,'/S',d.slot_id,'/P',d.port_id) ORDER BY d.id SEPARATOR ' | ') AS puertos,
+        GROUP_CONCAT(d.equipo ORDER BY d.id SEPARATOR ' | ') AS olts,
+        GROUP_CONCAT(d.estado ORDER BY d.id SEPARATOR ' | ') AS estados_run,
+        GROUP_CONCAT(DISTINCT d.line_profile_name ORDER BY d.line_profile_name SEPARATOR ' | ') AS profiles,
+        GROUP_CONCAT(DISTINCT d.modelo ORDER BY d.modelo SEPARATOR ' | ') AS terminales
+        FROM OLT_INFORMACION_ONT_DETALLE_COMPLETO d
+        INNER JOIN OLT_SERVER_ONNET s ON s.server = d.equipo
+        GROUP BY d.sn_mac
         HAVING COUNT(*) > 1
-        ORDER BY sn_mac ASC";
+        ORDER BY d.sn_mac ASC";
 $result = $mysqli->query($sql) or die("Error consulta MAC duplicadas ONNET: " . $mysqli->error);
 
 $filas = array();

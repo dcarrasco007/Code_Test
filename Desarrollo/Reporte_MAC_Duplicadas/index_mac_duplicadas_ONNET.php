@@ -18,7 +18,7 @@ checkAccV2(getUser(),$idPag2); */
             <div class="col-md-12 text-center">
                 <button type="button" class="btn btn-primary" onclick="generarReporte()">Generar Datos</button>
                 &nbsp;
-                <a id="btnExportar" href="export_mac_duplicadas_ONNET.php" class="btn btn-success" style="display:none;">Exportar Excel</a>
+                <a id="btnExportar" href="../ONT/Reporte_MAC_Duplicadas/export_mac_duplicadas_ONNET.php" class="btn btn-success" style="display:none;">Exportar Excel</a>
             </div>
         </div><br />
         <div class="row">
@@ -33,7 +33,7 @@ checkAccV2(getUser(),$idPag2); */
 function generarReporte() {
     $('#cont_mac_dup').html('<center><br>Generando informe, por favor espera...</center>');
     $('#btnExportar').hide();
-    $.post('tabla_mac_duplicadas_ONNET.php', {}, function(data) {
+    $.post('../ONT/Reporte_MAC_Duplicadas/tabla_mac_duplicadas_ONNET.php', {}, function(data) {
         $('#cont_mac_dup').html(data);
         $('#btnExportar').show();
         var $tabla = $('#tblMacDup');
