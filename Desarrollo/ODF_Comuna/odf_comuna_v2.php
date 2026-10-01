@@ -32,10 +32,11 @@ $total = count($comunas);
     #odfComunaV2 .total-badge{color:#607D8B;font-size:13px;margin-top:8px;display:block;}
     #odfComunaV2 .grid-wrap{background:#fff;padding:26px 28px 30px;border:1px solid #E0E4E8;border-top:none;border-radius:0 0 4px 4px;}
     #odfComunaV2 .celda-comuna-odf{padding-left:10px;padding-right:10px;margin-bottom:20px;}
-    #odfComunaV2 .comuna-card{background:#fff;border:1px solid #E0E4E8;border-left:4px solid #2E75B6;border-radius:4px;padding:16px 14px;height:100%;min-height:64px;cursor:pointer;transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease;display:flex;align-items:center;}
+    #odfComunaV2 .comuna-card{background:#fff;border:1px solid #E0E4E8;border-left:4px solid #2E75B6;border-radius:4px;padding:14px;min-height:34px;cursor:pointer;transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease;overflow:hidden;}
     #odfComunaV2 .comuna-card:hover{box-shadow:0 3px 10px rgba(0,0,0,0.12);transform:translateY(-2px);border-left-color:#1a5290;}
-    #odfComunaV2 .comuna-icon{width:30px;height:30px;min-width:30px;border-radius:50%;background:#E6F1FB;color:#2E75B6;display:flex;align-items:center;justify-content:center;margin-right:12px;}
-    #odfComunaV2 .comuna-name{font-size:13px;font-weight:600;color:#263238;line-height:1.3;}
+    #odfComunaV2 .comuna-icon{width:30px;height:30px;border-radius:50%;background:#E6F1FB;color:#2E75B6;float:left;margin-right:12px;text-align:center;line-height:30px;}
+    #odfComunaV2 .comuna-icon svg{vertical-align:-3px;}
+    #odfComunaV2 .comuna-name{font-size:13px;font-weight:600;color:#263238;line-height:30px;}
     #odfComunaV2 .sin-resultados{color:#90A4AE;padding:20px;text-align:center;font-size:13px;}
 </style>
 <div class="row">
