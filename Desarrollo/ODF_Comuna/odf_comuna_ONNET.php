@@ -1,18 +1,18 @@
 <?php
 //$idPag = 'reporte_ont_general';
 $idPag2 = '527';
-include_once('../perfiles/getPerfiles.php');
+include_once(__DIR__ . '/../perfiles/getPerfiles.php');
 //checkAcc(getUser(),$idPag);
 //checkAccV2(getUser(),$idPag2);
-include('../perfiles/proceso.php');
+include(__DIR__ . '/../perfiles/proceso.php');
 
-include ('../../conexion/conexion_db.php');
+include (__DIR__ . '/../conexion/conexion_db.php');
 include ('estilo.php');
 
 $mysqli = new mysqli($host144_geret,$user144_geret,$pass144_geret, 'Aden');
 $mysqli ->  set_charset("utf8");
 
-$query_1 = "SELECT DISTINCT (OLT_SERVER.comuna) from OLT_SERVER INNER JOIN OLT_POS_ODF on OLT_SERVER.server = OLT_POS_ODF.equipo ORDER BY comuna ASC";
+$query_1 = "SELECT DISTINCT (OLT_SERVER_ONNET.comuna) from OLT_SERVER_ONNET INNER JOIN OLT_POS_ODF on OLT_SERVER_ONNET.server = OLT_POS_ODF.equipo ORDER BY comuna ASC";
 $res = $mysqli->query($query_1) or die("error $query_1");
 
 $comunas = array();
@@ -44,7 +44,7 @@ $total = count($comunas);
     <div class="col-md-10">
     <div id="odfComunaV2" class="container-fluid">
     <div class="panel-heading-odf">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-7.3-7-12a7 7 0 0 1 14 0c0 4.7-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>ODF por Comunas
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-7.3-7-12a7 7 0 0 1 14 0c0 4.7-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>ODF por Comunas ONNET
     </div>
     <div class="toolbar">
         <div class="row">
@@ -65,7 +65,7 @@ $total = count($comunas);
         <div class="row" id="gridComunasODF">
 <?php foreach ($comunas as $c): ?>
             <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 celda-comuna-odf">
-                <div class="comuna-card" onclick="muestraODFComuna('<?php echo addslashes($c); ?>')">
+                <div class="comuna-card" onclick="muestraODFComunaONNET('<?php echo addslashes($c); ?>')">
                     <div class="comuna-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-7.3-7-12a7 7 0 0 1 14 0c0 4.7-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
                     </div>
