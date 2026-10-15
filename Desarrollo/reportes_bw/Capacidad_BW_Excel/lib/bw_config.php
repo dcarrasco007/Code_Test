@@ -1,6 +1,6 @@
 <?php
 /**
- * Configuración del reporte semanal de capacidades BW (Excel anual por semana ISO).
+ * Configuración del reporte semanal de capacidades BW (Excel anual por semana, ver lib/bw_fechas.php).
  * Compatible con PHP 5.3.
  */
 if (!ini_get('date.timezone')) {
@@ -26,6 +26,21 @@ define('BW_UMBRAL_ALERTA', 99);
 define('BW_PREFIJO_ARCHIVO', 'Capacidades OLTs');
 
 define('BW_LOG', BW_DIR_SEMANA . '/log_reporte_bw_semanal.log');
+
+/**
+ * OLTs que no se incluyen en el reporte (laboratorio). Para volver a considerar una,
+ * basta con borrarla o comentarla de esta lista: la próxima ejecución la agrega al Excel.
+ */
+function bw_olts_excluidas()
+{
+    return array(
+        'OLT1-1-LABONNET-5800',     // laboratorio
+        'OLT1-2-LABONNET-5600',     // laboratorio
+        'OLT61-LASERII-HW5800',     // laboratorio
+        'OLT02-LASERII-HW5600',     // laboratorio
+        'OLT62-LASERII-HW5800T',    // laboratorio
+    );
+}
 
 function bw_log($mensaje)
 {

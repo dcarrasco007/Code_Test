@@ -1,6 +1,6 @@
 <?php
 /**
- * Cron semanal (lunes 04:00): genera los Excel de capacidades BW de la semana ISO anterior
+ * Cron semanal (lunes 04:00): genera los Excel de capacidades BW de la semana anterior (semana 1 = la que contiene el 1 de enero)
  * en Archivos/Semana/ junto con sus alertas.
  *
  * Uso:

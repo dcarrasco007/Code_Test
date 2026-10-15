@@ -68,6 +68,7 @@ foreach ($semanas as $clave => $d) {
     $uplink = array();
     $sinRegistro = array();
     $nuevas = array();
+    $capacidad = array();
     foreach ($d['alertas'] as $a) {
         if ($a['tipo'] == 'uplink') {
             $uplink[] = $a;
@@ -75,6 +76,8 @@ foreach ($semanas as $clave => $d) {
             $sinRegistro[] = $a;
         } elseif ($a['tipo'] == 'olt_nueva') {
             $nuevas[] = $a;
+        } elseif ($a['tipo'] == 'capacidad') {
+            $capacidad[] = $a;
         }
     }
 ?>
@@ -94,7 +97,7 @@ foreach ($semanas as $clave => $d) {
                 <div class="panel-heading"><strong>Alertas de la semana W-<?php echo (int)$d['semana']; ?>
                     (<?php echo bw_fecha_corta($d['desde']); ?> al <?php echo bw_fecha_corta($d['hasta']); ?>)</strong></div>
                 <div class="panel-body">
-<?php if (count($uplink) + count($sinRegistro) + count($nuevas) == 0) { ?>
+<?php if (count($uplink) + count($sinRegistro) + count($nuevas) + count($capacidad) == 0) { ?>
                     Sin alertas: ninguna OLT superó el <?php echo (int)$d['umbral']; ?>% de Uplink y todas tienen registros.
 <?php } ?>
 <?php if (count($uplink) > 0) { ?>
@@ -127,6 +130,23 @@ foreach ($semanas as $clave => $d) {
                                 <td><?php echo bw_h($a['olt']); ?></td>
                                 <td><?php echo (int)$a['fila']; ?></td>
                                 <td><?php echo bw_h($a['detalle']); ?></td>
+                            </tr>
+<?php } ?>
+                        </tbody>
+                    </table>
+<?php } ?>
+<?php if (count($capacidad) > 0) { ?>
+                    <h4>Cambios de capacidad respecto de la semana anterior</h4>
+                    <table class="table table-bordered table-condensed table-striped">
+                        <thead><tr><th>PE-com</th><th>OLT</th><th>Fila Excel</th><th>Capacidad anterior (Mbps)</th><th>Capacidad nueva (Mbps)</th></tr></thead>
+                        <tbody>
+<?php foreach ($capacidad as $a) { ?>
+                            <tr>
+                                <td><?php echo bw_h($a['pe_com']); ?></td>
+                                <td><?php echo bw_h($a['olt']); ?></td>
+                                <td><?php echo (int)$a['fila']; ?></td>
+                                <td><?php echo number_format($a['anterior'], 0, ',', '.'); ?></td>
+                                <td><?php echo number_format($a['nueva'], 0, ',', '.'); ?></td>
                             </tr>
 <?php } ?>
                         </tbody>

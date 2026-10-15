@@ -33,10 +33,33 @@ function bw_clave_olt($nombre)
 }
 
 /**
- * OLTs con capacidad uplink conocida.
+ * Capacidad de la OLT en Mbps a partir de capacidad_total (Gbps), igual que
+ * reporte_bw_fecha_peak_capacidad.php: capacidad_total suma los 2 uplinks redundantes,
+ * por lo que en OLTs de 10G o más se divide por 2 (ej: 200Gb => 100000). Las de 1G quedan igual.
+ */
+function bw_capacidad_mbps($capTotalGb)
+{
+    $cap = (int)$capTotalGb;
+    return ($cap >= 10) ? (int)round($cap / 2 * 1000) : $cap * 1000;
+}
+
+function bw_olt_excluida($nombre)
+{
+    static $excluidas = null;
+    if ($excluidas === null) {
+        $excluidas = array();
+        foreach (bw_olts_excluidas() as $o) {
+            $excluidas[bw_clave_olt($o)] = true;
+        }
+    }
+    return isset($excluidas[bw_clave_olt($nombre)]);
+}
+
+/**
+ * OLTs con capacidad uplink conocida (sin las excluidas de bw_olts_excluidas()).
  * Retorna array(clave => array('olt','ip','pe_id','pe_com','cap'))  (cap en Mbps)
- * En reporte_bw_fecha_peak.php la capacidad de la OLT es la de su puerta de mayor
- * capacidad (subconsulta ordenada por cap DESC + GROUP BY olt), equivalente a MAX(cap).
+ * La capacidad_total se toma de la puerta de mayor valor (subconsulta ordenada por
+ * cap DESC + GROUP BY olt en el reporte original), equivalente a MAX(cap).
  */
 function bw_obtener_olts($mysqli)
 {
@@ -57,12 +80,15 @@ function bw_obtener_olts($mysqli)
     }
     $olts = array();
     while ($row = $res->fetch_assoc()) {
+        if (bw_olt_excluida($row['olt'])) {
+            continue;
+        }
         $olts[bw_clave_olt($row['olt'])] = array(
             'olt'    => $row['olt'],
             'ip'     => $row['ip'],
             'pe_id'  => (int)$row['pe_id'],
             'pe_com' => $row['pe_com'],
-            'cap'    => ((int)$row['cap']) * 1000,
+            'cap'    => bw_capacidad_mbps($row['cap']),
         );
     }
 
@@ -73,7 +99,7 @@ function bw_obtener_olts($mysqli)
     }
     while ($row = $res->fetch_assoc()) {
         $clave = bw_clave_olt($row['server']);
-        if (!isset($olts[$clave]) && $row['ip'] != '') {
+        if (!isset($olts[$clave]) && $row['ip'] != '' && !bw_olt_excluida($row['server'])) {
             $olts[$clave] = array('olt' => $row['server'], 'ip' => $row['ip'], 'pe_id' => (int)$row['pe_com'],
                 'pe_com' => '', 'cap' => null);
         }
@@ -120,7 +146,9 @@ function bw_datos_desde_json($archivo)
     }
     $olts = array();
     foreach ($d['olts'] as $o) {
-        $olts[bw_clave_olt($o['olt'])] = $o;
+        if (!bw_olt_excluida($o['olt'])) {
+            $olts[bw_clave_olt($o['olt'])] = $o;
+        }
     }
     return array($olts, $d['trafico']);
 }

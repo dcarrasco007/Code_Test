@@ -52,7 +52,7 @@ function bw_buscar_plantilla($dir, $anio, $semana)
 }
 
 /**
- * Genera los 2 Excel y el .json de alertas de la semana ISO indicada.
+ * Genera los 2 Excel y el .json de alertas de la semana indicada (lunes a domingo, semana 1 = la que contiene el 1 de enero).
  * $opc: forzar (bool), datos (ruta .json de prueba en vez de BD), plantilla (ruta)
  */
 function bw_generar_reporte_semanal($anio, $semana, $opc = array())
@@ -198,6 +198,18 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
                 $filasOlt[$r] = array('clave' => $clave, 'olt' => $olt,
                     'pe' => (isset($olts[$clave]) && $olts[$clave]['pe_com'] != '') ? $olts[$clave]['pe_com'] : $pe);
             }
+        }
+    }
+
+    // ---------- cambios de capacidad respecto del último día del Excel anterior ----------
+    foreach ($filasOlt as $r => $info) {
+        $o = isset($olts[$info['clave']]) ? $olts[$info['clave']] : null;
+        $antes = isset($capPrevia[$info['clave']]) ? $capPrevia[$info['clave']] : null;
+        if ($o && $o['cap'] !== null && $antes !== null && (int)$o['cap'] != (int)$antes) {
+            $alertas[] = array('tipo' => 'capacidad', 'olt' => $info['olt'], 'pe_com' => $info['pe'], 'fila' => $r,
+                'anterior' => $antes, 'nueva' => $o['cap'],
+                'detalle' => 'Capacidad cambia de ' . number_format($antes, 0, ',', '.') . ' a '
+                    . number_format($o['cap'], 0, ',', '.') . ' Mbps');
         }
     }
 
