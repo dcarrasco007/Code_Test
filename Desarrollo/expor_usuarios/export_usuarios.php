@@ -1,7 +1,7 @@
 <?php
-include_once('../perfiles/getPerfiles.php');
-include ('../../conexion/conexion_db.php');
-require_once '/var/www/html/contingencia/js/PHPExcel/Classes/PHPExcel.php';
+include_once(__DIR__ . '/../perfiles/getPerfiles.php');
+include (__DIR__ . '/../conexion/conexion_db.php');
+require_once '../../js/PHPExcel/Classes/PHPExcel.php';
 
 $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : 'todo';
 
