@@ -140,14 +140,19 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
             continue;
         }
         $conTrafico = false;
+        $primera = null;   // primera fecha con registro dentro de los días a generar
         if (isset($trafico[$o['ip']])) {
             foreach ($trafico[$o['ip']] as $f => $v) {
                 if ($f >= bw_fecha_dia($anio, $diaIni) && $f <= $hasta) {
                     $conTrafico = true;
                 }
+                if ($f >= $desde && $f <= $hasta && ($primera === null || $f < $primera)) {
+                    $primera = $f;
+                }
             }
         }
         if ($conTrafico) {
+            $o['primera'] = $primera;
             $nuevas[] = $o;
         }
     }
@@ -180,8 +185,10 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
             $celdaA = $libro->celda($pos, 1);
             $libro->ponerCelda($pos, $libro->celdaTexto('A' . $pos, $celdaA ? $celdaA->getAttribute('s') : null, $o['pe_com']));
         }
+        // Días anteriores ya existentes en el Excel: tráfico 0 con la capacidad obtenida esta semana
+        $libro->rellenarHistorial($pos, $k0, $o['cap']);
         $capPrevia[bw_clave_olt($o['olt'])] = null;
-        $agregadas[bw_clave_olt($o['olt'])] = true;
+        $agregadas[bw_clave_olt($o['olt'])] = $o['primera'];
         $alertas[] = array('tipo' => 'olt_nueva', 'olt' => $o['olt'], 'pe_com' => $o['pe_com'], 'fila' => $pos,
             'detalle' => 'OLT agregada al Excel en la fila ' . $pos . ($grupo === null ? ' (PE-com nuevo al final)' : ''));
         bw_log("OLT nueva agregada: $o[olt] ($o[pe_com]) en fila $pos");
@@ -224,6 +231,8 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
             $traf = null;
             if ($o && isset($trafico[$o['ip']][$fecha])) {
                 $traf = round($trafico[$o['ip']][$fecha], 0);
+            } elseif (isset($agregadas[$info['clave']]) && $fecha < $agregadas[$info['clave']]) {
+                $traf = 0;   // OLT nueva: días previos a su primer registro quedan en 0
             }
             $cap = ($o && $o['cap'] !== null && $o['cap'] > 0) ? $o['cap'] : $capPrevia[$info['clave']];
             $valores[$r] = array($traf, $cap);
@@ -291,9 +300,6 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
         }
     }
     foreach ($sinRegistro as $r => $fechas) {
-        if (isset($agregadas[$filasOlt[$r]['clave']])) {
-            continue;   // OLT recién agregada: los días previos a su primer registro no son falla
-        }
         $dias = array();
         foreach ($fechas as $f) {
             $dias[] = bw_etiqueta_dia($anio, (int)round((strtotime($f . ' 12:00:00') - bw_ts_dia($anio, 0)) / 86400));

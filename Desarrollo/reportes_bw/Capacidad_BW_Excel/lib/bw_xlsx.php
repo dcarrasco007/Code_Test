@@ -206,7 +206,11 @@ class BwLibroXlsx
 
     function valor($fila, $col)
     {
-        $c = $this->celda($fila, $col);
+        return $this->valorCelda($this->celda($fila, $col));
+    }
+
+    function valorCelda($c)
+    {
         if ($c === null) {
             return null;
         }
@@ -649,6 +653,132 @@ class BwLibroXlsx
         } else {
             $this->sheetData->appendChild($row);
         }
+        $this->indexarFilas();
+    }
+
+    /**
+     * Completa los días 0..$kFin-1 de una fila (OLT recién agregada) con tráfico 0,
+     * la capacidad indicada y la fórmula de % Uplink, conservando el estilo de cada celda.
+     */
+    function rellenarHistorial($fila, $kFin, $capacidad)
+    {
+        $maxCol = 4 + 3 * (int)$kFin;
+        foreach ($this->celdasFila($fila) as $col => $c) {
+            if ($col < 5 || $col > $maxCol) {
+                continue;
+            }
+            while ($c->firstChild) {
+                $c->removeChild($c->firstChild);
+            }
+            if ($c->hasAttribute('t')) {
+                $c->removeAttribute('t');
+            }
+            $tipo = ($col - 5) % 3;   // 0 tráfico, 1 capacidad, 2 % Uplink
+            if ($tipo == 0) {
+                $c->appendChild($this->dom->createElement('v', '0'));
+            } elseif ($tipo == 1 && $capacidad !== null) {
+                $c->appendChild($this->dom->createElement('v', bw_num_xml($capacidad)));
+            } elseif ($tipo == 2 && $capacidad !== null && $capacidad > 0) {
+                $c->appendChild($this->dom->createElement('f', bw_formula_pct($col, $fila)));
+                $c->appendChild($this->dom->createElement('v', '0'));
+            }
+        }
+    }
+
+    /**
+     * Reemplaza las filas de OLT (3 en adelante) por los grupos indicados, copiando el formato
+     * de A..D de las filas del archivo (inicio / medio / fin de grupo y grupo de una fila).
+     * Usar después de truncarDias(0).
+     * $grupos: array(array('pe' => , 'b' => num|null, 'c' => num|null, 'olts' => array(nombres)))
+     */
+    function reconstruirFilas($grupos)
+    {
+        // Filas modelo
+        $rep = array();
+        $cubiertas = array();
+        foreach ($this->hijos($this->mergeCells(), 'mergeCell') as $m) {
+            $p = bw_rango_partes($m->getAttribute('ref'));
+            if ($p && $p[0] == 1 && $p[2] == 1 && $p[1] >= 3) {
+                for ($r = $p[1]; $r <= $p[3]; $r++) {
+                    $cubiertas[$r] = true;
+                }
+                if (!isset($rep['inicio']) && $p[3] - $p[1] >= 2) {
+                    $rep['inicio'] = $p[1];
+                    $rep['medio'] = $p[1] + 1;
+                    $rep['fin'] = $p[3];
+                }
+            }
+        }
+        for ($r = 3; $r <= $this->ultimaFila(); $r++) {
+            if (!isset($cubiertas[$r]) && isset($this->filas[$r])) {
+                $rep['unica'] = $r;
+                break;
+            }
+        }
+        foreach (array('inicio', 'medio', 'fin', 'unica') as $pos) {
+            if (!isset($rep[$pos])) {
+                $rep[$pos] = 3;
+            }
+        }
+        $modelos = array();
+        foreach ($rep as $pos => $r) {
+            $estilos = array();
+            foreach ($this->celdasFila($r) as $col => $c) {
+                if ($col <= 4) {
+                    $estilos[$col] = $c->getAttribute('s');
+                }
+            }
+            $modelos[$pos] = array('fila' => $this->filas[$r]->cloneNode(false), 'estilos' => $estilos);
+        }
+
+        // Borrar filas de OLT y sus combinaciones
+        foreach ($this->filas as $r => $row) {
+            if ($r >= 3) {
+                $this->sheetData->removeChild($row);
+            }
+        }
+        $mc = $this->mergeCells();
+        foreach ($this->hijos($mc, 'mergeCell') as $m) {
+            $p = bw_rango_partes($m->getAttribute('ref'));
+            if ($p && $p[3] >= 3) {
+                $mc->removeChild($m);
+            }
+        }
+
+        // Crear filas nuevas
+        $r = 3;
+        foreach ($grupos as $g) {
+            $n = count($g['olts']);
+            foreach ($g['olts'] as $i => $olt) {
+                $pos = ($n == 1) ? 'unica' : ($i == 0 ? 'inicio' : ($i == $n - 1 ? 'fin' : 'medio'));
+                $mod = $modelos[$pos];
+                $row = $mod['fila']->cloneNode(false);
+                $row->setAttribute('r', $r);
+                $est = $mod['estilos'];
+                $s = array();
+                for ($col = 1; $col <= 4; $col++) {
+                    $s[$col] = isset($est[$col]) ? $est[$col] : null;
+                }
+                if ($i == 0) {
+                    $row->appendChild($this->celdaTexto('A' . $r, $s[1], $g['pe']));
+                    $row->appendChild($this->celdaNumero('B' . $r, $s[2], $g['b']));
+                    $row->appendChild($this->celdaNumero('C' . $r, $s[3], $g['c']));
+                } else {
+                    $row->appendChild($this->nuevaCelda('A' . $r, $s[1]));
+                    $row->appendChild($this->nuevaCelda('B' . $r, $s[2]));
+                    $row->appendChild($this->nuevaCelda('C' . $r, $s[3]));
+                }
+                $row->appendChild($this->celdaTexto('D' . $r, $s[4], $olt));
+                $this->sheetData->appendChild($row);
+                $r++;
+            }
+            if ($n > 1) {
+                for ($col = 1; $col <= 3; $col++) {
+                    $this->combinar($col, $r - $n, $col, $r - 1);
+                }
+            }
+        }
+        $mc->setAttribute('count', count($this->hijos($mc, 'mergeCell')));
         $this->indexarFilas();
     }
 

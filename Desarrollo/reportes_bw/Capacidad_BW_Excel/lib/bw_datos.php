@@ -57,12 +57,21 @@ function bw_olt_excluida($nombre)
 
 /**
  * OLTs con capacidad uplink conocida (sin las excluidas de bw_olts_excluidas()).
- * Retorna array(clave => array('olt','ip','pe_id','pe_com','cap'))  (cap en Mbps)
+ * $tablaServer: OLT_SERVER (Nacional y ONNET) u OLT_SERVER_V2 (EQUIFIBER)
+ * $soloOlts: lista de nombres a considerar (ONNET) o null para todas
+ * Retorna array(clave => array('olt','ip','pe_id','pe_com','cap','cap_gb'))  (cap en Mbps)
  * La capacidad_total se toma de la puerta de mayor valor (subconsulta ordenada por
  * cap DESC + GROUP BY olt en el reporte original), equivalente a MAX(cap).
  */
-function bw_obtener_olts($mysqli)
+function bw_obtener_olts($mysqli, $tablaServer = 'OLT_SERVER', $soloOlts = null)
 {
+    $filtro = null;
+    if ($soloOlts !== null) {
+        $filtro = array();
+        foreach ($soloOlts as $o) {
+            $filtro[bw_clave_olt($o)] = true;
+        }
+    }
     $sql = "SELECT T1.olt, MAX(OLTSERVER.ip) AS ip, MAX(OLTPE.id) AS pe_id, MAX(OLTPE.pe_com) AS pe_com, MAX(T1.cap) AS cap
             FROM (
                 SELECT OLT_PUERTAS_UPLINKS_GB.olt,
@@ -70,7 +79,7 @@ function bw_obtener_olts($mysqli)
                 FROM OLT_PUERTAS_UPLINKS_GB
                 WHERE OLT_PUERTAS_UPLINKS_GB.capacidad_total <> ''
             ) T1
-            INNER JOIN OLT_SERVER AS OLTSERVER ON T1.olt = OLTSERVER.`server`
+            INNER JOIN `" . $tablaServer . "` AS OLTSERVER ON T1.olt = OLTSERVER.`server`
             INNER JOIN OLT_PE_COM AS OLTPE ON OLTSERVER.pe_com = OLTPE.id
             GROUP BY T1.olt
             ORDER BY pe_id ASC, cap DESC";
@@ -80,7 +89,7 @@ function bw_obtener_olts($mysqli)
     }
     $olts = array();
     while ($row = $res->fetch_assoc()) {
-        if (bw_olt_excluida($row['olt'])) {
+        if (bw_olt_excluida($row['olt']) || ($filtro !== null && !isset($filtro[bw_clave_olt($row['olt'])]))) {
             continue;
         }
         $olts[bw_clave_olt($row['olt'])] = array(
@@ -89,19 +98,21 @@ function bw_obtener_olts($mysqli)
             'pe_id'  => (int)$row['pe_id'],
             'pe_com' => $row['pe_com'],
             'cap'    => bw_capacidad_mbps($row['cap']),
+            'cap_gb' => (int)$row['cap'],
         );
     }
 
     // OLTs del Excel que no tengan capacidad cargada igual necesitan su ip para el tráfico
-    $res = $mysqli->query("SELECT `server`, ip, pe_com FROM OLT_SERVER");
+    $res = $mysqli->query("SELECT `server`, ip, pe_com FROM `" . $tablaServer . "`");
     if (!$res) {
         throw new Exception('Error consulta OLT_SERVER: ' . $mysqli->error);
     }
     while ($row = $res->fetch_assoc()) {
         $clave = bw_clave_olt($row['server']);
-        if (!isset($olts[$clave]) && $row['ip'] != '' && !bw_olt_excluida($row['server'])) {
+        if (!isset($olts[$clave]) && $row['ip'] != '' && !bw_olt_excluida($row['server'])
+            && ($filtro === null || isset($filtro[$clave]))) {
             $olts[$clave] = array('olt' => $row['server'], 'ip' => $row['ip'], 'pe_id' => (int)$row['pe_com'],
-                'pe_com' => '', 'cap' => null);
+                'pe_com' => '', 'cap' => null, 'cap_gb' => null);
         }
     }
     return $olts;
