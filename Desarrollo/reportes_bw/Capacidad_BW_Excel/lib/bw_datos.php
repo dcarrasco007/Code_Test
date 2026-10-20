@@ -92,9 +92,10 @@ function bw_obtener_olts($mysqli, $tablaServer = 'OLT_SERVER', $soloOlts = null)
         if (bw_olt_excluida($row['olt']) || ($filtro !== null && !isset($filtro[bw_clave_olt($row['olt'])]))) {
             continue;
         }
+        // trim: hay nombres con espacios al final en OLT_PUERTAS_UPLINKS_GB (el JOIN de MySQL los ignora)
         $olts[bw_clave_olt($row['olt'])] = array(
-            'olt'    => $row['olt'],
-            'ip'     => $row['ip'],
+            'olt'    => trim($row['olt']),
+            'ip'     => trim($row['ip']),
             'pe_id'  => (int)$row['pe_id'],
             'pe_com' => $row['pe_com'],
             'cap'    => bw_capacidad_mbps($row['cap']),
@@ -111,7 +112,7 @@ function bw_obtener_olts($mysqli, $tablaServer = 'OLT_SERVER', $soloOlts = null)
         $clave = bw_clave_olt($row['server']);
         if (!isset($olts[$clave]) && $row['ip'] != '' && !bw_olt_excluida($row['server'])
             && ($filtro === null || isset($filtro[$clave]))) {
-            $olts[$clave] = array('olt' => $row['server'], 'ip' => $row['ip'], 'pe_id' => (int)$row['pe_com'],
+            $olts[$clave] = array('olt' => trim($row['server']), 'ip' => trim($row['ip']), 'pe_id' => (int)$row['pe_com'],
                 'pe_com' => '', 'cap' => null, 'cap_gb' => null);
         }
     }

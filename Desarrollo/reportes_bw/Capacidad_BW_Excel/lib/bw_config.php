@@ -171,17 +171,19 @@ function bw_olts_onnet()
 /**
  * Tablas destino y origen de OLTs por red, con el formato histórico de cada una:
  *   pe_sin_enie: PE-com sin Ñ (ej: NUNOA, ANFIOMUNOZ), como en las cargas manuales de EQUIFIBER y ONNET
- *   dia_2_digitos: día con 2 dígitos en la fila 2 (ej: "Lunes 05 de Octubre"), como en EQUIFIBER
+ *   dia_2_digitos: día con 2 dígitos en la fila 2 (ej: "Lunes 05 de Octubre"), como en EQUIFIBER y ONNET
+ *   dias_doble_espacio: días de la semana (1 = lunes ... 7 = domingo) con 2 espacios entre nombre y número,
+ *                       como en EQUIFIBER ("Jueves  08 de Octubre", "Sábado  10 ...", "Domingo  11 ...")
  */
 function bw_redes()
 {
     return array(
         'nacional'  => array('nombre' => 'Nacional', 'sufijo' => '', 'tabla_server' => 'OLT_SERVER',
-            'pe_sin_enie' => false, 'dia_2_digitos' => false),
+            'pe_sin_enie' => false, 'dia_2_digitos' => false, 'dias_doble_espacio' => array()),
         'equifiber' => array('nombre' => 'EQUIFIBER', 'sufijo' => '_EQUIFIBER', 'tabla_server' => 'OLT_SERVER_V2',
-            'pe_sin_enie' => true, 'dia_2_digitos' => true),
+            'pe_sin_enie' => true, 'dia_2_digitos' => true, 'dias_doble_espacio' => array(4, 6, 7)),
         'onnet'     => array('nombre' => 'ONNET', 'sufijo' => '_ONNET', 'tabla_server' => 'OLT_SERVER',
-            'pe_sin_enie' => true, 'dia_2_digitos' => false),
+            'pe_sin_enie' => true, 'dia_2_digitos' => true, 'dias_doble_espacio' => array()),
     );
 }
 

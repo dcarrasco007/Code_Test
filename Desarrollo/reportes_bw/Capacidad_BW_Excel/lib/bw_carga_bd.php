@@ -372,7 +372,7 @@ function bw_matriz_tabla($grilla, $fechas, &$avisos, $red = 'nacional')
     foreach ($fechas as $fe) {
         $t = $c = $p = $vacia;
         $t[1] = 'Tráfico Gbps';
-        $t[2] = bw_etiqueta_fecha($fe, $formato['dia_2_digitos']);
+        $t[2] = bw_etiqueta_fecha($fe, $formato['dia_2_digitos'], $formato['dias_doble_espacio']);
         $c[1] = 'Capacidad Gbps';
         $p[1] = '% Uplink';
         foreach ($filas as $i => $f) {
