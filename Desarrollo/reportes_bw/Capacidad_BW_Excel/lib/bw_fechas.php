@@ -50,11 +50,11 @@ function bw_etiqueta_dia($anio, $k)
     return bw_nombre_dia(date('N', $ts)) . ' ' . date('j', $ts) . ' de ' . bw_nombre_mes(date('n', $ts));
 }
 
-// "Lunes 12 de Octubre" a partir de 'Y-m-d'
-function bw_etiqueta_fecha($ymd)
+// "Lunes 5 de Octubre" (o "Lunes 05 de Octubre" con $dosDigitos) a partir de 'Y-m-d'
+function bw_etiqueta_fecha($ymd, $dosDigitos = false)
 {
     $ts = strtotime($ymd . ' 12:00:00');
-    return bw_nombre_dia(date('N', $ts)) . ' ' . date('j', $ts) . ' de ' . bw_nombre_mes(date('n', $ts));
+    return bw_nombre_dia(date('N', $ts)) . ' ' . date($dosDigitos ? 'd' : 'j', $ts) . ' de ' . bw_nombre_mes(date('n', $ts));
 }
 
 // Días entre dos timestamps de mediodía

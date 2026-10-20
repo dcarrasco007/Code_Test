@@ -168,13 +168,20 @@ function bw_olts_onnet()
     );
 }
 
-// Tablas destino y origen de OLTs por red
+/**
+ * Tablas destino y origen de OLTs por red, con el formato histórico de cada una:
+ *   pe_sin_enie: PE-com sin Ñ (ej: NUNOA, ANFIOMUNOZ), como en las cargas manuales de EQUIFIBER y ONNET
+ *   dia_2_digitos: día con 2 dígitos en la fila 2 (ej: "Lunes 05 de Octubre"), como en EQUIFIBER
+ */
 function bw_redes()
 {
     return array(
-        'nacional'  => array('nombre' => 'Nacional', 'sufijo' => '', 'tabla_server' => 'OLT_SERVER'),
-        'equifiber' => array('nombre' => 'EQUIFIBER', 'sufijo' => '_EQUIFIBER', 'tabla_server' => 'OLT_SERVER_V2'),
-        'onnet'     => array('nombre' => 'ONNET', 'sufijo' => '_ONNET', 'tabla_server' => 'OLT_SERVER'),
+        'nacional'  => array('nombre' => 'Nacional', 'sufijo' => '', 'tabla_server' => 'OLT_SERVER',
+            'pe_sin_enie' => false, 'dia_2_digitos' => false),
+        'equifiber' => array('nombre' => 'EQUIFIBER', 'sufijo' => '_EQUIFIBER', 'tabla_server' => 'OLT_SERVER_V2',
+            'pe_sin_enie' => true, 'dia_2_digitos' => true),
+        'onnet'     => array('nombre' => 'ONNET', 'sufijo' => '_ONNET', 'tabla_server' => 'OLT_SERVER',
+            'pe_sin_enie' => true, 'dia_2_digitos' => false),
     );
 }
 

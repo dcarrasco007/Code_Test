@@ -47,3 +47,17 @@
 2026-10-20 15:02:26 [BD]    columna B fila 53: BD='13326' generado='16146'
 2026-10-20 15:02:26 [BD]    columna B fila 56: BD='33237' generado='44508'
 2026-10-20 15:02:26 [BD]    columna B fila 66: BD='46' generado='799'
+2026-10-20 10:12:44 [BD] cargar semana W-40 2026 (2026-09-28 a 2026-10-04) redes: nacional, equifiber, onnet
+2026-10-20 10:12:45 [BD] OLT_CAPACIDAD_BW cargada: 146 OLTs, 25 filas, origen Excel Capacidades OLTs Octubre 2026 W-40.xlsx
+2026-10-20 10:12:45 [BD] OLT_CAPACIDAD_BW_EQUIFIBER cargada: 13 OLTs, 25 filas, origen BD
+2026-10-20 10:12:45 [BD] OLT_CAPACIDAD_BW_ONNET cargada: 102 OLTs, 25 filas, origen BD
+2026-10-20 10:12:45 [BD] comparar semana W-40 2026 (2026-09-28 a 2026-10-04) redes: nacional, equifiber, onnet
+2026-10-20 10:12:46 [BD] OLT_CAPACIDAD_BW comparación: BD 25 filas, generado 25 filas, 0 celdas distintas (146 OLTs, 25 filas, origen Excel Capacidades OLTs Octubre 2026 W-40.xlsx)
+2026-10-20 10:12:46 [BD] OLT_CAPACIDAD_BW_EQUIFIBER comparación: BD 25 filas, generado 25 filas, 1 celdas distintas (13 OLTs, 25 filas, origen BD)
+2026-10-20 10:12:46 [BD]    fecha (fila 2): 1 distintas (ej: E2 BD='Lunes 5 de Octubre' generado='Lunes 28 de Septiembre')
+2026-10-20 10:12:46 [BD] OLT_CAPACIDAD_BW_ONNET comparación: BD 25 filas, generado 25 filas, 1 celdas distintas (102 OLTs, 25 filas, origen BD)
+2026-10-20 10:12:46 [BD]    B (Tráfico PE): 1 distintas (ej: B3 BD='999' generado='163583')
+2026-10-20 10:12:57 [BD] simular semana W-41 2026 (2026-10-05 a 2026-10-11) redes: nacional, equifiber, onnet
+2026-10-20 10:12:58 [BD] OLT_CAPACIDAD_BW simulación: 146 OLTs, 25 filas, origen BD, csv C:/Users/Daniel/AppData/Local/Temp/claude/C--laragon-www-Pruebas-Migraci-n-Procesos-OLT-php-8-0-Uplink/a0099cac-e45d-45b6-b3f1-96bda12f1b2d/scratchpad/c41/OLT_CAPACIDAD_BW_41_2026.csv
+2026-10-20 10:12:58 [BD] OLT_CAPACIDAD_BW_EQUIFIBER simulación: 13 OLTs, 25 filas, origen BD, csv C:/Users/Daniel/AppData/Local/Temp/claude/C--laragon-www-Pruebas-Migraci-n-Procesos-OLT-php-8-0-Uplink/a0099cac-e45d-45b6-b3f1-96bda12f1b2d/scratchpad/c41/OLT_CAPACIDAD_BW_EQUIFIBER_41_2026.csv
+2026-10-20 10:12:58 [BD] OLT_CAPACIDAD_BW_ONNET simulación: 102 OLTs, 25 filas, origen BD, csv C:/Users/Daniel/AppData/Local/Temp/claude/C--laragon-www-Pruebas-Migraci-n-Procesos-OLT-php-8-0-Uplink/a0099cac-e45d-45b6-b3f1-96bda12f1b2d/scratchpad/c41/OLT_CAPACIDAD_BW_ONNET_41_2026.csv

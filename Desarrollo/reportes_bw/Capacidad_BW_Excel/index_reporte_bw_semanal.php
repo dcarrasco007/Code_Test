@@ -37,7 +37,8 @@ foreach ($semanas as $clave => $d) {
         $actVigente[$d['archivos']['act']] = $clave;
     }
 }
-$urlBase = '../Capacidad_BW_Excel/Archivos/Semana/';
+// URL de la carpeta de BW_DIR_SEMANA (ej: Archivos_Auto/Semana), relativa al módulo
+$urlBase = '../Capacidad_BW_Excel' . str_replace('\\', '/', substr(BW_DIR_SEMANA, strlen(BW_DIR_MODULO))) . '/';
 ?>
 <style>
     .bw-semana { display: none; }

@@ -110,7 +110,7 @@ function bw_guardar_excel_periodo($periodo, $red, $grilla, $columnas)
     foreach ($filas as $i => $f) {
         if ($actual === null || $f['grupo'] !== $actual) {
             $r0 = 3 + $i;
-            $grupos[] = array('pe' => $f['pe'], 'olts' => array(),
+            $grupos[] = array('pe' => $columnas[0][$r0], 'olts' => array(),
                 'b' => $columnas[1][$r0] === '' ? null : (float)$columnas[1][$r0],
                 'c' => $columnas[2][$r0] === '' ? null : (float)$columnas[2][$r0]);
             $actual = $f['grupo'];
@@ -125,7 +125,7 @@ function bw_guardar_excel_periodo($periodo, $red, $grilla, $columnas)
         foreach ($filas as $i => $f) {
             $valores[3 + $i] = $f['valores'][$fecha];
         }
-        $colsPct[] = $libro->agregarDia($k, bw_etiqueta_fecha($fecha), $proto, $valores);
+        $colsPct[] = $libro->agregarDia($k, $columnas[4 + 3 * $k][2], $proto, $valores);
     }
     $libro->agregarFormatoCondicional($colsPct, 3, $libro->ultimaFila());
     $libro->ajustarVista(end($colsPct), 5);
@@ -311,8 +311,10 @@ function bw_txt($v)
 /**
  * Retorna array de columnas; cada columna es array(1..BW_FILAS_TABLA => texto)
  */
-function bw_matriz_tabla($grilla, $fechas, &$avisos)
+function bw_matriz_tabla($grilla, $fechas, &$avisos, $red = 'nacional')
 {
+    $redes = bw_redes();
+    $formato = $redes[$red];
     $filas = $grilla['filas'];
     $max = BW_FILAS_TABLA - 2;
     if (count($filas) > $max) {
@@ -357,7 +359,8 @@ function bw_matriz_tabla($grilla, $fechas, &$avisos)
         foreach ($indices as $i) {
             $cap += (float)$filas[$i]['valores'][$ultimaFecha][1];
         }
-        $colA[$r0] = $filas[$indices[0]]['pe'];
+        $pe = $filas[$indices[0]]['pe'];
+        $colA[$r0] = $formato['pe_sin_enie'] ? str_replace(array('Ñ', 'ñ'), array('N', 'n'), $pe) : $pe;
         $colB[$r0] = $dias > 0 ? bw_txt(round($suma / $dias, 0)) : '';
         $colC[$r0] = $cap > 0 ? bw_txt($cap) : '';
     }
@@ -369,7 +372,7 @@ function bw_matriz_tabla($grilla, $fechas, &$avisos)
     foreach ($fechas as $fe) {
         $t = $c = $p = $vacia;
         $t[1] = 'Tráfico Gbps';
-        $t[2] = bw_etiqueta_fecha($fe);
+        $t[2] = bw_etiqueta_fecha($fe, $formato['dia_2_digitos']);
         $c[1] = 'Capacidad Gbps';
         $p[1] = '% Uplink';
         foreach ($filas as $i => $f) {
@@ -448,8 +451,25 @@ function bw_guardar_tabla($mysqli, $tabla, $claves, $columnas)
     $mysqli->autocommit(true);
 }
 
+// Tipo de celda para resumir diferencias
+function bw_tipo_celda($i, $r)
+{
+    $fijas = array('A (PE-com)', 'B (Tráfico PE)', 'C (Capacidad PE)', 'D (OLT)');
+    if ($i < 4) {
+        return $r <= 2 ? 'encabezados' : $fijas[$i];
+    }
+    if ($r == 1) {
+        return 'encabezados';
+    }
+    if ($r == 2) {
+        return 'fecha (fila 2)';
+    }
+    $tipos = array('tráfico diario', 'capacidad diaria', '% Uplink');
+    return $tipos[($i - 4) % 3];
+}
+
 // Compara lo generado con lo que hay en la tabla para el período (no modifica nada)
-function bw_comparar_tabla($mysqli, $tabla, $claves, $columnas, $maxDetalle = 15)
+function bw_comparar_tabla($mysqli, $tabla, $claves, $columnas, $ejemplosPorTipo = 3)
 {
     $sql = 'SELECT ' . implode(', ', bw_campos_tabla()) . " FROM `$tabla` WHERE " . bw_where_claves($mysqli, $claves) . ' ORDER BY id';
     $res = $mysqli->query($sql);
@@ -461,7 +481,7 @@ function bw_comparar_tabla($mysqli, $tabla, $claves, $columnas, $maxDetalle = 15
         $bd[] = $row;
     }
     $difs = 0;
-    $detalle = array();
+    $porTipo = array();   // tipo => array('n' => , 'ejemplos' => array())
     $n = max(count($bd), count($columnas));
     for ($i = 0; $i < $n; $i++) {
         for ($r = 1; $r <= BW_FILAS_TABLA; $r++) {
@@ -470,11 +490,20 @@ function bw_comparar_tabla($mysqli, $tabla, $claves, $columnas, $maxDetalle = 15
             $iguales = ($a === $b) || (is_numeric($a) && is_numeric($b) && abs($a - $b) < 0.000001);
             if (!$iguales) {
                 $difs++;
-                if (count($detalle) < $maxDetalle) {
-                    $detalle[] = 'columna ' . bw_col_letra($i + 1) . " fila $r: BD='$a' generado='$b'";
+                $tipo = bw_tipo_celda($i, $r);
+                if (!isset($porTipo[$tipo])) {
+                    $porTipo[$tipo] = array('n' => 0, 'ejemplos' => array());
+                }
+                $porTipo[$tipo]['n']++;
+                if (count($porTipo[$tipo]['ejemplos']) < $ejemplosPorTipo) {
+                    $porTipo[$tipo]['ejemplos'][] = bw_col_letra($i + 1) . "$r BD='$a' generado='$b'";
                 }
             }
         }
+    }
+    $detalle = array();
+    foreach ($porTipo as $tipo => $d) {
+        $detalle[] = "$tipo: $d[n] distintas (ej: " . implode(' | ', $d['ejemplos']) . ')';
     }
     return array('filas_bd' => count($bd), 'filas_generadas' => count($columnas), 'diferencias' => $difs, 'detalle' => $detalle);
 }
@@ -558,7 +587,7 @@ function bw_cargar_bd($tipo, $anio, $num, $redes, $opc = array())
             bw_log('[BD] ' . $config[$red]['nombre'] . ": sin OLTs con datos para $periodo[nombre], no se carga $tabla");
             continue;
         }
-        $columnas = bw_matriz_tabla($grilla, $fechas, $avisos);
+        $columnas = bw_matriz_tabla($grilla, $fechas, $avisos, $red);
         foreach ($avisos as $a) {
             bw_log("[BD] ADVERTENCIA $tabla: $a");
         }

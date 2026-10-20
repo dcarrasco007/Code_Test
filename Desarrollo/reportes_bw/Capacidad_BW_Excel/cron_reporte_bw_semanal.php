@@ -1,7 +1,7 @@
 <?php
 /**
  * Cron semanal (lunes 04:00): genera los Excel de capacidades BW de la semana anterior (semana 1 = la que contiene el 1 de enero)
- * en Archivos/Semana/ junto con sus alertas.
+ * en Archivos_Auto/Semana/ (BW_DIR_SEMANA) junto con sus alertas. La etapa 2 deja sus Excel en Archivos/.
  *
  * Uso:
  *   php cron_reporte_bw_semanal.php                       -> semana anterior a hoy
