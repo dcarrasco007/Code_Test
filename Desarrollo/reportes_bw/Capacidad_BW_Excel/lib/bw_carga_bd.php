@@ -5,7 +5,7 @@
  *
  * Mismo formato que dejaba model/carga_excel*.php: cada columna del Excel es una fila de
  * la tabla y sus celdas 1..162 van en los campos `1`..`162`:
- *   A: PE-com | B: Tráfico PE (promedio del período) | C: Capacidad PE (último día) | D: OLT
+ *   A: PE-com | B: Tráfico PE (promedio del período) | C: Capacidad PE (la del Excel; si no hay, suma de sus OLTs) | D: OLT
  *   desde E, por día: Tráfico (fila 2 = "Lunes 12 de Octubre"), Capacidad, % Uplink (fracción)
  *
  * Origen de los datos:
@@ -168,7 +168,9 @@ function bw_layout_excel($libro)
             }
         }
         if (count($olts) > 0) {
-            $layout[] = array('pe' => trim((string)$libro->valor($g[0], 1)), 'olts' => $olts);
+            $c = $libro->valor($g[0], 3);
+            $layout[] = array('pe' => trim((string)$libro->valor($g[0], 1)), 'olts' => $olts,
+                'c' => (is_numeric($c) && $c > 0) ? (float)$c : null);
         }
     }
     return $layout;
@@ -213,7 +215,7 @@ function bw_grilla_desde_excel($fechas)
                 $c = $libro->valorCelda(isset($celdas[$col + 1]) ? $celdas[$col + 1] : null);
                 $valores[$f] = array(is_numeric($t) ? (float)$t : null, is_numeric($c) ? (float)$c : null);
             }
-            $filas[] = array('pe' => $g['pe'], 'olt' => $o['olt'], 'grupo' => $i, 'valores' => $valores);
+            $filas[] = array('pe' => $g['pe'], 'olt' => $o['olt'], 'grupo' => $i, 'c_pe' => $g['c'], 'valores' => $valores);
         }
     }
     return array(array('filas' => $filas), basename($ruta));
@@ -255,7 +257,7 @@ function bw_grilla_desde_bd($olts, $trafico, $fechas, $layout = null)
     $usadas = array();
     if ($layout !== null) {
         foreach ($layout as $g) {
-            $grupo = array('pe' => $g['pe'], 'olts' => array());
+            $grupo = array('pe' => $g['pe'], 'c' => $g['c'], 'olts' => array());
             foreach ($g['olts'] as $o) {
                 $grupo['olts'][] = $o['olt'];
                 $usadas[bw_clave_olt($o['olt'])] = true;
@@ -276,7 +278,7 @@ function bw_grilla_desde_bd($olts, $trafico, $fechas, $layout = null)
     foreach ($resto as $o) {
         $id = $o['seccion'] . '|' . $o['pe_id'];
         if ($id !== $ultimo) {
-            $grupos[] = array('pe' => $o['pe_com'], 'olts' => array());
+            $grupos[] = array('pe' => $o['pe_com'], 'c' => null, 'olts' => array());
             $ultimo = $id;
         }
         $grupos[count($grupos) - 1]['olts'][] = $o['olt'];
@@ -292,7 +294,7 @@ function bw_grilla_desde_bd($olts, $trafico, $fechas, $layout = null)
                 $t = ($o && isset($trafico[$o['ip']][$f])) ? round($trafico[$o['ip']][$f], 0) : null;
                 $valores[$f] = array($t, $o ? $o['cap'] : null);
             }
-            $filas[] = array('pe' => $g['pe'], 'olt' => $nombre, 'grupo' => $i, 'valores' => $valores);
+            $filas[] = array('pe' => $g['pe'], 'olt' => $nombre, 'grupo' => $i, 'c_pe' => $g['c'], 'valores' => $valores);
         }
     }
     return array('filas' => $filas);
@@ -362,7 +364,13 @@ function bw_matriz_tabla($grilla, $fechas, &$avisos, $red = 'nacional')
         $pe = $filas[$indices[0]]['pe'];
         $colA[$r0] = $formato['pe_sin_enie'] ? str_replace(array('Ñ', 'ñ'), array('N', 'n'), $pe) : $pe;
         $colB[$r0] = $dias > 0 ? bw_txt(round($suma / $dias, 0)) : '';
-        $colC[$r0] = $cap > 0 ? bw_txt($cap) : '';
+        // C: la capacidad del PE que trae el Excel (Nacional); si no hay, la suma de sus OLTs al último día
+        $cPe = isset($filas[$indices[0]]['c_pe']) ? $filas[$indices[0]]['c_pe'] : null;
+        if ($cPe !== null && $cPe > 0) {
+            $colC[$r0] = bw_txt($cPe);
+        } else {
+            $colC[$r0] = $cap > 0 ? bw_txt($cap) : '';
+        }
     }
     foreach ($filas as $i => $f) {
         $colD[3 + $i] = $f['olt'];

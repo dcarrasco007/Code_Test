@@ -11,7 +11,9 @@ if (!ini_get('date.timezone')) {
 define('BW_DIR_MODULO', dirname(dirname(__FILE__)));
 
 // Carpeta donde se dejan los Excel generados, sus alertas (.json) y el log
-define('BW_DIR_SEMANA', BW_DIR_MODULO . '/Archivos_Auto/Semana');
+if (!defined('BW_DIR_SEMANA')) {
+    define('BW_DIR_SEMANA', BW_DIR_MODULO . '/Archivos_Auto/Semana');
+}
 
 // Archivo de conexión con $host144_geret, $user144_geret, $pass144_geret
 if (!defined('BW_CONEXION')) {

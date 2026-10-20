@@ -244,7 +244,9 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
     }
     $libro->agregarFormatoCondicional($colsPct, 3, $libro->ultimaFila());
 
-    // ---------- B (promedio semanal del tráfico del PE) y C (capacidad del PE al domingo) ----------
+    // ---------- B (promedio semanal del tráfico del PE) y C (capacidad del PE) ----------
+    // C se mantiene como viene en el Excel (capacidad real del PE-com, mantenida a mano);
+    // solo si está vacía (PE-com nuevo) se completa con la suma de capacidades de sus OLTs al domingo.
     foreach ($libro->gruposPe() as $g) {
         $sumaDias = 0;
         $diasConDatos = 0;
@@ -269,7 +271,8 @@ function bw_generar_reporte_semanal($anio, $semana, $opc = array())
         if ($diasConDatos > 0) {
             $libro->fijarValor($g[0], 2, (float)round($sumaDias / $diasConDatos, 0));
         }
-        if ($capPe > 0) {
+        $cExcel = $libro->valor($g[0], 3);
+        if (!(is_numeric($cExcel) && $cExcel > 0) && $capPe > 0) {
             $libro->fijarValor($g[0], 3, (float)$capPe);
         }
     }
