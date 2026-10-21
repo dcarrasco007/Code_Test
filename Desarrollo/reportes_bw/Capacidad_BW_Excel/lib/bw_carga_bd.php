@@ -241,7 +241,7 @@ function bw_ordenar_olts($a, $b)
  *   primero las de 10G o más y luego las de 1G, cada bloque por PE-com (id) y capacidad descendente.
  * Con $layout (Nacional): mismo orden de filas que el Excel; OLTs con tráfico que no estén en él van al final.
  */
-function bw_grilla_desde_bd($olts, $trafico, $fechas, $layout = null)
+function bw_grilla_desde_bd($olts, $trafico, $fechas, $layout = null, $primeros = array())
 {
     $conTrafico = array();
     foreach ($olts as $clave => $o) {
@@ -292,6 +292,10 @@ function bw_grilla_desde_bd($olts, $trafico, $fechas, $layout = null)
             $valores = array();
             foreach ($fechas as $f) {
                 $t = ($o && isset($trafico[$o['ip']][$f])) ? round($trafico[$o['ip']][$f], 0) : null;
+                // OLT nueva: los días anteriores a su primer registro histórico quedan en 0 (no vacíos)
+                if ($t === null && $o && isset($primeros[$o['ip']]) && $f < $primeros[$o['ip']]) {
+                    $t = 0;
+                }
                 $valores[$f] = array($t, $o ? $o['cap'] : null);
             }
             $filas[] = array('pe' => $g['pe'], 'olt' => $nombre, 'grupo' => $i, 'c_pe' => $g['c'], 'valores' => $valores);
@@ -380,7 +384,8 @@ function bw_matriz_tabla($grilla, $fechas, &$avisos, $red = 'nacional')
     foreach ($fechas as $fe) {
         $t = $c = $p = $vacia;
         $t[1] = 'Tráfico Gbps';
-        $t[2] = bw_etiqueta_fecha($fe, $formato['dia_2_digitos'], $formato['dias_doble_espacio']);
+        $t[2] = bw_etiqueta_fecha($fe, $formato['dia_2_digitos'], $formato['dias_doble_espacio'],
+            $formato['dias_doble_espacio_despues']);
         $c[1] = 'Capacidad Gbps';
         $p[1] = '% Uplink';
         foreach ($filas as $i => $f) {
@@ -552,6 +557,7 @@ function bw_cargar_bd($tipo, $anio, $num, $redes, $opc = array())
     if ($modo != 'simular' || $json === null) {
         $mysqli = bw_conectar_bd();
     }
+    $primeros = null;
     $resultado = array();
     foreach ($redes as $red) {
         if (!isset($config[$red])) {
@@ -589,7 +595,10 @@ function bw_cargar_bd($tipo, $anio, $num, $redes, $opc = array())
                     unset($libro);
                 }
             }
-            $grilla = bw_grilla_desde_bd($olts, $trafico, $fechas, $layout);
+            if ($primeros === null) {
+                $primeros = bw_primeros_registros($mysqli, $json, $trafico);
+            }
+            $grilla = bw_grilla_desde_bd($olts, $trafico, $fechas, $layout, $primeros);
         }
         if (count($grilla['filas']) == 0) {
             bw_log('[BD] ' . $config[$red]['nombre'] . ": sin OLTs con datos para $periodo[nombre], no se carga $tabla");
@@ -635,6 +644,21 @@ function bw_cargar_bd($tipo, $anio, $num, $redes, $opc = array())
         $mysqli->close();
     }
     return $resultado;
+}
+
+// Primer registro histórico por ip (desde la BD o, en pruebas, desde el .json)
+function bw_primeros_registros($mysqli, $json, $trafico)
+{
+    if ($json !== null) {
+        $primeros = array();
+        foreach ($json['trafico'] as $ip => $dias) {
+            $fechas = array_keys($dias);
+            sort($fechas);
+            $primeros[$ip] = $fechas[0];
+        }
+        return $primeros;
+    }
+    return bw_obtener_primer_registro($mysqli, array_keys($trafico));
 }
 
 /**

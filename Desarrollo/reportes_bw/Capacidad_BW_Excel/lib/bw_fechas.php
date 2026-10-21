@@ -52,11 +52,14 @@ function bw_etiqueta_dia($anio, $k)
 
 // "Lunes 5 de Octubre" (o "Lunes 05 de Octubre" con $dosDigitos) a partir de 'Y-m-d'.
 // $dobleEspacio: días de la semana (1..7) que llevan 2 espacios antes del número
-function bw_etiqueta_fecha($ymd, $dosDigitos = false, $dobleEspacio = array())
+// $dobleEspacioDespues: días de la semana (1..7) que llevan 2 espacios entre el número y "de"
+function bw_etiqueta_fecha($ymd, $dosDigitos = false, $dobleEspacio = array(), $dobleEspacioDespues = array())
 {
     $ts = strtotime($ymd . ' 12:00:00');
-    $sep = in_array((int)date('N', $ts), $dobleEspacio) ? '  ' : ' ';
-    return bw_nombre_dia(date('N', $ts)) . $sep . date($dosDigitos ? 'd' : 'j', $ts) . ' de ' . bw_nombre_mes(date('n', $ts));
+    $n = (int)date('N', $ts);
+    $sep = in_array($n, $dobleEspacio) ? '  ' : ' ';
+    $sep2 = in_array($n, $dobleEspacioDespues) ? '  ' : ' ';
+    return bw_nombre_dia($n) . $sep . date($dosDigitos ? 'd' : 'j', $ts) . $sep2 . 'de ' . bw_nombre_mes(date('n', $ts));
 }
 
 // Días entre dos timestamps de mediodía

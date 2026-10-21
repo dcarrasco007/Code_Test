@@ -147,6 +147,30 @@ function bw_obtener_trafico($mysqli, $desde, $hasta)
 }
 
 /**
+ * Fecha del primer registro histórico de tráfico de cada ip: array(ip => 'Y-m-d').
+ * Sirve para saber si una OLT ya existía en un día sin registro (falla) o aún no existía (va 0).
+ */
+function bw_obtener_primer_registro($mysqli, $ips)
+{
+    $primeros = array();
+    $lista = array();
+    foreach ($ips as $ip) {
+        $lista[] = "'" . $mysqli->real_escape_string($ip) . "'";
+    }
+    foreach (array_chunk($lista, 200) as $lote) {
+        $res = $mysqli->query("SELECT ip, MIN(fecha) AS primera FROM OLT_TRAFICO_PEAK_DAY
+                               WHERE ip IN (" . implode(',', $lote) . ") GROUP BY ip");
+        if (!$res) {
+            throw new Exception('Error consulta primer registro: ' . $mysqli->error);
+        }
+        while ($row = $res->fetch_assoc()) {
+            $primeros[trim($row['ip'])] = substr($row['primera'], 0, 10);
+        }
+    }
+    return $primeros;
+}
+
+/**
  * Datos de prueba desde un .json con el mismo formato:
  * {"olts": {clave: {olt, ip, pe_id, pe_com, cap}}, "trafico": {ip: {fecha: mbps}}}
  */
