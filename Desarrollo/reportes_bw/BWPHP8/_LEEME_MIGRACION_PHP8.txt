@@ -1,0 +1,92 @@
+========================================================================
+ MIGRACIÓN REPORTE BW SEMANAL + CARGA BD  ·  PHP 5.3  ->  PHP 8.0 (contingencia_v3)
+========================================================================
+Fecha de migración : 2026-10-23
+Carpeta original   : Pruebas/Desarrollo/reportes_bw/Capacidad_BW_Excel   (PHP 5.3,
+                     desplegada en contingencia/OLT/Capacidad_BW_Excel)
+Carpeta migrada    : Pruebas/Desarrollo/reportes_bw/BWPHP8/Capacidad_BW_Excel  (esta)
+Destino servidor   : /var/www/html/Capacidad_BW_Excel/   (estructura contingencia_v3)
+
+Réplica 1:1 de los procesos (crons, librería, ventana web y árbol de carpetas).
+Los originales PHP 5.3 NO fueron modificados. Detalle funcional completo en
+Capacidad_BW_Excel/README_REPORTE_BW.md.
+
+------------------------------------------------------------------------
+ESTRUCTURA COPIADA
+------------------------------------------------------------------------
+Capacidad_BW_Excel/
+  cron_reporte_bw_semanal.php     Etapa 1: Excel anual + alertas
+  cron_carga_bw_bd.php            Etapa 2: Excel por período + carga BD
+  index_reporte_bw_semanal.php    Ventana web (descargas + alertas)
+  README_REPORTE_BW.md
+  lib/  bw_config.php bw_fechas.php bw_datos.php bw_xlsx.php bw_reporte.php bw_carga_bd.php
+  Archivos_Auto/Semana/           (vacía, .gitkeep) Etapa 1
+  Archivos/Semana*, Mes*, Year*   (vacías, .gitkeep) Etapa 2; v3 ya las tiene
+
+No se copiaron Excel, alertas ni logs. Al desplegar, copiar a
+/var/www/html/Capacidad_BW_Excel/Archivos_Auto/Semana/ el último Excel anual vigente
+("Capacidades OLTs {Mes} {Año} W-{n}.xlsx") desde la instalación actual: la etapa 1
+construye sobre él.
+
+------------------------------------------------------------------------
+CAMBIOS DE RUTAS (según contingencia_v3/cambios_rutas_migracion.txt)
+------------------------------------------------------------------------
+ 1. El módulo pasa de /var/www/html/contingencia/OLT/Capacidad_BW_Excel a
+    /var/www/html/Capacidad_BW_Excel (ya no existe la carpeta OLT/).
+ 2. Conexión: BW_CONEXION
+      antes: BW_DIR_MODULO . '/../../conexion/conexion_db.php'
+      ahora: BW_DIR_MODULO . '/../conexion/conexion_db.php'
+             (= /var/www/html/conexion/conexion_db.php, un nivel menos)
+ 3. Todos los include/require anclados con __DIR__ (antes dirname(__FILE__)),
+    igual que la "PARTE 2" de la migración v3.
+ 4. index_reporte_bw_semanal.php: perfiles con __DIR__ . '/../perfiles/...'
+    (igual que index_subir_excel.php de v3).
+ 5. Las URL de descarga siguen siendo '../Capacidad_BW_Excel/...' (relativas a menu/,
+    desde donde v3 carga las páginas con $(".contenido").load(...)). La carpeta de la
+    etapa 1 se toma de BW_DIR_SEMANA.
+
+------------------------------------------------------------------------
+CAMBIOS PHP 8
+------------------------------------------------------------------------
+ 1. date_default_timezone_set('America/Santiago') al inicio de los 2 crons y fijo en
+    lib/bw_config.php (antes solo si date.timezone no estaba definido).
+ 2. mysqli_report(MYSQLI_REPORT_OFF) antes de conectar: desde PHP 8.1 mysqli lanza
+    excepciones por defecto; así el comportamiento es el mismo en 8.0 y 8.1+.
+    (Igual quedan capturadas: el código ya envuelve todo en try/catch Exception).
+ 3. No hubo funciones eliminadas que reemplazar: el código ya era compatible
+    (sin mysql_*, each(), create_function(), ereg*, llaves {} en strings, etc.).
+    Tampoco parámetros opcionales antes de obligatorios.
+ 4. Requiere extensiones: mysqli, zip, dom/xml, json. (zip la usa también PHPExcel en v3.)
+
+------------------------------------------------------------------------
+CRONS (PHP 8, rutas v3)
+------------------------------------------------------------------------
+0 4 * * 1  php /var/www/html/Capacidad_BW_Excel/cron_reporte_bw_semanal.php
+30 4 * * 1 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=semana
+30 4 1 * * php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=mes
+45 4 * * 1 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=anio
+
+No usar "php -f archivo --tipo=..." (PHP toma --tipo como opción propia). Usar
+"php archivo --tipo=..." o "php -f archivo -- --tipo=...".
+
+------------------------------------------------------------------------
+PENDIENTE EN v3
+------------------------------------------------------------------------
+- Agregar la ventana al menú (menu/menu.php), por ejemplo:
+    $(".contenido").load('../Capacidad_BW_Excel/index_reporte_bw_semanal.php');
+- Copiar el Excel anual vigente a Archivos_Auto/Semana/ (ver arriba).
+
+------------------------------------------------------------------------
+VERIFICACIÓN REALIZADA (local, PHP 8.3 con error_reporting=E_ALL)
+------------------------------------------------------------------------
+- php -l: 9 archivos "No syntax errors".
+- 0 warnings / notices / deprecations en todas las ejecuciones.
+- Mismo resultado que la versión PHP 5.3 en producción (ejecutada con PHP 7.4):
+    * Excel W-42 de la etapa 1: todas las partes del .xlsx idénticas byte a byte.
+    * alertas_2026_W42.json idéntico.
+    * Etapa 2 (simular + csv): semana (Excel y BD), mes y año, 3 redes: 10 CSV idénticos.
+- Cambio de año (W-1 2027 desde W-52 2026): hoja "Reporte BW 2027", del 28-12 al 03-01.
+- Carga real en MySQL 5.7 local: 3 redes, re-carga sin duplicar, --comparar 0 diferencias,
+  Excel por período guardados en Archivos/Semana*.
+- Carga anual sin año cerrado: no carga (mensaje esperado).
+- Ventana web: lista semanas, enlaces y alertas.
