@@ -63,6 +63,7 @@ $mysqli->query($truncate) or die("Error query ont $truncate"); */
     $puertas_vacias = array();
     $puertos_totales = array();
     $puerto_funcion_global = array();
+    $ont_data_version = array("ONT Version" => array());
     echo "\n ping=".$y."\n";
     
         
@@ -233,6 +234,7 @@ $mysqli->query($truncate) or die("Error query ont $truncate"); */
                 $puerto1=$puertos[12];
                 obtenerData2($array13, $server, $ip, $region,$comuna, $puerto1,$ont_data_version);
                 echo "\nFin Puerto a revisar por funcion-----$puerto1\n";
+            }
             if(isset($puertos[13])){
                  echo "\nPuerto a revisar por funcion-----$puerto1\n";
                 $puerto1=$puertos[13];
@@ -251,14 +253,13 @@ $mysqli->query($truncate) or die("Error query ont $truncate"); */
                 obtenerData2($array16, $server, $ip, $region,$comuna, $puerto1,$ont_data_version);
                 echo "\nFin Puerto a revisar por funcion-----$puerto1\n";
             }
-        }
-    
+
 
     //print_r($detalle);
     unset($data);
     unset($array_1);
     unset($array_2);
-  }  
+  }
     function obtenerData2($log,$server,$ip,$region,$comuna, $puerto1,$ont_data_version){
         global $mysqli;
         global $puertas_vacias;
@@ -448,8 +449,8 @@ $mysqli->query($truncate) or die("Error query ont $truncate"); */
                 $distance = '';
                 $service_profile = '';
                 $line_profile = '';
-                $version_sw = '';
-                
+                $versionSW = '';
+
                 foreach ($data["ONT Profile"] as $item) {
                     $ont_id_profile = $item["ONT ID"];
                     if($row==$ont_id_profile){
@@ -560,256 +561,40 @@ $mysqli->query($truncate) or die("Error query ont $truncate"); */
                 }
                 echo"\n puertas_vacias V2:\n";print_r($puertas_vacias);
     
-    if(!empty($puertas_vacias)){
-        echo"\nInicio Repaso de puertas vacias\n";
+    // Repaso de puertas vacias: hasta 2 intentos (obtenerData2 vuelve a agregar a $puertas_vacias las que sigan sin ONT)
+    for ($intento = 1; $intento <= 2 && !empty($puertas_vacias); $intento++) {
+        echo"\nInicio Repaso de puertas vacias (intento $intento)\n";
 
-        $texto =estado_equipo_repaso($ip,$puertas_vacias, $modelo);
-        unset($puertas_vacias);
+        $puertas_repaso = array_values($puertas_vacias);
+        $puertas_vacias = array();
+        $texto = estado_equipo_repaso($ip, $puertas_repaso, $modelo);
 
-        foreach (explode(chr(13), $texto) as $linea)
+        $data = array();
+        foreach (explode(chr(13), (string)$texto) as $linea)
             {
                 $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
                 $linea = str_replace(array('','[16D','[16D [16','[16D                [16D','[16D','[16D                [16D ',' [16D [16D ',' [16D[16D','[1D',
             '[37D','[37D                                     ','[37D                                     [37D',"---- More ( Press 'Q' to break ) ----",' [1D','}:','Command:',"% Unknown command, the error locates at '^'",'^'),'',$linea);
                 $data[] = $linea;
-            } 
-            print_r($data);  
-            /* die("Fin 2"); */
-            
+            }
+            print_r($data);
+
             $grep = preg_grep("/interface gpon 0/", $data);
-            $llaves = array_keys($grep);
+            $llaves = array_values(array_keys($grep));
             echo "llaves: \n";
             print_r($llaves);
             echo "\n";
 
-            if (count($puertos) == 1) {
-                for ($i = $llaves[0]; $i < count($data); $i++) {
-                    $array1[] = $data[$i];
-                }
-            } else {
-                // Crear un array dinámico de porciones
-                $arrays = array();
-                
-                for ($i = 0; $i < count($llaves); $i++) {
-                    $arrays[$i] = array();
-                }
-                
-                for ($i = 0; $i < count($data); $i++) {
-                    // Encontrar en qué sección cae el índice actual
-                    for ($j = 0; $j < count($llaves) - 1; $j++) {
-                        if ($i >= $llaves[$j] && $i < $llaves[$j + 1]) {
-                            $arrays[$j][] = $data[$i];
-                            break;
-                        }
-                    }
-                    
-                    // Última sección (si es el último índice de llaves)
-                    if ($i >= end($llaves)) {
-                        $arrays[count($llaves) - 1][] = $data[$i];
-                    }
-                }
-            
-                // Extraer los arrays en variables individuales si es necesario
-                list($array1, $array2, $array3, $array4, $array5, $array6, $array7, 
-                     $array8, $array9, $array10, $array11, $array12, $array13, 
-                     $array14, $array15, $array16) = array_pad($arrays, 16, []);
-            }
             $mysqli = new mysqli($host144_geret,$user144_geret,$pass144_geret, 'Aden');
             $mysqli ->  set_charset("utf8");
             echo "---------------------------------";
-            if(isset($puertos[0])){
-                $puerto1=$puertos[0];
-                obtenerData2($array1, $server);
+            // Una seccion por cada "interface gpon 0/X" enviado (una por puerta vacia, no por tarjeta)
+            for ($j = 0; $j < count($llaves); $j++) {
+                $fin = isset($llaves[$j + 1]) ? $llaves[$j + 1] : count($data);
+                $seccion = array_slice($data, $llaves[$j], $fin - $llaves[$j]);
+                $puerto1 = preg_match('/interface gpon 0\/(\d+)/', $data[$llaves[$j]], $m) ? $m[1] : '';
+                obtenerData2($seccion, $server, $ip, $region, $comuna, $puerto1, $ont_data_version);
             }
-            if(isset($puertos[1])){
-                $puerto1=$puertos[1];
-                obtenerData2($array2,$server);
-            }
-            if(isset($puertos[2])){
-                $puerto1=$puertos[2];
-                obtenerData2($array3, $server);
-            }
-            if(isset($puertos[3])){
-                $puerto1=$puertos[3];
-                obtenerData2($array4, $server);
-            }
-            if(isset($puertos[4])){
-                $puerto1=$puertos[4];
-                obtenerData2($array5,$server );
-            }
-            if(isset($puertos[5])){
-                $puerto1=$puertos[5];
-                obtenerData2($array6,$server);
-            }
-            if(isset($puertos[6])){
-                $puerto1=$puertos[6];
-                obtenerData2($array7,$server);
-            }
-            if(isset($puertos[7])){
-                $puerto1=$puertos[7];
-                obtenerData2($array8,$server);
-            }
-            if(isset($puertos[8])){
-                $puerto1=$puertos[8];
-                obtenerData2($array9,$server);
-            }
-            if(isset($puertos[9])){
-                $puerto1=$puertos[9];
-                obtenerData2($array10,$server);
-            }
-            if(isset($puertos[10])){
-                $puerto1=$puertos[10];
-                obtenerData2($array11,$server);
-            }
-            if(isset($puertos[11])){
-                $puerto1=$puertos[11];
-                obtenerData2($array12,$server);
-            }
-            if(isset($puertos[12])){
-                $puerto1=$puertos[12];
-                obtenerData2($array13,$server);
-            }
-            if(isset($puertos[13])){
-                $puerto1=$puertos[13];
-                obtenerData2($array14,$server);
-            }
-            if(isset($puertos[14])){
-                $puerto1=$puertos[14];
-                obtenerData2($array15,$server);
-            }
-            if(isset($puertos[15])){
-                $puerto1=$puertos[15];
-                obtenerData2($array16,$server);
-            }
-         
-    }
-    
-    if(!empty($puertas_vacias)){
-
-        echo"\nInicio Repaso de puertas vacias\n";
-
-        $texto =estado_equipo_repaso($ip,$puertas_vacias, $modelo);
-        unset($puertas_vacias);
-
-        foreach (explode(chr(13), $texto) as $linea)
-            {
-                $linea = preg_replace('/[\n|\r|\n\r]/', '', $linea);
-                $linea = str_replace(array('','[16D','[16D [16','[16D                [16D','[16D','[16D                [16D ',' [16D [16D ',' [16D[16D','[1D',
-            '[37D','[37D                                     ','[37D                                     [37D',"---- More ( Press 'Q' to break ) ----",' [1D','}:','Command:',"% Unknown command, the error locates at '^'",'^'),'',$linea);
-                $data[] = $linea;
-            } 
-            print_r($data);  
-            /* die("Fin 2"); */
-            
-            $grep = preg_grep("/interface gpon 0/", $data);
-            $llaves = array_keys($grep);
-            echo "llaves: \n";
-            print_r($llaves);
-            echo "\n";
-
-            if (count($puertos) == 1) {
-                for ($i = $llaves[0]; $i < count($data); $i++) {
-                    $array1[] = $data[$i];
-                }
-            } else {
-                // Crear un array dinámico de porciones
-                $arrays = array();
-                
-                for ($i = 0; $i < count($llaves); $i++) {
-                    $arrays[$i] = array();
-                }
-                
-                for ($i = 0; $i < count($data); $i++) {
-                    // Encontrar en qué sección cae el índice actual
-                    for ($j = 0; $j < count($llaves) - 1; $j++) {
-                        if ($i >= $llaves[$j] && $i < $llaves[$j + 1]) {
-                            $arrays[$j][] = $data[$i];
-                            break;
-                        }
-                    }
-                    
-                    // Última sección (si es el último índice de llaves)
-                    if ($i >= end($llaves)) {
-                        $arrays[count($llaves) - 1][] = $data[$i];
-                    }
-                }
-            
-                // Extraer los arrays en variables individuales si es necesario
-                list($array1, $array2, $array3, $array4, $array5, $array6, $array7, 
-                     $array8, $array9, $array10, $array11, $array12, $array13, 
-                     $array14, $array15, $array16) = array_pad($arrays, 16, []);
-            }
-            $mysqli = new mysqli($host144_geret,$user144_geret,$pass144_geret, 'Aden');
-            $mysqli ->  set_charset("utf8");
-            echo "---------------------------------";
-            if(isset($puertos[0])){
-                $puerto1=$puertos[0];
-                
-                obtenerData2($array1, $server);
-                
-            }
-            
-            if(isset($puertos[1])){
-                $puerto1=$puertos[1];
-                obtenerData2($array2,$server);
-            }
-            if(isset($puertos[2])){
-                $puerto1=$puertos[2];
-                obtenerData2($array3, $server);
-            }
-            if(isset($puertos[3])){
-                $puerto1=$puertos[3];
-                obtenerData2($array4, $server);
-            }
-            if(isset($puertos[4])){
-                $puerto1=$puertos[4];
-                obtenerData2($array5,$server );
-            }
-            if(isset($puertos[5])){
-                $puerto1=$puertos[5];
-                obtenerData2($array6,$server);
-            }
-            if(isset($puertos[6])){
-                $puerto1=$puertos[6];
-                obtenerData2($array7,$server);
-            }
-            if(isset($puertos[7])){
-                $puerto1=$puertos[7];
-                obtenerData2($array8,$server);
-            }
-            if(isset($puertos[8])){
-                $puerto1=$puertos[8];
-                obtenerData2($array9,$server);
-            }
-            if(isset($puertos[9])){
-                $puerto1=$puertos[9];
-                obtenerData2($array10,$server);
-            }
-            if(isset($puertos[10])){
-                $puerto1=$puertos[10];
-                obtenerData2($array11,$server);
-            }
-            if(isset($puertos[11])){
-                $puerto1=$puertos[11];
-                obtenerData2($array12,$server);
-            }
-            if(isset($puertos[12])){
-                $puerto1=$puertos[12];
-                obtenerData2($array13,$server);
-            }
-            if(isset($puertos[13])){
-                $puerto1=$puertos[13];
-                obtenerData2($array14,$server);
-            }
-            if(isset($puertos[14])){
-                $puerto1=$puertos[14];
-                obtenerData2($array15,$server);
-            }
-            if(isset($puertos[15])){
-                $puerto1=$puertos[15];
-                obtenerData2($array16,$server);
-            }
-         
     }
     
     //print_r($detalle);
@@ -1266,9 +1051,10 @@ function ping_ip($ip1){
     $outputIP1 = shell_exec($commandA);
 
     // Usamos una expresión regular para buscar el número que está justo antes de '% packet loss'
-    if (preg_match('/(\d+)%\s+packet\s+loss/', $outputIP1, $matches)) {
-        // $matches[1] contendrá solo los dígitos (ej: "0", "100", "33")
-        $paquetes = (int)$matches[1]; 
+    // (puede venir con decimales, ej: "33.3333% packet loss"; con \d+ solo se tomaba "3333")
+    if (preg_match('/([\d.]+)%\s+packet\s+loss/', $outputIP1, $matches)) {
+        // $matches[1] contendrá el porcentaje (ej: "0", "100", "33.3333")
+        $paquetes = (float)$matches[1];
     }
 
     return $paquetes;
