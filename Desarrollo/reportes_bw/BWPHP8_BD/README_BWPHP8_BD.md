@@ -37,6 +37,10 @@ BWPHP8_BD/
     ├── descarga_reporte_bw.php          Arma y descarga el Excel
     ├── lib/  (los mismos 4 de cron/lib + bw_xlsx.php, bw_anual_excel.php, bw_web.php)
     └── plantilla/plantilla_reporte_bw.xlsx   Formato (W-42 con un solo día, 31 KB)
+└── web_contingencia/Capacidad_BW_Excel/  → portal OLT de contingencia: contingencia/OLT/Capacidad_BW_Excel/ (PHP 5.3+)
+    ├── (las mismas 3 páginas de web/)
+    ├── lib_bd/  (las mismas librerías de web/lib, salvo bw_web.php con las rutas de contingencia)
+    └── plantilla/plantilla_reporte_bw.xlsx
 ```
 
 `bw_config.php`, `bw_fechas.php`, `bw_datos.php` y `bw_anual.php` son **idénticos** en cron y web:
@@ -68,6 +72,14 @@ Clave única `(anio, olt, fecha)`. ~55.000 filas por año.
    `/var/www/html/conexion/` y `/var/www/conexion/`. Si no encuentra ninguno, el error indica la ruta probada.
    (Un error "Can't connect to local MySQL server through socket" significa que no se cargó el archivo de conexión.)
 4. **Menú (v3):** `$(".contenido").load('../Capacidad_BW_Excel/index_reporte_bw_semanal.php');`
+4b. **Portal OLT de contingencia (PHP 5.3+):** copiar el contenido de `web_contingencia/Capacidad_BW_Excel/` en
+   `contingencia/OLT/Capacidad_BW_Excel/`. Las librerías van en `lib_bd/` (no en `lib/`) para no pisar las del
+   cron antiguo en disco que ya están en esa carpeta. Reemplaza el `index_reporte_bw_semanal.php` antiguo (el que
+   leía los Excel de `Archivos_Auto/Semana`). Conexión: `contingencia/conexion/conexion_db.php` (`../../conexion`
+   desde el módulo, igual que `index_reporte_excel*.php`), o `contingencia/OLT/conexion/conexion_db.php` si la
+   primera no existe (`lib_bd/bw_web.php`). Menú: `OLT/menu/menu.php`, misma línea `.load` del punto 4.
+   Las páginas y `lib_bd/` son las mismas de `web/` salvo `bw_web.php` (rutas) y `lib/` → `lib_bd/` en los `require`;
+   si se modifica una librería compartida, copiarla también aquí.
 5. **Semanas faltantes:** si la carga inicial llega a W-42 y el cron parte después, la primera ejecución
    completa automáticamente las semanas que falten hasta la semana anterior.
 

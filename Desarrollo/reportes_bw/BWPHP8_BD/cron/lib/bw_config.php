@@ -2,11 +2,12 @@
 /**
  * Configuración del reporte BW anual guardado en BD (tabla OLT_REPORTE_BW_ANUAL).
  * La misma carpeta lib/ se usa en el servidor del cron (solo BD) y en el servidor web
- * (arma el Excel al descargar). PHP 8.0.
+ * (arma el Excel al descargar). PHP 8.0 / portal de contingencia PHP 5.3+.
  *
  * BW_CONEXION y BW_LOG los define el script de entrada antes de incluir este archivo:
  *   cron: /var/www/procesos/php/conexion/conexion_db.php
  *   web : /var/www/html/conexion/conexion_db.php (contingencia_v3)
+ *   web : contingencia/conexion/conexion_db.php (portal OLT de contingencia, ver lib_bd/bw_web.php)
  */
 date_default_timezone_set('America/Santiago');
 

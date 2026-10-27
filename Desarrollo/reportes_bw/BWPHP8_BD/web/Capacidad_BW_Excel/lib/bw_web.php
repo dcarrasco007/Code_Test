@@ -24,7 +24,7 @@ require_once __DIR__ . '/bw_anual.php';
 
 function bw_h($s)
 {
-    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars((string)$s, ENT_QUOTES | ENT_IGNORE, 'UTF-8');
 }
 
 // URL relativa de las páginas del módulo (las páginas se cargan desde menu/ con $(".contenido").load)
