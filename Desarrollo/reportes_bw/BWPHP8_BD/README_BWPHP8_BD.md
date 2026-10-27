@@ -64,6 +64,9 @@ Clave única `(anio, olt, fecha)`. ~55.000 filas por año.
    (convención de los procesos PHP 8; se cambia en `BW_CONEXION` de `cron_reporte_bw_anual.php`).
 3. **Web:** copiar `web/Capacidad_BW_Excel/` a `/var/www/html/Capacidad_BW_Excel/`. Conexión:
    `/var/www/html/conexion/conexion_db.php` (`lib/bw_web.php`). Requiere extensiones `mysqli`, `zip`, `dom`.
+   La web usa el primer archivo que exista entre: `módulo/../conexion/conexion_db.php`, `DOCUMENT_ROOT/conexion/`,
+   `/var/www/html/conexion/` y `/var/www/conexion/`. Si no encuentra ninguno, el error indica la ruta probada.
+   (Un error "Can't connect to local MySQL server through socket" significa que no se cargó el archivo de conexión.)
 4. **Menú (v3):** `$(".contenido").load('../Capacidad_BW_Excel/index_reporte_bw_semanal.php');`
 5. **Semanas faltantes:** si la carga inicial llega a W-42 y el cron parte después, la primera ejecución
    completa automáticamente las semanas que falten hasta la semana anterior.

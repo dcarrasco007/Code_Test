@@ -9,7 +9,13 @@
 
 function bw_conectar_bd()
 {
+    if (!is_file(BW_CONEXION)) {
+        throw new Exception('No se encontró el archivo de conexión ' . BW_CONEXION);
+    }
     include BW_CONEXION;
+    if (empty($host144_geret)) {
+        throw new Exception('El archivo de conexión ' . BW_CONEXION . ' no define $host144_geret');
+    }
     mysqli_report(MYSQLI_REPORT_OFF);   // mismo comportamiento en PHP 8.0 y 8.1+ (errores por valor de retorno)
     $mysqli = @new mysqli($host144_geret, $user144_geret, $pass144_geret, BW_BD);
     if ($mysqli->connect_error) {
