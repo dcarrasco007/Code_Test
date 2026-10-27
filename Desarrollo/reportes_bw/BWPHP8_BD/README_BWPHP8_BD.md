@@ -111,6 +111,11 @@ No usar `php -f archivo --anio=...` (PHP toma `--anio` como opción propia). Log
 - 2 botones con el mismo contenido: `Capacidades OLTs {Mes} {Año} W-{n}.xlsx` y `... Act - Act.xlsx`
   (mes = el del domingo). El Excel trae el año hasta el domingo de la semana elegida, así que se puede
   descargar cualquier semana pasada. Tarda ~3 segundos.
+- La descarga se hace por `fetch` (JS en `index_reporte_bw_semanal.php`, con delegación sobre `#bw_detalle`
+  porque el fragmento se inserta con `innerHTML`): mientras se genera, el botón muestra un spinner, una barra
+  y los segundos transcurridos; el otro botón y el selector de semana quedan bloqueados. Al terminar el botón
+  indica "Descargado"; si el PHP responde error, el mensaje aparece bajo los botones. El nombre del archivo
+  sale de `data-nombre` del botón.
 - Alertas calculadas con SQL al elegir la semana (no se guardan):
   % Uplink ≥ 99 % (`BW_UMBRAL_ALERTA`, con la celda del Excel), OLTs sin registro, cambio de capacidad
   respecto del domingo anterior y OLTs nuevas (`alta`).
