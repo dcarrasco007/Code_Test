@@ -162,9 +162,9 @@ try {
                 botones[i].classList.add(botones[i] === btn ? 'bw-generando' : 'bw-bloqueado');
                 botones[i].setAttribute('aria-disabled', 'true');
             }
-            estado.textContent = 'Generando Excel…';
+            estado.textContent = 'Generando Excel\u2026';
             reloj = setInterval(function () {
-                estado.textContent = 'Generando Excel… ' + Math.round((Date.now() - inicio) / 1000) + ' s';
+                estado.textContent = 'Generando Excel\u2026 ' + Math.round((Date.now() - inicio) / 1000) + ' s';
             }, 1000);
 
             function terminar() {
