@@ -7,11 +7,19 @@ foreach (['USER','PASSWORD','SALTO','SHELL','SHELL_CONFIG','SHELL_CONFIG1','SHEL
     if (!defined($__const)) { define($__const, $__const); }
 }
 // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+// Etapa 1 (bloqueos BD, 2026-10-28): el hijo ya no se conecta a la BD. Hace ping + telnet a su OLT y deja
+// el resultado en <carpeta del lote>/<OLT>.json; el padre (alarmas_proceso_detalle.php) junta los .json de
+// todas las OLTs y hace una sola carga. Plan: Pendientes/Bloqueos_BD_2026-10/03.1 - Plan implementacion etapa 1
+// Uso: php alarmas_proceso_detalle_exped.php <ip> <server> <region> <lote_id> <carpeta_lote>
 //include ('../../conexion/conexion_db.php');
 echo "Inicio: ".date('d-m-Y H:i:s')."\n";
+/* Etapa 1: sin conexión a la BD en el hijo
 include ('/var/www/procesos/php/conexion/conexion_db.php');
 $mysqli = new mysqli($host144_geret,$user144_geret,$pass144_geret, 'Aden');
 $mysqli ->  set_charset("utf8");
+*/
+/* Etapa 1: el monitoreo queda fuera del diseño, se deja comentado
 //-----------MONITOREO
     $fecha_monitor=date('Y-m-d H:i:s');
     $lote=$argv[4];
@@ -29,6 +37,10 @@ $mysqli ->  set_charset("utf8");
     $id_hijo = $parent_id;
     sleep(1);
     //--------------------
+*/
+if (count($argv) < 6 || !is_dir($argv[5])) {
+    die("Uso: php alarmas_proceso_detalle_exped.php <ip> <server> <region> <lote_id> <carpeta_lote>\n");
+}
 
 $fecha_proceso = date('Y-m-d');
 
@@ -36,23 +48,29 @@ $anio=date('Y');
         $ip = $argv[1];
         $server = $argv[2];
         $region = $argv[3];
+        $lote = $argv[4];
+        $dir = $argv[5];
 
         /* $ip = '10.99.24.68';
         $server = 'OLT-DURZUA-4';
         $region = 'METROPOLITANA SANTIAGO'; */
-        
-        $cont_critical = 0;
-        $cont_major = 0;
-        $cont_minor = 0;
-        $cont_warning = 0;
-        
+
+        // Resultado del hijo. escribir_resultado() deja el .json al terminar, también si el script se cae.
+        $filas = ['CRITICAL' => [], 'MAJOR' => [], 'MINOR' => [], 'WARNING' => []];
+        $cantidad = null;   // fila de OLT_CANTIDAD_ALARMAS_DETALLE; queda null si no hay ping (igual que antes)
+        $estado = 'OK';
+        register_shutdown_function('escribir_resultado');
+
+        $data = [];
         $y = ping_ip($ip);
-        if(trim($y)){
-            if($y < 100){    
+        if(trim($y) && $y < 100){
                 if($ip == '10.99.24.68'){
                     $texto = estado_equipo2($ip);
                 }else{
                     $texto = estado_equipo($ip);
+                }
+                if ($texto === 'TELNET_ERROR' || $texto === 'TIMEOUT' || $texto === 2) {
+                    $estado = 'TELNET_ERROR';
                 }
                 foreach (explode(chr(13), $texto) as $linea)
                 {
@@ -60,16 +78,17 @@ $anio=date('Y');
                     $data[] = $linea;
                 }
                 print_r($data);
+                $puerto = '';
                 for($j=0;$j<count($data);$j++){
                     $line = preg_replace('/\s+/', ' ', $data[$j]);
-                    if (stristr($line,'ALARM NAME')){                                 
+                    if (stristr($line,'ALARM NAME')){
                         $alarma = explode(':',$line);
                         $alarma = trim($alarma[1]);
                         echo"\nEntro como alarma--\n";
                         /*if(!stristr($data[$j+1],':')){
                             $alarma = $alarma.' '.trim($data[$j+1]);
                         }*/
-                        
+
                         if(stristr($data[$j+2],'PARAMETERS')){
                              echo"\nEntro PARAMETERS +2 --\n";
                             $pto = explode(':',$data[$j+2]);
@@ -81,55 +100,18 @@ $anio=date('Y');
                             $port = explode(',',$pto[5]);
                             $puerto = $pto[1].$pto[2].$pto[3].$pto[4].$port[0];
                         }
-                        
+
+                        // Cada caso arma $fecha y $linea_alarma; la severidad se resuelve en registrar_alarma()
+                        $linea_alarma = null;
                         if(stristr($data[$j-1],'QUALITY')){
                              echo"\nEntro QUALITY -1 --\n";
                             $fecha = explode('QUALITY',$data[$j-1]);
                             $fecha = explode(' ',trim($fecha[1]));
                             $fecha = $fecha[0].' '.$fecha[1];//agregado
-                            
                             $linea_alarma = trim($data[$j-1]);
-                            
-                            if(stristr($linea_alarma,'CRITICAL')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_critical++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_CRITICAL
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                            
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MAJOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_major++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MAJOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                            
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MINOR')){   
-                                if(stristr($fecha,$anio)){
-                                    $cont_minor++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MINOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'WARNING')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_warning++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_WARNING
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                             
-                                }
-    
-                            }
-     
-                        }elseif(stristr($data[$j-2],'QUALITY')){   
-                            echo"\nEntro QUALITY -2 --\n";                    
+
+                        }elseif(stristr($data[$j-2],'QUALITY')){
+                            echo"\nEntro QUALITY -2 --\n";
                             $fecha = explode('QUALITY',$data[$j-2]);
                             $fecha = trim($fecha[1]);
                             $fecha2 = explode(':',$data[$j-1]);
@@ -139,193 +121,43 @@ $anio=date('Y');
                             $fecha = str_replace("ST:::", "", $fecha);
                             //$fecha = $fecha.trim($data[$j-1]);//agregado
                             $linea_alarma = trim($data[$j-2]);
-                            
-                            if(stristr($linea_alarma,'CRITICAL')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_critical++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_CRITICAL
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                             
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MAJOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_major++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MAJOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                            
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MINOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_minor++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MINOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'WARNING')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_warning++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_WARNING
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }
-                            
+
                         }elseif(stristr($data[$j-1],'ERROR')){
                             $fecha = explode('ERROR',$data[$j-1]);
                             $fecha = explode(' ',trim($fecha[1]));
                             $fecha = $fecha[0].' '.$fecha[1];
-                            
                             $linea_alarma = trim($data[$j-1]);
-                            
-                            if(stristr($linea_alarma,'CRITICAL')){ 
-                                if(stristr($fecha,$anio)){
-                                    $cont_critical++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_CRITICAL
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                             
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MAJOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_major++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MAJOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                               
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MINOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_minor++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MINOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'WARNING')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_warning++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_WARNING
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                             
-                                }
-    
-                            }
-                            
+
                         }elseif(stristr($data[$j-2],'ERROR')){
                             $fecha = explode('ERROR',$data[$j-2]);
                             $fecha = trim($fecha[1]);
-                            
                             $linea_alarma = trim($data[$j-2]);
-                            
-                            if(stristr($linea_alarma,'CRITICAL')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_critical++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_CRITICAL
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MAJOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_major++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MAJOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MINOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_minor++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MINOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                            
-                                }
-    
-                            }elseif(stristr($linea_alarma,'WARNING')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_warning++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_WARNING
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                             
-                                }
-                            }
-                            
+
                         }elseif(stristr($data[$j-1],'EQUIPMENT')){
                             $fecha = explode('EQUIPMENT',$data[$j-1]);
                             $fecha = trim($fecha[1]);
-                            
                             $linea_alarma = trim($data[$j-1]);
-                            
-                            if(stristr($linea_alarma,'CRITICAL')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_critical++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_CRITICAL
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MAJOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_major++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MAJOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                              
-                                }
-    
-                            }elseif(stristr($linea_alarma,'MINOR')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_minor++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_MINOR
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                            
-                                }
-    
-                            }elseif(stristr($linea_alarma,'WARNING')){
-                                if(stristr($fecha,$anio)){
-                                    $cont_warning++;
-                                    $query_alarma = "INSERT INTO OLT_ALARMAS_WARNING
-                                                    (equipo,ip,puerta,alarma,fecha,fecha_proceso) VALUES 
-                                                    ('$server','$ip','$puerto','$alarma','$fecha','$fecha_proceso')";
-                                    $mysqli->query($query_alarma) or die("Error $query_alarma");                             
-                                }
-                            }
-                            
+                        }
+
+                        if ($linea_alarma !== null) {
+                            registrar_alarma($filas, $linea_alarma, $fecha, $server, $ip, $puerto, $alarma, $fecha_proceso, $anio);
                         }
                     }
                 }
-                    
-                $query_cant = "INSERT INTO OLT_CANTIDAD_ALARMAS_DETALLE
-                              (equipo,ip,region,cantidad_critical,cantidad_major,cantidad_minor,cantidad_warning,fecha) 
-                               VALUES 
-                              ('$server','$ip','$region','$cont_critical','$cont_major','$cont_minor','$cont_warning','$fecha_proceso')";
-                $mysqli->query($query_cant) or die("Error $query_cant");
-            }
-        }  
-        unset($data); 
-    //}  
+
+                $cantidad = [$server, $ip, $region,
+                             count($filas['CRITICAL']), count($filas['MAJOR']),
+                             count($filas['MINOR']), count($filas['WARNING']), $fecha_proceso];
+        }else{
+            $estado = 'SIN_PING';
+        }
+        unset($data);
+    //}
+/* Etapa 1: monitoreo comentado
 //-----------MONITOREO FIN
 $fecha_monitor=date('Y-m-d H:i:s');
 $sql = "UPDATE MONITOREO_PROCESOS_EJECUCIONES
-SET 
+SET
     fecha_fin = '$fecha_monitor',
     duracion = TIMESTAMPDIFF(SECOND, fecha_inicio, '$fecha_monitor'),
     estado = 'OK'
@@ -336,7 +168,52 @@ if (!$mysqli->query($sql)) {
 }
 //---------------------------------
 mysqli_close($mysqli);
+*/
 echo "Fin: ".date('d-m-Y H:i:s')."\n";
+
+/**
+ * Agrega la alarma a su severidad (antes eran 4 INSERT copiados en cada uno de los 5 casos del parseo).
+ * Solo cuenta las alarmas con fecha del año en curso, como antes.
+ */
+function registrar_alarma(array &$filas, string $linea, string $fecha, string $server, string $ip,
+                          string $puerto, string $alarma, string $fecha_proceso, string $anio): void
+{
+    if (!stristr($fecha, $anio)) return;
+    foreach (['CRITICAL', 'MAJOR', 'MINOR', 'WARNING'] as $sev) {
+        if (stristr($linea, $sev)) {
+            $filas[$sev][] = [$server, $ip, $puerto, $alarma, $fecha, $fecha_proceso];
+            return;
+        }
+    }
+}
+
+/**
+ * Deja <carpeta_lote>/<OLT>.json. Se escribe a .tmp y se renombra, para que el padre nunca lea un archivo
+ * a medio escribir. Corre al terminar el script (register_shutdown_function), también tras un error fatal.
+ * Si timeout mata al hijo no corre: el padre lo anota como OLT sin respuesta.
+ */
+function escribir_resultado()
+{
+    global $dir, $server, $estado, $filas, $cantidad;
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        $estado = 'ERROR';
+    }
+    $json = json_encode([
+        'equipo'   => $server,
+        'estado'   => $estado,
+        'alarmas'  => $filas,
+        'cantidad' => $cantidad,
+        'fin'      => date('Y-m-d H:i:s'),
+    ], JSON_INVALID_UTF8_SUBSTITUTE);
+    $tmp = "$dir/$server.json.tmp";
+    if ($json === false || file_put_contents($tmp, $json) === false || !rename($tmp, "$dir/$server.json")) {
+        echo "Error escribiendo $dir/$server.json\n";
+        return;
+    }
+    echo "Resultado: $dir/$server.json ($estado)\n";
+}
+
 function estado_equipo($server)
 {
     $i = 0;

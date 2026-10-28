@@ -27,7 +27,7 @@ Detalle de qué tablas pasar de `TRUNCATE` a `DELETE`: `Inventario_TRUNCATE_2026
 
 | # | Acción | Nota | Estado |
 |---|---|---|---|
-| 3 | Proceso de alarmas OLT: los ~150 hijos solo hacen telnet y dejan un .json; el padre espera 3 min y revisa cada 1 min (máx. 8 min), luego hace un solo DELETE + INSERT en una transacción con lo que llegó (sin TRUNCATE, monitoreo comentado, `timeout 450` por hijo) | [[03 - bhaul-dev OLT_ALARMAS_CRITICAL]] · plan: [[03.1 - Plan implementacion etapa 1 alarmas OLT]] | 🔲 pendiente |
+| 3 | Proceso de alarmas OLT: los ~150 hijos solo hacen telnet y dejan un .json; el padre espera 3 min y revisa cada 1 min (máx. 8 min), luego hace un solo DELETE + INSERT en una transacción con lo que llegó (sin TRUNCATE, monitoreo comentado, `timeout 450` por hijo) | [[03 - bhaul-dev OLT_ALARMAS_CRITICAL]] · plan: [[03.1 - Plan implementacion etapa 1 alarmas OLT]] | 🟡 código listo, falta probar en el servidor |
 
 ## Pendientes de otros equipos (solo seguimiento)
 

@@ -1,7 +1,7 @@
 ---
 tipo: pendiente
 proyecto: GERET
-estado: pendiente
+estado: código listo, falta probar
 equipo: nuestro
 responsable: "Equipo bhaul-dev (192.168.66.121) — NOSOTROS"
 tablas: [Aden.OLT_ALARMAS_CRITICAL, Aden.OLT_ALARMAS_MAJOR, Aden.OLT_ALARMAS_MINOR, Aden.OLT_ALARMAS_WARNING, Aden.OLT_CANTIDAD_ALARMAS_DETALLE]
@@ -71,6 +71,8 @@ Otros hallazgos (no son de bloqueo, pero conviene anotarlos):
 > - Cada hijo se lanza con **`timeout 450`** (7,5 min).
 >
 > Plan de implementación paso a paso: [[03.1 - Plan implementacion etapa 1 alarmas OLT]]
+>
+> **2026-10-28: código implementado** en la copia PHP 8 (`Alarmas_PHP8/Procesos/`). Falta probarlo en el servidor (pasos 0, 3 y 4 del plan).
 
 ### Flujo
 
@@ -173,11 +175,11 @@ Cada hijo, al terminar, toma un candado (`flock`) y cuenta los `.json`. El que *
 ## Checklist
 
 - [ ] Confirmar qué copia corre en 66.121 / usuario `bhaul-dev` y desde dónde se lanza.
-- [ ] Confirmar si el máximo es 8 min en total o 3 + 8 ciclos.
+- [x] Confirmar si el máximo es 8 min en total o 3 + 8 ciclos. → 8 min en total (`MAX_CICLOS = 5`), según lo pedido ("8 minutos como máximo"); se cambia en una constante.
 - [ ] `SELECT COUNT(*) FROM Aden.OLT_SERVER` (≈150) y cuántas alarmas hay por corrida → validar el tamaño del INSERT contra `max_allowed_packet`.
 - [ ] Revisar en los logs cuánto tarda hoy la OLT más lenta → confirmar los 3 min iniciales y el `timeout` por hijo.
-- [ ] Padre: monitoreo comentado, `lote_id`, carpeta, sin `TRUNCATE`, `timeout` en el `nohup`, ciclo de espera, carga en una transacción.
-- [ ] Hijo: sin conexión, monitoreo comentado, `.json` siempre, `registrar_alarma()`.
+- [x] Padre: monitoreo comentado, `lote_id`, carpeta, sin `TRUNCATE`, `timeout` en el `nohup`, ciclo de espera, carga en una transacción. (2026-10-28)
+- [x] Hijo: sin conexión, monitoreo comentado, `.json` siempre, `registrar_alarma()`. (2026-10-28)
 - [ ] Decidir el tratamiento de las OLTs sin respuesta (¿fila con ceros?).
 - [ ] Probar con 2–3 OLTs antes de desplegar; desplegar como lo defina el equipo.
 - [ ] Verificar después con [[Consultas de diagnostico de bloqueos]] (conexiones por host y esperas de MDL).
