@@ -118,7 +118,7 @@ for ($ciclo = 0; $ciclo <= 5; $ciclo++) {      // revisa a los 3, 4, 5, 6, 7 y 8
 ```
 
 8. Leer los `.json` que existan y juntar las filas por severidad.
-9. Abrir **una** conexión → `SET SESSION lock_wait_timeout = 10` → transacción → `DELETE` de las 5 tablas → INSERT multi-fila por tabla (en bloques de 1.000 filas, ver abajo) → `COMMIT`. Si algo falla, `ROLLBACK` y las tablas quedan con los datos de la hora anterior.
+9. Abrir **una** conexión → `SET SESSION lock_wait_timeout = 10` → transacción → `DELETE` de las 5 tablas → INSERT multi-fila por tabla (máximo 5.000 filas por INSERT, ver abajo) → `COMMIT`. Si algo falla, `ROLLBACK` y las tablas quedan con los datos de la hora anterior.
 10. Cerrar la conexión y borrar la carpeta del lote.
 
 **2. Hijo** (`alarmas_proceso_detalle_exped.php`)
@@ -139,7 +139,7 @@ shell_exec("nohup timeout 450 php -f $hijo $ip $server $region $lote_id $dir > $
 
 **4. Carga en bloques**
 
-Un INSERT multi-fila viaja en un solo paquete, limitado por `max_allowed_packet` (64 MB por defecto en MySQL 8, 4 MB en 5.7). Ejemplo: 150 OLTs × 50 alarmas ≈ 7.500 filas × ~150 bytes ≈ 1 MB, así que cabe. Igual conviene trocear en bloques de 1.000 filas **dentro de la misma transacción**: para la BD sigue siendo una sola carga.
+Un INSERT multi-fila viaja en un solo paquete, limitado por `max_allowed_packet` (64 MB por defecto en MySQL 8, 4 MB en 5.7). Ejemplo: 150 OLTs × 50 alarmas ≈ 7.500 filas × ~150 bytes ≈ 1 MB, así que cabe. Igual se trocea con un **máximo de 5.000 filas por INSERT** (si hay más, se hacen más INSERT) **dentro de la misma transacción**: para la BD sigue siendo una sola carga.
 
 ### Qué se logra
 

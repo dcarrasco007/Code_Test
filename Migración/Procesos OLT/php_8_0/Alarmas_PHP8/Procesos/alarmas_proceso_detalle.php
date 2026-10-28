@@ -15,7 +15,8 @@ const TIMEOUT_HIJO   = 450;    // timeout de cada hijo; menor que la espera máx
 const ESPERA_INICIAL = 180;    // primera espera después de lanzar el último hijo
 const INTERVALO      = 60;     // espera entre revisiones
 const MAX_CICLOS     = 5;      // revisiones extra después de la inicial -> 3 + 5 = 8 min máximo
-const TAM_BLOQUE     = 1000;   // filas por INSERT multi-fila (todos dentro de la misma transacción)
+const TAM_BLOQUE     = 5000;   // máximo de filas por INSERT; si hay más se hacen más INSERT, en la misma transacción
+                               // (5000 x 8 columnas = 40.000 parámetros, bajo el límite de 65.535 por sentencia)
 const DIR_LOTES      = '/var/www/procesos/php/Alarmas_PHP8/tmp';
 const HIJO           = '/var/www/procesos/php/Alarmas_PHP8/Procesos/alarmas_proceso_detalle_exped.php';
 const DIR_LOGS       = '/var/www/procesos/php/Alarmas_PHP8/logs/Alarmas_detalle';
@@ -211,6 +212,7 @@ function insertar_lote(mysqli $db, string $tabla, string $cols, array $filas): v
         $stmt->bind_param(str_repeat('s', $n * count($chunk)), ...array_merge(...$chunk));
         $stmt->execute();
         $stmt->close();
+        echo "  $tabla: INSERT de " . count($chunk) . " filas\n";
     }
 }
 
