@@ -20,8 +20,12 @@ date_default_timezone_set('America/Santiago');
  *   --sinexcel                           carga la BD sin dejar el Excel en Archivos/
  *   --csv=/ruta/carpeta                  deja lo generado en .csv para revisarlo
  *
- * Se ejecuta desde el crontab del host 120 con podman exec (el log queda en el host, fuera de la web):
- *   30 4 * * 1 /usr/bin/podman exec <contenedor> php <modulo>/cron_carga_bw_bd.php --tipo=semana >> <log> 2>&1
+ * Se ejecuta desde el crontab del host 120 (usuario reyt_dcarrasco, podman rootless) dentro del contenedor
+ * portal-php53; el log queda en el host, fuera de la web (ver etapa2_portal/LEEME_ETAPA2_PORTAL.md):
+ *   XDG_RUNTIME_DIR=/run/user/<uid>
+ *   30 4 * * 1 /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=semana >> $HOME/logs/geret/carga_bw_semana.log 2>&1
+ *   45 4 * * 1 /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=anio   >> $HOME/logs/geret/carga_bw_anio.log 2>&1
+ *   0 5 1 * *  /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=mes    >> $HOME/logs/geret/carga_bw_mes.log 2>&1
  *
  * Servidor 120: contenedor podman con PHP 5.5 (contingencia_v3).
  */

@@ -55,43 +55,69 @@ Nombres iguales a la subida manual: `Capacidades_OLTs_W-42_2026.xlsx`, `Capacida
 El portal corre dentro de un contenedor, así que el crontab **del host 120** ejecuta el PHP **dentro del contenedor**
 con `podman exec` (no se reinicia nada y el Excel queda donde el portal lo lee). El log queda en el host, fuera de la web.
 
-### 1. Revisar el contenedor (solo lectura)
+### Datos del contenedor (revisados el 2026-10-28)
+
+| Dato | Valor |
+|---|---|
+| Host / usuario | `web-pgpon` / `reyt_dcarrasco` |
+| Contenedor | `portal-php53` (imagen `localhost/portal-php53_php53:latest`, puerto 8080 → 80) |
+| Podman | **rootless** (corre con el usuario `reyt_dcarrasco`) |
+| PHP del contenedor | 5.5.9 (Ubuntu), Apache 2 |
+| Usuario web | `www-data` |
+| Volumen | host `/var/www/Contenedor/portal-php53/www` → contenedor `/var/www/html` |
+| Módulo (contenedor) | `/var/www/html/Capacidad_BW_Excel` |
+| Módulo (host) | `/var/www/Contenedor/portal-php53/www/Capacidad_BW_Excel` |
+| Conexión BD | `/var/www/html/conexion/conexion_db.php` (la encuentra `lib/bw_web.php`) |
+
+Como `/var/www/html` es un **volumen**, los Excel que deja el cron en `Archivos/` persisten aunque se recree el
+contenedor, y los archivos se despliegan copiándolos en la carpeta del host (no hace falta `podman cp`).
+
+### 1. Revisar antes de programar (solo lectura)
 
 ```bash
-podman ps --format "{{.Names}}  {{.Image}}  {{.Status}}"
-podman info --format '{{.Host.Security.Rootless}}'          # true = rootless
-podman exec <contenedor> php -v
-podman exec <contenedor> php -m | grep -iE 'mysqli|zip|dom'
-podman exec <contenedor> sh -c 'ls -d /var/www/Capacidad_BW_Excel /var/www/html/Capacidad_BW_Excel 2>/dev/null'
-podman exec <contenedor> ps aux | grep -E 'apache|httpd|nginx|php-fpm' | head -3   # usuario web
-podman inspect <contenedor> --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'
+which podman                     # ruta completa para el crontab (normalmente /usr/bin/podman)
+id -u                            # uid de reyt_dcarrasco, para XDG_RUNTIME_DIR
+loginctl show-user reyt_dcarrasco --property=Linger    # debe decir Linger=yes
+podman exec portal-php53 php -m | grep -iE 'mysqli|zip|dom'
+podman exec portal-php53 ls -l /var/www/html/conexion/conexion_db.php /var/www/html/Capacidad_BW_Excel/Archivos
+crontab -l
 ```
 
-### 2. Probar a mano (no escribe)
+- Si `Linger=no`, el contenedor rootless y el cron dependen de que haya una sesión abierta: pedir
+  `loginctl enable-linger reyt_dcarrasco` (lo hace root).
+- Si en `php -m` falta `mysqli`, `zip` o `dom`, el cron no puede correr (la ventana de la etapa 1 ya los usa vía Apache,
+  pero el PHP de consola puede tener otra configuración).
+
+### 2. Desplegar y probar a mano (no escribe)
+
+Copiar `etapa2_portal/v3_120/Capacidad_BW_Excel/` sobre `/var/www/Contenedor/portal-php53/www/Capacidad_BW_Excel/`.
 
 ```bash
-podman exec <contenedor> php <modulo>/cron_carga_bw_bd.php --tipo=semana --anio=2026 --semana=42 --comparar
+podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=semana --anio=2026 --semana=42 --comparar
 ```
 
-### 3. Crontab del host (mismo usuario que corre podman)
+### 3. Crontab del host (`crontab -e` con el usuario `reyt_dcarrasco`)
+
+```bash
+mkdir -p ~/logs/geret
+```
 
 ```cron
+# Podman rootless: cron no carga el entorno de la sesión (reemplazar 1000 por el resultado de "id -u")
+XDG_RUNTIME_DIR=/run/user/1000
+
 # GERET - Capacidad BW etapa 2 (carga OLT_CAPACIDAD_BW* + Excel en Archivos/)
-30 4 * * 1 /usr/bin/podman exec --user <usuario_web> <contenedor> php <modulo>/cron_carga_bw_bd.php --tipo=semana >> /var/log/geret/carga_bw_semana.log 2>&1
-45 4 * * 1 /usr/bin/podman exec --user <usuario_web> <contenedor> php <modulo>/cron_carga_bw_bd.php --tipo=anio   >> /var/log/geret/carga_bw_anio.log 2>&1
-0 5 1 * *  /usr/bin/podman exec --user <usuario_web> <contenedor> php <modulo>/cron_carga_bw_bd.php --tipo=mes    >> /var/log/geret/carga_bw_mes.log 2>&1
+30 4 * * 1 /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=semana >> $HOME/logs/geret/carga_bw_semana.log 2>&1
+45 4 * * 1 /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=anio   >> $HOME/logs/geret/carga_bw_anio.log 2>&1
+0 5 1 * *  /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/Capacidad_BW_Excel/cron_carga_bw_bd.php --tipo=mes    >> $HOME/logs/geret/carga_bw_mes.log 2>&1
 ```
 
-- `<modulo>`: ruta del módulo dentro del contenedor (paso 1), ej. `/var/www/Capacidad_BW_Excel`.
-- `--user <usuario_web>` (ej. `www-data` o `apache`): los Excel quedan con el mismo dueño que la web, que así puede
-  reemplazarlos. Si se omite, el cron corre como el usuario por defecto del contenedor; igual se dejan con permiso 0666.
-- Usar la ruta completa de podman (`which podman`). Si es **rootless**, agregar al inicio del crontab
-  `XDG_RUNTIME_DIR=/run/user/<uid>` y verificar `loginctl enable-linger <usuario>`.
-- Crear antes la carpeta de logs del host (`mkdir -p /var/log/geret`, o `~/logs/geret` si no es root).
-- La semana (04:30) debe correr **después** de la etapa 1 (`cron_reporte_bw_anual.php`, 04:00), que llena
+- `--user www-data`: los Excel quedan con el mismo dueño que Apache, que así puede reemplazarlos.
+- No usar `php -f archivo --tipo=...` (PHP toma `--tipo` como opción propia).
+- La semana (04:30) debe correr **después** de la etapa 1 en el 121 (`cron_reporte_bw_anual.php`, 04:00), que llena
   `OLT_REPORTE_BW_ANUAL`. El mes del día 1 completa desde `OLT_TRAFICO_PEAK_DAY` los días que la etapa 1 aún no cerró.
-- Si `Archivos/` no es un volumen del host, los Excel viven en la capa del contenedor y se pierden si se recrea;
-  aun así el link "Descargar Archivo" los vuelve a armar desde la BD.
+- Revisar el resultado: `tail ~/logs/geret/carga_bw_semana.log` y
+  `ls -l /var/www/Contenedor/portal-php53/www/Capacidad_BW_Excel/Archivos/Semana`.
 
 ### 4. Apagar los otros crons de la etapa 2
 
