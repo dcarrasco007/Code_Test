@@ -8,6 +8,8 @@ tags: [geret, mysql, pendientes, bloqueos]
 
 # Bloqueos BD — Pendientes (oct 2026)
 
+Volver a [[00 - Pendientes GERET]]
+
 Origen: revisión de esperas por *metadata lock* y tablas lentas en el MySQL compartido.
 Detalle de qué tablas pasar de `TRUNCATE` a `DELETE`: `Inventario_TRUNCATE_2026-10-26.pdf` (aún no está en esta carpeta — **adjuntar**).
 

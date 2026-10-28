@@ -3,7 +3,7 @@
  * Fragmento HTML con los botones de descarga y las alertas de una semana (calculadas desde
  * OLT_REPORTE_BW_ANUAL). Lo carga index_reporte_bw_semanal.php al cambiar la semana.
  *   alertas_reporte_bw.php?anio=2026&semana=42
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 require_once __DIR__ . '/lib/bw_web.php';
 

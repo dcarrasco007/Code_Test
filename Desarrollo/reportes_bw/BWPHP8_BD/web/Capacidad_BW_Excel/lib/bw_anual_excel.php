@@ -3,7 +3,7 @@
  * Arma el Excel anual desde OLT_REPORTE_BW_ANUAL (servidor web), con el mismo formato del archivo
  * original: encabezados, día combinado en la fila 2, PE-com combinado por grupo, colores 60/70 y
  * fórmula % Uplink = +Tráfico/Capacidad. Usa como formato plantilla/plantilla_reporte_bw.xlsx.
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 require_once __DIR__ . '/bw_anual.php';
 require_once __DIR__ . '/bw_xlsx.php';

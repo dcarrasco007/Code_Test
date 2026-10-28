@@ -4,7 +4,7 @@
  * Misma fuente que OLT/Reporte_BW/reporte_bw_fecha_peak.php:
  *   capacidad: OLT_PUERTAS_UPLINKS_GB (capacidad_total, ej "100GB" => 100 Gbps => 100000 Mbps)
  *   tráfico:   OLT_TRAFICO_PEAK_DAY.peak_mb por ip y fecha
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 
 function bw_conectar_bd()

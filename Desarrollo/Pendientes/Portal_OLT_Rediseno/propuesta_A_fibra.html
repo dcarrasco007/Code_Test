@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Fibra</title>
+<!--
+  Propuesta A — "Fibra": tema oscuro, tarjeta de vidrio, fondo animado de fibras con pulsos de luz.
+  Menú: barra superior de vidrio + mega-menú por columnas + buscador con Ctrl+K.
+  Maqueta estática: sin dependencias externas, sin login real. "Aceptar" entra a la vista del portal.
+  Logo: reemplazar .brand-mark por <img src="../../NEWFRONT/logonuevo.png">.
+-->
+<style>
+:root{
+  --bg:#050f26; --bg2:#0b2257; --glass:rgba(255,255,255,.065); --glass2:rgba(255,255,255,.11);
+  --line:rgba(255,255,255,.13); --txt:#eaf0ff; --mut:#93a6cc; --acc:#ff7a00; --acc2:#ffae42;
+  --blue:#3a7bff; --ok:#2fd4a3; --warn:#ffcf4a; --bad:#ff5d6c; --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden}
+canvas#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.aura{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(900px 600px at 85% 20%,rgba(58,123,255,.22),transparent 60%),
+             radial-gradient(700px 500px at 10% 90%,rgba(255,122,0,.10),transparent 60%)}
+button,input{font:inherit;color:inherit}
+svg{display:block}
+
+/* ---------- LOGIN ---------- */
+#login{position:relative;z-index:1;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;padding:24px clamp(16px,4vw,48px)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:600;letter-spacing:.2px}
+.brand-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--blue),#1b3fae);box-shadow:0 6px 20px rgba(58,123,255,.45)}
+.brand small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+.login-wrap{display:grid;place-items:center}
+.card{width:min(400px,100%);padding:36px 32px 28px;border-radius:24px;background:var(--glass);
+  border:1px solid var(--line);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);
+  animation:rise .8s cubic-bezier(.2,.8,.2,1) both;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+  background:conic-gradient(from var(--ang,0deg),transparent 0 70%,rgba(255,174,66,.9) 80%,transparent 90%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:spin 6s linear infinite}
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes spin{to{--ang:360deg}}
+@keyframes rise{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+.card h1{font-size:26px;font-weight:600}
+.card p.sub{color:var(--mut);margin:6px 0 26px;font-size:14px}
+.field{position:relative;margin-bottom:16px;animation:rise .7s both}
+.field:nth-of-type(1){animation-delay:.15s}.field:nth-of-type(2){animation-delay:.25s}
+.field input{width:100%;height:54px;padding:20px 44px 6px 44px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(5,15,38,.55);outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(58,123,255,.18)}
+.field label{position:absolute;left:44px;top:17px;color:var(--mut);font-size:14px;pointer-events:none;transition:all .18s}
+.field input:focus+label,.field input:not(:placeholder-shown)+label{top:7px;font-size:11px;color:var(--acc2)}
+.field .ico{position:absolute;left:14px;top:17px;color:var(--mut)}
+.field .eye{position:absolute;right:10px;top:12px;width:30px;height:30px;border:0;background:none;color:var(--mut);cursor:pointer;border-radius:8px}
+.field .eye:hover{color:var(--txt);background:var(--glass)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);margin:4px 0 22px}
+.row label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.row input{accent-color:var(--acc)}
+.caps{color:var(--warn);font-size:12px;height:0;overflow:hidden;transition:height .2s}
+.caps.on{height:18px;margin:-8px 0 8px}
+.btn{position:relative;width:100%;height:50px;border:0;border-radius:12px;cursor:pointer;font-weight:600;letter-spacing:.3px;color:#fff;
+  background:linear-gradient(135deg,var(--acc),#ff5400);box-shadow:0 10px 30px rgba(255,100,0,.35);overflow:hidden;transition:transform .15s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 14px 36px rgba(255,100,0,.45)}
+.btn:active{transform:translateY(1px)}
+.btn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;transform:skewX(-20deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transition:left .6s}
+.btn:hover::after{left:120%}
+.btn .spin{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;margin:auto;animation:sp .7s linear infinite}
+.btn.loading .lbl{display:none}.btn.loading .spin{display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.status{display:flex;gap:16px;justify-content:center;margin-top:22px;font-size:12px;color:var(--mut)}
+.status span{display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(47,212,163,.6);animation:ping 2s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 7px rgba(47,212,163,0)}100%{box-shadow:0 0 0 0 rgba(47,212,163,0)}}
+.foot{color:var(--mut);font-size:12px;text-align:center}
+#login.out .card{animation:out .5s cubic-bezier(.6,0,.8,.2) forwards}
+@keyframes out{to{opacity:0;transform:scale(.94) translateY(-10px);filter:blur(6px)}}
+
+/* ---------- PORTAL ---------- */
+#portal{position:relative;z-index:1;display:none;min-height:100vh}
+#portal.on{display:block;animation:fade .6s ease both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;height:64px;padding:0 clamp(16px,3vw,32px);
+  background:rgba(5,15,38,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.topbar .brand{white-space:nowrap}
+.nav{display:flex;gap:2px;height:100%;align-items:center;flex:1;min-width:0}
+.nav>li{list-style:none;height:100%;display:flex;align-items:center}
+.nav>li>button{height:38px;padding:0 14px;border:0;background:none;border-radius:10px;cursor:pointer;color:#c9d6f3;font-size:14px;
+  display:flex;align-items:center;gap:6px;transition:background .2s,color .2s}
+.nav>li>button:hover,.nav>li.open>button{background:var(--glass2);color:#fff}
+.nav>li>button svg{transition:transform .25s}
+.nav>li.open>button svg{transform:rotate(180deg)}
+.mega{position:absolute;left:clamp(16px,3vw,32px);right:clamp(16px,3vw,32px);top:64px;padding:22px;border-radius:0 0 var(--r) var(--r);
+  background:rgba(9,24,60,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line);border-top:0;
+  box-shadow:0 30px 60px rgba(0,0,0,.45);display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px 26px;
+  opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s,transform .2s}
+.nav>li.open .mega{opacity:1;transform:none;pointer-events:auto}
+.mega h4{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--acc2);margin-bottom:8px;font-weight:600}
+.mega a{display:block;padding:7px 10px;margin:0 -10px;border-radius:8px;color:#d7e2fb;text-decoration:none;font-size:14px;transition:background .15s,padding .15s}
+.mega a:hover{background:var(--glass2);padding-left:14px;color:#fff}
+.mega .sub{margin:4px 0 6px 2px;padding-left:10px;border-left:1px solid var(--line)}
+.mega .sub a{font-size:13px;color:var(--mut)}
+.tools{display:flex;align-items:center;gap:10px}
+.search{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--glass);
+  color:var(--mut);cursor:pointer;font-size:13px;min-width:230px;transition:border-color .2s}
+.search:hover{border-color:var(--blue)}
+.search kbd{margin-left:auto;font-size:11px;padding:2px 6px;border-radius:6px;border:1px solid var(--line);font-family:inherit}
+.chip{height:30px;padding:0 12px;border-radius:999px;display:flex;align-items:center;gap:6px;font-size:12px;
+  background:rgba(255,122,0,.14);color:var(--acc2);border:1px solid rgba(255,122,0,.3);white-space:nowrap}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;cursor:pointer;
+  background:linear-gradient(135deg,var(--blue),#7a4dff);border:2px solid rgba(255,255,255,.2)}
+.burger{display:none;border:0;background:none;cursor:pointer;width:38px;height:38px;border-radius:10px}
+.content{padding:32px clamp(16px,3vw,32px);max-width:1400px;margin:0 auto}
+.hello h2{font-size:26px;font-weight:600}
+.hello p{color:var(--mut);margin-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:26px}
+.kpi{padding:20px;border-radius:var(--r);background:var(--glass);border:1px solid var(--line);animation:rise .6s both;transition:transform .2s,border-color .2s}
+.kpi:hover{transform:translateY(-3px);border-color:rgba(58,123,255,.5)}
+.kpi:nth-child(2){animation-delay:.08s}.kpi:nth-child(3){animation-delay:.16s}.kpi:nth-child(4){animation-delay:.24s}
+.kpi .k{color:var(--mut);font-size:13px}
+.kpi .v{font-size:32px;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .t{font-size:12px;margin-top:6px}
+.demo{margin-top:22px;font-size:12px;color:var(--mut)}
+
+/* buscador Ctrl+K */
+.palette{position:fixed;inset:0;z-index:50;background:rgba(2,8,22,.6);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.palette.on{display:flex;animation:fade .15s}
+.palette .box{width:min(620px,92vw);border-radius:var(--r);background:#0c1d47;border:1px solid var(--line);box-shadow:0 40px 90px rgba(0,0,0,.6);overflow:hidden;animation:rise .25s both}
+.palette input{width:100%;height:56px;padding:0 20px;border:0;border-bottom:1px solid var(--line);background:none;outline:none;font-size:16px}
+.palette ul{max-height:50vh;overflow:auto;padding:8px;list-style:none}
+.palette li{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.palette li small{color:var(--mut)}
+.palette li.sel{background:var(--glass2)}
+
+/* móvil */
+.drawer{display:none}
+@media (max-width:1440px){.search{min-width:0}.search .lbl{display:none}.nav>li>button{padding:0 11px}}
+@media (max-width:1240px){
+  .nav,.search span.lbl,.chip{display:none}
+  .search{min-width:0}
+  .burger{display:grid;place-items:center;margin-left:auto}
+  .drawer{display:block;position:fixed;top:64px;left:0;right:0;bottom:0;z-index:19;background:rgba(5,15,38,.97);overflow:auto;padding:12px 16px;
+    transform:translateX(100%);transition:transform .3s}
+  .drawer.on{transform:none}
+  .drawer details{border-bottom:1px solid var(--line)}
+  .drawer summary{padding:14px 4px;cursor:pointer;list-style:none;font-weight:600}
+  .drawer a{display:block;padding:8px 12px;color:#d7e2fb;text-decoration:none;font-size:14px}
+  .drawer h5{padding:8px 12px 2px;color:var(--acc2);font-size:11px;text-transform:uppercase;letter-spacing:1px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="aura"></div>
+
+<!-- ================= LOGIN ================= -->
+<section id="login">
+  <div class="brand">
+    <div class="brand-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7.5 12h9M7 11l10-5M7 13l10 5"/></svg></div>
+    <div>Panel de Gestión Red GPON<small>GERET · Portal OLT</small></div>
+  </div>
+
+  <div class="login-wrap">
+    <form class="card" id="frm" autocomplete="on">
+      <h1>Bienvenido</h1>
+      <p class="sub">Ingresa con tu usuario de red para continuar</p>
+      <div class="field">
+        <input id="u" name="usuario" placeholder=" " autocomplete="username" required>
+        <label for="u">Usuario</label>
+        <svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      </div>
+      <div class="field">
+        <input id="p" name="password" type="password" placeholder=" " autocomplete="current-password" required>
+        <label for="p">Contraseña</label>
+        <svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <button type="button" class="eye" id="eye" aria-label="Mostrar contraseña"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin:auto"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <div class="caps" id="caps">⚠ Bloq Mayús está activado</div>
+      <div class="row">
+        <label><input type="checkbox"> Recordarme</label>
+        <span>Semana <b id="wk1"></b></span>
+      </div>
+      <button class="btn" id="go"><span class="lbl">Ingresar</span><span class="spin"></span></button>
+      <div class="status"><span><i class="dot"></i>Servicios operativos</span><span id="clock"></span></div>
+    </form>
+  </div>
+  <div class="foot">Desarrollado por GERET · Maqueta propuesta A</div>
+</section>
+
+<!-- ================= PORTAL ================= -->
+<section id="portal">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7.5 12h9M7 11l10-5M7 13l10 5"/></svg></div>
+      <div>Red GPON</div>
+    </div>
+    <ul class="nav" id="nav"></ul>
+    <div class="tools">
+      <button class="search" id="openPal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lbl">Buscar OLT, IP o reporte…</span><kbd>Ctrl K</kbd></button>
+      <span class="chip">📅 Semana <b id="wk2"></b></span>
+      <div class="avatar" title="Usuario">DC</div>
+      <button class="burger" id="burger" aria-label="Menú"><svg width="22" height="22" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </header>
+  <nav class="drawer" id="drawer"></nav>
+
+  <main class="content">
+    <div class="hello"><h2>Hola, Daniel 👋</h2><p>Resumen de la red GPON</p></div>
+    <div class="kpis">
+      <div class="kpi"><div class="k">OLTs monitoreadas</div><div class="v" data-n="150">0</div><div class="t" style="color:var(--ok)">● 147 en línea</div></div>
+      <div class="kpi"><div class="k">Alarmas críticas</div><div class="v" data-n="12">0</div><div class="t" style="color:var(--bad)">▲ 3 vs. hora anterior</div></div>
+      <div class="kpi"><div class="k">Uplinks sobre 80 %</div><div class="v" data-n="8">0</div><div class="t" style="color:var(--warn)">Revisar capacidades</div></div>
+      <div class="kpi"><div class="k">ONT activas</div><div class="v" data-n="482310">0</div><div class="t" style="color:var(--mut)">Última carga 10:00</div></div>
+    </div>
+    <p class="demo">Datos de ejemplo, solo para la maqueta. Pasa el mouse sobre el menú o presiona Ctrl K.</p>
+  </main>
+</section>
+
+<div class="palette" id="pal"><div class="box">
+  <input id="q" placeholder="Buscar equipo OLT (nombre o IP) o un reporte…" autocomplete="off">
+  <ul id="res"></ul>
+</div></div>
+
+<script>
+/* ---- Menú: misma estructura que menu.php (en producción sale de la BD según perfil) ---- */
+const MENU = {
+ "Reportes": {"Corte de Fibra":["Reporte General","Reporte Corte Fibra"],"Corte de Energía":["Reporte General","Reporte Corte Energía"],"Reporte Uplinks":["Estado General Uplinks","Estado de Corte Uplinks"],"Paneles":["Panel Corte Energía","Panel Corte Fibra GPON","Panel Corte Uplink OLT","Panel Slide","Inicio Alarmas"]},
+ "ONNET": {"Reporte General":["Subir Reporte General","Reporte General","Reporte Potencia","Reporte Voltaje","Reporte Rx Onu","Reporte Ranging","Reporte Last Up Last Down"]},
+ "Equipos": {"Equipos":["Lista Equipos","Nuevo Equipo","IP Consolas"],"Uplinks":["Agregar Uplink"],"ONT":["Subir Información ONT","Información ONT","Información ONT Detalle"]},
+ "Tráfico": {"Reporte Histórico":["Tráfico GPON","Tráfico Uplinks"],"Gráficos":["Tráfico GPON","Tráfico Uplinks","Porcentaje de BW Uplinks"],"Ocupación":["ONT por OLT","Puertas Uplinks","Ocupación GPON Mensual","Ocupación GPON Semanal","ONT Disponibles/Utilizadas"],"Capacidades":["Reporte BW Semanal","Reporte BW Diario","Reporte BW OLT/Week","Reporte BW Peak Week",{"Informes Capacidades BW":["Subir Archivo Semanal","BW Capacidad Semanal","BW Capacidad Mensual","BW Capacidad Anual"]}],"Uplink":["MA5800-X15 Peak Diario","MA5800-X15 Promedio Diario","MA5600T Peak Diario","Reporte BW Uplink","Detalle Uplink diario"],"Potencias Ópticas":["Potencia Diaria","Potencia Semanal","Gráfico de OLT por PE"]},
+ "ODF": {"ODF":["Ingresar ODF","Ver ODF","Subir Info Gabinete","ODF por Comuna"]},
+ "KPIs": {"Temperatura/CPU":["Reporte General","Reporte Temp/CPU"],"Reporte ONT":["Reporte General","ONT General","ONT Detalle","Histórico Week","ONT Diario"],"Reporte Alarmas":["Reporte General","Reporte Detalle","Uplinks LOS","Alarmas Recovery"],"Equipamiento":["Firmware/Patch","Tarjetas","Poder","FAN Estado","Uptime OLT","Uptime PON"],"Reporte Vlan":["Cantidad Vlan","Tráfico Vlan","Export Semanal Vlan/Servicios","Vlan por OLT"]},
+ "Mantención OLT": {"Mantención":["Equipo","Subir Gantt","Ver Gantt","Detalle Gantt"]},
+ "Administración": {"Cuenta":["Gestión usuarios","Gestión perfiles","Gestión cuenta","Salir del panel"]}
+};
+const caret='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>';
+const links=(arr)=>arr.map(x=>typeof x==="string"?`<a href="#">${x}</a>`:Object.entries(x).map(([h,l])=>`<a href="#">${h}</a><div class="sub">${links(l)}</div>`).join("")).join("");
+const nav=document.getElementById("nav"), drawer=document.getElementById("drawer");
+for(const [top,groups] of Object.entries(MENU)){
+  const li=document.createElement("li");
+  li.innerHTML=`<button aria-haspopup="true">${top}${caret}</button><div class="mega">${Object.entries(groups).map(([g,l])=>`<div><h4>${g}</h4>${links(l)}</div>`).join("")}</div>`;
+  let t; li.onmouseenter=()=>{clearTimeout(t);document.querySelectorAll(".nav>li.open").forEach(o=>o!==li&&o.classList.remove("open"));li.classList.add("open")};
+  li.onmouseleave=()=>{t=setTimeout(()=>li.classList.remove("open"),180)};
+  li.querySelector("button").onclick=()=>li.classList.toggle("open");
+  nav.appendChild(li);
+  drawer.insertAdjacentHTML("beforeend",`<details><summary>${top}</summary>${Object.entries(groups).map(([g,l])=>`<h5>${g}</h5>${links(l)}`).join("")}</details>`);
+}
+document.getElementById("burger").onclick=()=>drawer.classList.toggle("on");
+
+/* ---- Semana ISO y reloj ---- */
+const iso=d=>{d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-n);return Math.ceil(((d-new Date(Date.UTC(d.getUTCFullYear(),0,1)))/864e5+1)/7)};
+wk1.textContent=wk2.textContent=iso(new Date());
+const tick=()=>clock.textContent=new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});tick();setInterval(tick,3e4);
+
+/* ---- Login ---- */
+eye.onclick=()=>{p.type=p.type==="password"?"text":"password"};
+p.addEventListener("keyup",e=>caps.classList.toggle("on",e.getModifierState&&e.getModifierState("CapsLock")));
+frm.onsubmit=e=>{e.preventDefault();go.classList.add("loading");
+  setTimeout(()=>{login.classList.add("out");setTimeout(()=>{login.style.display="none";portal.classList.add("on");countUp()},450)},900)};
+function countUp(){document.querySelectorAll(".kpi .v").forEach(el=>{const n=+el.dataset.n,t0=performance.now();
+  const f=t=>{const k=Math.min(1,(t-t0)/1200);el.textContent=Math.round(n*(1-Math.pow(1-k,3))).toLocaleString("es-CL");if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
+
+/* ---- Buscador Ctrl+K ---- */
+const ALL=[];const walk=(arr,path)=>arr.forEach(x=>typeof x==="string"?ALL.push([x,path]):Object.entries(x).forEach(([h,l])=>walk(l,path+" › "+h)));
+for(const [top,g] of Object.entries(MENU))for(const [n,l] of Object.entries(g))walk(l,top+" › "+n);
+let sel=0;
+function render(){const v=q.value.trim().toLowerCase();const r=ALL.filter(([n,p])=>(n+p).toLowerCase().includes(v)).slice(0,9);
+  res.innerHTML=(v?`<li class="${sel===0?"sel":""}"><span>🔎 Buscar equipo OLT: <b>${q.value}</b></span><small>Nombre o IP</small></li>`:"")+
+  r.map(([n,p],i)=>`<li class="${sel===i+(v?1:0)?"sel":""}"><span>${n}</span><small>${p}</small></li>`).join("")}
+const openPal=()=>{pal.classList.add("on");q.value="";sel=0;render();setTimeout(()=>q.focus(),20)};
+document.getElementById("openPal").onclick=openPal;
+pal.onclick=e=>{if(e.target===pal)pal.classList.remove("on")};
+q.oninput=()=>{sel=0;render()};
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"&&portal.classList.contains("on")){e.preventDefault();openPal()}
+  if(!pal.classList.contains("on"))return;
+  const n=res.children.length;
+  if(e.key==="Escape")pal.classList.remove("on");
+  if(e.key==="ArrowDown"){sel=(sel+1)%n;render()} if(e.key==="ArrowUp"){sel=(sel-1+n)%n;render()}
+});
+
+/* ---- Fondo: fibras con pulsos de luz ---- */
+const cv=document.getElementById("fx"),cx=cv.getContext("2d");let W,H,fibers=[];
+const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function size(){W=cv.width=innerWidth*devicePixelRatio;H=cv.height=innerHeight*devicePixelRatio;
+  fibers=Array.from({length:26},(_,i)=>({y:H*(.55+i*.018),a:H*(.05+Math.random()*.12),f:1.2+Math.random()*1.4,ph:Math.random()*6,s:.0004+Math.random()*.0006,
+    hue:Math.random()<.18?28:215,pulses:Array.from({length:2},()=>({x:Math.random(),v:.0015+Math.random()*.003}))}))}
+const Y=(fb,x,t)=>fb.y+fb.a*Math.sin(x*fb.f*Math.PI+fb.ph+t*fb.s)-x*H*.35;
+function draw(t){cx.clearRect(0,0,W,H);
+  for(const fb of fibers){cx.beginPath();for(let i=0;i<=60;i++){const x=i/60;cx.lineTo(x*W,Y(fb,x,t))}
+    cx.strokeStyle=`hsla(${fb.hue},90%,65%,.14)`;cx.lineWidth=devicePixelRatio;cx.stroke();
+    for(const p of fb.pulses){p.x+=still?0:p.v;if(p.x>1.1)p.x=-.1;
+      const px=p.x*W,py=Y(fb,p.x,t),g=cx.createRadialGradient(px,py,0,px,py,14*devicePixelRatio);
+      g.addColorStop(0,`hsla(${fb.hue},100%,75%,.95)`);g.addColorStop(1,"transparent");cx.fillStyle=g;cx.beginPath();cx.arc(px,py,14*devicePixelRatio,0,7);cx.fill()}}
+  if(!still)requestAnimationFrame(draw)}
+addEventListener("resize",size);size();requestAnimationFrame(draw);
+</script>
+</body>
+</html>

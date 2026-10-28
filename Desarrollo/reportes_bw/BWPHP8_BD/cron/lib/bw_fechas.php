@@ -2,7 +2,7 @@
 /**
  * Fechas del reporte. Semanas de lunes a domingo; la semana 1 de un año es la que
  * contiene el 1 de enero (ej: 2026 parte el lunes 29-12-2025 y 2027 el lunes 28-12-2026).
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 
 function bw_nombre_mes($mes)

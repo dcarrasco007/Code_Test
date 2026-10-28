@@ -28,8 +28,9 @@ BWPHP8_BD/
 │   ├── 01_crear_tabla_OLT_REPORTE_BW_ANUAL.sql   Crear la tabla (una vez)
 │   └── 02_carga_inicial_2026_hasta_W42.sql       Carga inicial desde "Capacidades OLTs Octubre 2026 W-42.xlsx"
 ├── cron/                         → servidor de cron: /var/www/procesos/php/BWPHP8/
-│   ├── cron_reporte_bw_anual.php
-│   ├── lib/  bw_config.php bw_fechas.php bw_datos.php bw_anual.php
+│   ├── cron_reporte_bw_anual.php             Etapa 1: agrega la semana a OLT_REPORTE_BW_ANUAL
+│   ├── cron_carga_bw_bd.php                  Etapa 2: carga OLT_CAPACIDAD_BW* (sección 9)
+│   ├── lib/  bw_config.php bw_fechas.php bw_datos.php bw_anual.php  bw_carga_bd.php (solo cron)
 │   └── logs/
 └── web/Capacidad_BW_Excel/       → servidor web: /var/www/html/Capacidad_BW_Excel/
     ├── index_reporte_bw_semanal.php     Ventana (selector de semana)
@@ -144,9 +145,52 @@ No usar `php -f archivo --anio=...` (PHP toma `--anio` como opción propia). Log
 - Alertas W-43: 99,5 %, día sin registro, cambio de capacidad y 2 OLTs nuevas.
 - Excel W-43 abierto en Excel: sin reparación, colores, combinaciones y fórmulas correctas.
 
-## 9. Pendientes
+## 9. Etapa 2: carga de `OLT_CAPACIDAD_BW*` (servidor de cron, solo BD)
 
-- Etapa 2 (carga de `OLT_CAPACIDAD_BW`, `_MES`, `_YEAR` y hermanas) con la nueva arquitectura.
+Archivos: `cron/cron_carga_bw_bd.php` + `cron/lib/bw_carga_bd.php` (solo en el servidor de cron; no se copia a la web).
+Reemplaza a la etapa 2 en disco (`contingencia/OLT/Capacidad_BW_Excel/cron_carga_bw_bd.php`, PHP 5.3): **desactivar
+ese cron** al activar este, para no cargar dos veces. Ya no se guardan Excel en `Archivos/Semana*|Mes*|Year*`.
+
+| Tipo | Tablas | Período | Cron sugerido |
+|---|---|---|---|
+| `--tipo=semana` | `OLT_CAPACIDAD_BW`, `_EQUIFIBER`, `_ONNET` | semana anterior (`week`, `year`) | lunes 04:30 (después de la etapa 1, 04:00) |
+| `--tipo=anio` | `OLT_CAPACIDAD_BW_YEAR*` | año del reporte (`year`) | lunes 04:45; solo carga si la semana anterior cierra el año |
+| `--tipo=mes` | `OLT_CAPACIDAD_BW_MES*` | mes calendario anterior (`mes` 2 dígitos, `year`) | día 1, 05:00 |
+
+```bash
+30 4 * * 1 php /var/www/procesos/php/BWPHP8/cron_carga_bw_bd.php --tipo=semana > /var/www/procesos/php/BWPHP8/logs/cron_carga_semana.log 2>&1
+45 4 * * 1 php /var/www/procesos/php/BWPHP8/cron_carga_bw_bd.php --tipo=anio   > /var/www/procesos/php/BWPHP8/logs/cron_carga_anio.log 2>&1
+0 5 1 * *  php /var/www/procesos/php/BWPHP8/cron_carga_bw_bd.php --tipo=mes    > /var/www/procesos/php/BWPHP8/logs/cron_carga_mes.log 2>&1
+```
+Opciones: `--anio --semana | --mes`, `--red=nacional,equifiber,onnet`, `--simular`, `--comparar` (compara con lo que
+ya está en la tabla, no escribe), `--csv=/carpeta`, `--datos=prueba.json`. Log: `logs/log_carga_bw_bd.log`.
+
+- **Formato** (igual que la subida manual `model/carga_excel*.php`): cada columna del Excel es una fila de la tabla,
+  celdas en los campos `1`..`162` (A PE-com, B promedio del tráfico del PE en el período, C capacidad PE, D OLT, y
+  por día Tráfico / Capacidad / % Uplink). Se reemplaza el período completo (DELETE + INSERT en transacción).
+- **Nacional:** desde `OLT_REPORTE_BW_ANUAL` (orden, grupos y C de la tabla; OLTs agregadas hasta el último día del
+  período). Los días que aún no estén en la tabla (ej: el mes se carga el día 1 y la última semana se cierra el lunes
+  siguiente) se completan desde `OLT_TRAFICO_PEAK_DAY` con las mismas reglas; se avisa en el log. Para diciembre, si
+  el año siguiente aún no tiene filas, se usa la estructura del año anterior.
+- **EQUIFIBER / ONNET:** desde `OLT_TRAFICO_PEAK_DAY` (OLT_SERVER_V2 / lista `bw_olts_onnet()`), con sus formatos
+  (`bw_redes()`: PE sin Ñ, día con 2 dígitos, dobles espacios históricos).
+- **Validación local:** Nacional desde la tabla vs la etapa 2 anterior desde el Excel W-42 original: idénticos en las
+  semanas 1, 9, 10, 20, 30, 41, 42 y los meses enero a septiembre. EQUIFIBER/ONNET idénticos a la versión anterior
+  con los mismos datos. Octubre con 13 días faltantes completados desde tráfico, recarga sin duplicar, `--comparar`
+  con 0 diferencias tras cargar, y carga anual omitida cuando la semana no cierra el año.
+
+**Servidores:** 121 = procesos sin contenedor, PHP 8.0 (etapa 1, `cron/cron_reporte_bw_anual.php`); 120 = portal
+contingencia_v3 en contenedor podman, **PHP 5.5** (ventana web + etapa 2); 181 = portal contingencia, PHP 5.3.
+
+**Despliegue definitivo de la etapa 2:** en el servidor 120, dentro del contenedor podman del portal, con
+`etapa2_portal/v3_120/Capacidad_BW_Excel/cron_carga_bw_bd.php` (además de cargar la BD deja el Excel en `Archivos/`).
+Los links "Descargar Archivo" del 120 y del 181 usan `descargar_excel_bw.php`: entregan el Excel de la carpeta o lo
+arman desde `OLT_CAPACIDAD_BW*`. Detalle, crontab con `podman exec` y validación en
+`etapa2_portal/LEEME_ETAPA2_PORTAL.md`. La versión de `cron/` (servidor de procesos, sin Excel) queda como
+alternativa: no correr las dos.
+
+## 10. Pendientes
+
 - En la carga inicial, 18 celdas (capacidad de DURZUA-13/14/15 del 12 al 14-10) quedaron en 0 como en el
   archivo "W-42"; el archivo "Act - Act" las tenía con su capacidad. Si se quiere esa versión:
   `UPDATE OLT_REPORTE_BW_ANUAL SET capacidad = 30000 WHERE anio = 2026 AND olt IN ('OLT-DURZUA-14','OLT-DURZUA-15') AND fecha BETWEEN '2026-10-12' AND '2026-10-14';`

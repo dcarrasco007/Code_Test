@@ -15,7 +15,7 @@ date_default_timezone_set('America/Santiago');
  *   0 4 * * 1 php /var/www/procesos/php/BWPHP8/cron_reporte_bw_anual.php > /var/www/procesos/php/BWPHP8/logs/cron.log 2>&1
  * No usar "php -f archivo --anio=..." (PHP toma --anio como opción propia).
  *
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 if (php_sapi_name() != 'cli') {
     header('HTTP/1.0 403 Forbidden');

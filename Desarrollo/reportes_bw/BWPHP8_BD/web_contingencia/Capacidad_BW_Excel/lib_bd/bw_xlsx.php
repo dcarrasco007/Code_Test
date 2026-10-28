@@ -9,7 +9,7 @@
  *   A: PE-com, B: Tráfico PE, C: Capacidad PE, D: OLT (A/B/C combinadas por grupo de PE)
  *   desde E, 3 columnas por día: Tráfico, Capacidad, % Uplink (=+Tráfico/Capacidad)
  *
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 
 function bw_col_num($letras)

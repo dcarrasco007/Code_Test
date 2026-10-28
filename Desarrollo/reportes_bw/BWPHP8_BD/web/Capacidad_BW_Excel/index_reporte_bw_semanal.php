@@ -3,7 +3,7 @@
  * Ventana del reporte BW semanal: selector de semana, botones de descarga (el Excel se arma desde
  * OLT_REPORTE_BW_ANUAL al presionarlos) y alertas de la semana.
  * Se carga desde el menú: $(".contenido").load('../Capacidad_BW_Excel/index_reporte_bw_semanal.php');
- * PHP 8.0 - contingencia_v3.
+ * Servidor 120: contenedor podman con PHP 5.5 (contingencia_v3).
  */
 //$idPag = 'informe_capacidad_bw';
 if (file_exists(__DIR__ . '/../perfiles/getPerfiles.php')) {

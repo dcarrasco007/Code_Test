@@ -4,7 +4,7 @@
  *   descarga_reporte_bw.php?anio=2026&semana=42&archivo=semana  -> "Capacidades OLTs Octubre 2026 W-42.xlsx"
  *   descarga_reporte_bw.php?anio=2026&semana=42&archivo=act     -> "Capacidades OLTs Octubre 2026 Act - Act.xlsx"
  * Ambos tienen el mismo contenido: el año hasta el domingo de la semana indicada.
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 set_time_limit(300);
 ini_set('memory_limit', '1024M');

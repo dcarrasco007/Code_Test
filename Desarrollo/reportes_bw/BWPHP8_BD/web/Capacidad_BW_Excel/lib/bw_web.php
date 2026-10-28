@@ -1,12 +1,13 @@
 <?php
 /**
- * Inicialización común de las páginas web del reporte BW anual (contingencia_v3, PHP 8.0).
+ * Inicialización común de las páginas web del reporte BW anual y del cron de la etapa 2
+ * (contingencia_v3, servidor 120: contenedor podman con PHP 5.5).
  */
 if (!defined('BW_CONEXION')) {
-    // Se usa el primer archivo que exista. En contingencia_v3 el módulo está en /var/www/html/Capacidad_BW_Excel
-    // y la conexión en /var/www/html/conexion/conexion_db.php (un nivel sobre el módulo).
+    // Se usa el primer archivo que exista. En contingencia_v3 la conexión está un nivel sobre el módulo
+    // (raíz del sitio/conexion/conexion_db.php). En el cron (CLI) no hay DOCUMENT_ROOT: vale la primera ruta.
     $bwCandidatos = array(
-        dirname(__DIR__, 2) . '/conexion/conexion_db.php',
+        dirname(dirname(__DIR__)) . '/conexion/conexion_db.php',
         (isset($_SERVER['DOCUMENT_ROOT']) ? rtrim($_SERVER['DOCUMENT_ROOT'], '/') : '') . '/conexion/conexion_db.php',
         '/var/www/html/conexion/conexion_db.php',
         '/var/www/conexion/conexion_db.php',

@@ -14,7 +14,7 @@
  *   - OLT nueva: se agrega al final de su grupo de PE-com (o en un grupo nuevo al final);
  *     sus días anteriores del año quedan en 0 con la capacidad obtenida esa semana.
  *   - Columna C (cap_pe): se mantiene; solo para un PE-com nuevo se calcula la suma de sus OLTs.
- * PHP 8.0.
+ * Compatible con PHP 5.3+ y 8.0 (121 procesos: 8.0, 120 contenedor v3: 5.5, 181 contingencia: 5.3).
  */
 require_once __DIR__ . '/bw_config.php';
 require_once __DIR__ . '/bw_fechas.php';
