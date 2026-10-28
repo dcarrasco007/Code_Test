@@ -1,11 +1,13 @@
 ---
 tipo: pendiente
 proyecto: GERET
-estado: pendiente
+estado: cron listo para instalar
 equipo: nuestro
+contenedor: portal-php53
 origen: servidor 181 (cron eliminado)
 destino: servidor 120 (portal en contenedor podman)
-script: /var/www/html/contingencia/OLT/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php
+script_181: /var/www/html/contingencia/OLT/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php
+script_120: /var/www/html/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php
 creado: 2026-10-27
 tags: [geret, cron, podman, migracion, pendiente, nuestro, onnet, ont]
 ---
@@ -25,6 +27,96 @@ El siguiente cron **fue eliminado del servidor 181** y hay que migrarlo al **ser
 En el 120 el portal (y el Portal OLT) corre **dentro de un contenedor podman**. Hay que revisar:
 1. Si se puede agregar el cron en el servidor.
 2. Que el cron actualice los archivos que ve el portal **sin botar el contenedor**.
+
+## Revisión del servidor 120 (2026-10-28)
+
+| Dato | Resultado | Consecuencia |
+|---|---|---|
+| Contenedor | `portal-php53` (imagen `localhost/portal-php53_php53:latest`), arriba hace 2 meses, puerto `8080→80` | Es el nombre que va en el cron. |
+| Podman | **rootless**, usuario `reyt_dcarrasco` | El cron va en el crontab de `reyt_dcarrasco` y necesita `XDG_RUNTIME_DIR`. |
+| Linger | `Linger=yes` | El contenedor y podman siguen activos sin sesión abierta: el cron funciona aunque nadie esté conectado. |
+| Volumen | Host `/var/www/Contenedor/portal-php53/www` → contenedor `/var/www/html` | **Todo el sitio web es un volumen**: los CSV **persisten** aunque se recree el contenedor y el código se puede editar directo en el host. **La fase 2 (volumen) no hace falta y no se necesita `podman cp`.** |
+| PHP | **5.5.9** (Ubuntu) con `mysqli`, `zip` y `dom` | Las funciones `mysql_*` todavía existen en 5.5 (obsoletas): **el script corre sin cambios**. Falta confirmar que la extensión `mysql` esté cargada (el `grep` buscó `mysqli`). |
+| Web | `apache2` como `www-data` | Ejecutar el cron con `--user www-data`, como `cron_carga_bw_bd.php`, para que los CSV queden con el mismo dueño que el resto del portal. |
+| BD | `cron_carga_bw_bd.php` se conectó bien a la BD desde el contenedor | Hay salida a la BD desde el 120. Confirmar con la prueba manual que también llega a `$host144_geret`. |
+| Estructura | En el 120 **no existe `contingencia/OLT/`**: el portal está directo en `/var/www/html` (copia local: `C:\laragon\www\contingencia_v3`) | Rutas nuevas: script en `/var/www/html/ONNET/Reporte_ONNET_ONT/`, conexión en `/var/www/html/conexion/conexion_db.php`, salida en `/var/www/html/ONNET/Reporte_ONNET_ONT/Archivos/{ONNET,EQUIFIBER}/` (las mismas que leen `ONT/Respaldo_ONT/*` y `unir_archivos.php` en `contingencia_v3`). |
+
+**Conclusión:** se usa la **opción A** (cron del host + `podman exec`), sin botar el contenedor, con un **script nuevo** que tiene las rutas del 120 y usa `mysqli`.
+
+## Script nuevo
+
+Archivo: [respaldo_reporte_ont.php](respaldo_reporte_ont.php) (en esta carpeta). Se basa en la versión de `contingencia_v3`, que ya incluye la columna `version_sw` → `SOFTWARE_VERSION`.
+
+| Cambio | Detalle |
+|---|---|
+| `mysql_*` → `mysqli` | Compatible con PHP 5.5 (el del contenedor) y con PHP 7/8 si el portal se actualiza. |
+| Rutas del 120 | `/var/www/html/conexion/conexion_db.php` y `/var/www/html/ONNET/Reporte_ONNET_ONT/Archivos/`. |
+| Mismo CSV | Mismas columnas, mismo orden (`…;MODELO;SOFTWARE_VERSION;FECHA_REGISTRO`), separador `;` y mismo nombre `Export_Info_ONT_<RED>_YYYYMMDD_HHMMSS.csv`. Las pantallas y `unir_archivos.php` no se tocan. |
+| Menos memoria | Lee y escribe fila a fila (`MYSQLI_USE_RESULT`); baja de 2048M a 512M. |
+| Archivo completo o nada | Escribe a `.csv.tmp` y renombra al terminar: el portal nunca lista un CSV a medias. |
+| Log con fecha y hora | Cada línea con fecha, cantidad de filas, duración y errores; código de salida 1 si algo falla. |
+| Solo por consola | Si alguien lo abre por URL responde 403. |
+| Opciones | `--red=onnet` o `--red=equifiber` para exportar solo una; `--retencion=90` para borrar CSV de más de N días (**desactivado por defecto**). |
+| Zona horaria | Fija `America/Santiago`, igual que `cron_carga_bw_bd.php`. |
+
+Revisado con `php -l` (sin errores de sintaxis). **No se probó contra la BD**: la primera prueba es la manual del paso 4 de abajo.
+
+## Cronjob para el servidor 120
+
+En el crontab de **`reyt_dcarrasco`** (`crontab -e`), reemplazando `<UID>` por el resultado de `id -u`. Si ya existe la línea `XDG_RUNTIME_DIR` (por los cron de Capacidad BW), no repetirla:
+
+```cron
+# Necesario para podman rootless desde cron (afecta a todas las líneas de este crontab)
+XDG_RUNTIME_DIR=/run/user/<UID>
+
+# GERET — Respaldo reporte ONT ONNET/EQUIFIBER (migrado desde el 181 el 2026-10-28)
+50 14 * * * /usr/bin/podman exec --user www-data portal-php53 php /var/www/html/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php >> $HOME/logs/geret/respaldo_reporte_ont.log 2>&1
+```
+
+- `/usr/bin/podman`: confirmar con `which podman`.
+- El log queda en el host, **fuera de la carpeta web** (antes quedaba accesible por URL) y se acumula con `>>` en vez de pisarse.
+- Confirmar la carpeta personal con `echo $HOME` y ajustar la ruta del log si es distinta.
+
+### Instalación paso a paso
+
+Como `/var/www/html` es un volumen, el script se copia **en el host** y el contenedor lo ve al instante. Ruta en el host: `/var/www/Contenedor/portal-php53/www/ONNET/Reporte_ONNET_ONT/`.
+
+```bash
+# 1. Datos para el cron
+id -u
+which podman
+mkdir -p ~/logs/geret
+
+# 2. Confirmar rutas en el contenedor (conexión, carpeta del script y carpetas de salida)
+podman exec portal-php53 ls -l /var/www/html/conexion/conexion_db.php /var/www/html/ONNET/Reporte_ONNET_ONT/
+podman exec portal-php53 ls -ld /var/www/html/ONNET/Reporte_ONNET_ONT/Archivos/ONNET \
+                                /var/www/html/ONNET/Reporte_ONNET_ONT/Archivos/EQUIFIBER
+
+# 3. Respaldar el script actual (si existe) y copiar el nuevo desde tu equipo al host
+cd /var/www/Contenedor/portal-php53/www/ONNET/Reporte_ONNET_ONT/
+cp -p respaldo_reporte_ont.php respaldo_reporte_ont.php.bak_20261028
+#   (subir respaldo_reporte_ont.php con scp/WinSCP a esta carpeta)
+
+# 4. Prueba manual como www-data (genera los 2 CSV de hoy)
+podman exec --user www-data portal-php53 php /var/www/html/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php
+ls -lt /var/www/Contenedor/portal-php53/www/ONNET/Reporte_ONNET_ONT/Archivos/ONNET | head -3
+head -2 /var/www/Contenedor/portal-php53/www/ONNET/Reporte_ONNET_ONT/Archivos/ONNET/Export_Info_ONT_ONNET_$(date +%Y%m%d)_*.csv
+
+# 5. Prueba con el entorno vacío, como lo ve cron
+env -i XDG_RUNTIME_DIR=/run/user/$(id -u) /usr/bin/podman exec --user www-data portal-php53 php -v
+
+# 6. Respaldar el crontab actual y agregar la línea
+crontab -l > ~/crontab_respaldo_20261028.txt
+crontab -e
+```
+
+- Si el paso 2 o el 4 dicen que `www-data` no puede escribir en `Archivos/`, corregir permisos **en el host** (`/var/www/Contenedor/portal-php53/www/ONNET/Reporte_ONNET_ONT/Archivos/`), sin tocar el contenedor.
+- Si el paso 4 da `ERROR conexión BD`, revisar que `conexion_db.php` del 120 tenga definidas `$host144_geret`, `$user144_geret` y `$pass144_geret`.
+
+### Después de instalarlo
+
+- [ ] Al día siguiente, después de las 14:50: `tail ~/logs/geret/respaldo_reporte_ont.log` y revisar que estén los CSV del día.
+- [ ] Descargar un CSV desde las pantallas `Respaldo_ONT` del portal.
 
 ## Qué hace el script
 
@@ -85,7 +177,10 @@ Las pantallas del portal **listan y descargan** los CSV desde esa misma carpeta,
 - **Fase 1 (sin botar el contenedor):** cron con `podman exec`; los CSV quedan en la capa del contenedor. Opcional: copiarlos también al host como respaldo con `podman cp`.
 - **Fase 2 (en una ventana programada):** recrear el contenedor montando `.../Reporte_ONNET_ONT/Archivos` como volumen del host, para que los CSV sobrevivan a cualquier actualización. Si `/var/www/html` ya es un volumen, esta fase no hace falta.
 
-## Plan paso a paso
+## Plan paso a paso (genérico, anterior a la revisión del 120)
+
+> [!warning] Obsoleto (2026-10-28)
+> Este plan se escribió antes de revisar el servidor 120 y usa las rutas del 181 (`contingencia/OLT/...`). **El que vale es [[#Instalación paso a paso]]**, con las rutas del 120 y el script nuevo. Se deja solo como referencia.
 
 ### Paso 0 — Revisar el servidor 120 (solo lectura)
 
@@ -222,7 +317,10 @@ Las pantallas del portal **listan y descargan** los CSV desde esa misma carpeta,
 
 ## Decisiones pendientes
 
-- [ ] ¿Quién tiene acceso para editar el crontab del 120 y con qué usuario corre podman?
+- [x] ¿Con qué usuario corre podman? → `reyt_dcarrasco`, rootless, con linger activo.
+- [x] ¿Fase 2 (volumen)? → **No hace falta**: `/var/www/html` ya es volumen del host.
+- [x] ¿Adaptar el script a `mysqli`? → **Sí**: script nuevo con `mysqli` y rutas del 120 (2026-10-28).
+- [ ] ¿Se activa `--retencion` en el cron? ¿Cuántos días?
 - [ ] Retención de los CSV (¿90 días?).
 - [ ] ¿Se copian los históricos del 181?
 - [ ] ¿Se programa la fase 2 (volumen para `Archivos/`)?
