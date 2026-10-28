@@ -14,6 +14,23 @@
  */
 set_time_limit(300);
 ini_set('memory_limit', '1024M');
+
+// Si PHP termina con un error fatal (con display_errors apagado el navegador solo muestra
+// ERR_HTTP_RESPONSE_CODE_FAILURE), se muestra el error para poder corregirlo
+function bw_descarga_fatal()
+{
+    $e = error_get_last();
+    if ($e && in_array($e['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR))) {
+        if (!headers_sent()) {
+            header('HTTP/1.0 500 Internal Server Error');
+            header('Content-Type: text/html; charset=utf-8');
+        }
+        echo '<p style="font-family:sans-serif;margin:30px">No se pudo descargar el archivo (error de PHP ' . PHP_VERSION . '): '
+            . htmlspecialchars($e['message'] . ' en ' . basename($e['file']) . ':' . $e['line'], ENT_QUOTES | ENT_IGNORE, 'UTF-8')
+            . '</p><p style="font-family:sans-serif;margin:30px"><a href="javascript:history.back()">Volver</a></p>';
+    }
+}
+register_shutdown_function('bw_descarga_fatal');
 $bwLib = is_dir(dirname(__FILE__) . '/lib_bd') ? dirname(__FILE__) . '/lib_bd' : dirname(__FILE__) . '/lib';
 require_once $bwLib . '/bw_web.php';
 require_once $bwLib . '/bw_excel_periodo.php';

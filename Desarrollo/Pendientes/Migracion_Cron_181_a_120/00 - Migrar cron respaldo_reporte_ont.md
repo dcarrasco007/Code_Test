@@ -1,7 +1,7 @@
 ---
 tipo: pendiente
 proyecto: GERET
-estado: cron listo para instalar
+estado: ok
 equipo: nuestro
 contenedor: portal-php53
 origen: servidor 181 (cron eliminado)
@@ -9,12 +9,23 @@ destino: servidor 120 (portal en contenedor podman)
 script_181: /var/www/html/contingencia/OLT/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php
 script_120: /var/www/html/ONNET/Reporte_ONNET_ONT/respaldo_reporte_ont.php
 creado: 2026-10-27
-tags: [geret, cron, podman, migracion, pendiente, nuestro, onnet, ont]
+cerrado: 2026-10-28
+tags: [geret, cron, podman, migracion, nuestro, onnet, ont, ok]
 ---
 
 # Migrar cron `respaldo_reporte_ont.php` del 181 al 120 (podman)
 
 Volver a [[00 - Pendientes GERET]]
+
+> [!success] OK — instalado y funcionando en el 120 (2026-10-28)
+> Script nuevo (`mysqli`, rutas del 120) y cron instalados en el crontab de `reyt_dcarrasco`. Primera ejecución, según `$HOME/logs/geret/respaldo_reporte_ont.log`:
+>
+> | Red | Archivo | Filas |
+> |---|---|---|
+> | ONNET | `Archivos/ONNET/Export_Info_ONT_ONNET_20261028_153902.csv` | 203.349 |
+> | EQUIFIBER | `Archivos/EQUIFIBER/Export_Info_ONT_EQUIFIBER_20261028_153912.csv` | 115.768 |
+>
+> Duración total 13,7 s, 0 errores. Quedan abiertas solo las decisiones menores de [[#Decisiones pendientes]] (retención, históricos del 181).
 
 ## Pendiente
 
@@ -323,5 +334,6 @@ Las pantallas del portal **listan y descargan** los CSV desde esa misma carpeta,
 - [ ] ¿Se activa `--retencion` en el cron? ¿Cuántos días?
 - [ ] Retención de los CSV (¿90 días?).
 - [ ] ¿Se copian los históricos del 181?
-- [ ] ¿Se programa la fase 2 (volumen para `Archivos/`)?
+- [x] ¿Se programa la fase 2 (volumen para `Archivos/`)? → No aplica: `/var/www/html` ya es volumen.
+- [x] Instalación y prueba en el 120 → **OK** el 2026-10-28 (ONNET 203.349 filas, EQUIFIBER 115.768, 13,7 s).
 - [ ] ¿Hay otros crons del 181 que también deban pasar al 120? Revisar el crontab completo del 181 contra el del 120.
