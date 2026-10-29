@@ -1,0 +1,4 @@
+OLT_INFO_ONT_PRUEBA.onu_general_vas_profile -> OLT_INFORMACION_ONT_DETALLE_COMPLETO
+
+proceso_data_V4.php -> carga: OLT_INFORMACION_ONT_DETALLE_COMPLETO
+
