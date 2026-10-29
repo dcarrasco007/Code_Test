@@ -94,14 +94,25 @@ foreach ($csvFiles as $csvFile) {
             }
         }
                 $var=0;
-                $inserta="INSERT INTO OLT_INFO_ONT_PRUEBA (equipo,fn,sn,pn,onu,name,alias,serial_number,line_profile,terminal_type,service_profile,onu_general_vas_profile) 
+                if(!empty($data1)){
+                $inserta="INSERT INTO OLT_INFO_ONT_PRUEBA (equipo,fn,sn,pn,onu,name,alias,serial_number,line_profile,terminal_type,service_profile,onu_general_vas_profile)
                 VALUES".implode(",",$data1);
                 $insert=$mysqli->query($inserta);
+                }
                 unset($data1);
         fclose($handle);
     } else {
         echo "No se pudo abrir el archivo: $csvFile\n";
     }
+}
+
+// Actualizar VAS Profile en OLT_INFORMACION_ONT_DETALLE_COMPLETO (equipo/frame/slot/port/onu); sin coincidencia -> "--"
+$update_vas="UPDATE OLT_INFORMACION_ONT_DETALLE_COMPLETO d
+    LEFT JOIN OLT_INFO_ONT_PRUEBA p
+        ON p.equipo=d.equipo AND p.fn=d.frame_id AND p.sn=d.slot_id AND p.pn=d.port_id AND p.onu=d.onu_id
+    SET d.vas_profile=COALESCE(NULLIF(TRIM(p.onu_general_vas_profile),''),'--')";
+if(!$mysqli->query($update_vas)){
+    error_log("Error update vas_profile: ".$mysqli->error);
 }
 
 // Limpiar los archivos descomprimidos
