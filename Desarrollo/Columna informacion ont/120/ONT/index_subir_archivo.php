@@ -34,7 +34,8 @@ if (isset($_GET['stats'])) {
         $stats['top_vas'][] = array('nombre' => $row[0], 'cantidad' => (int)$row[1]);
     }
 
-    $r = mysql_query("SELECT UPDATE_TIME FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'Aden' AND TABLE_NAME = 'OLT_INFO_ONT_PRUEBA'");
+    // fecha_registro se llena sola (DEFAULT CURRENT_TIMESTAMP) en cada INSERT de submit_ONT_zip.php
+    $r = mysql_query("SELECT MAX(fecha_registro) FROM OLT_INFO_ONT_PRUEBA");
     $row = $r ? mysql_fetch_array($r, MYSQL_NUM) : null;
     $stats['ultima_carga'] = $row && $row[0] ? date('d-m-Y H:i', strtotime($row[0])) : null;
 
@@ -304,7 +305,7 @@ if (isset($_GET['stats'])) {
         $id('ozu-file').className = 'ozu-file' + (f ? ' is-visible' : '');
         if (f) {
             $id('ozu-file-name').textContent = f.name;
-            $id('ozu-file-meta').textContent = fmtSize(f.size) + ' · listo para subir';
+            $id('ozu-file-meta').textContent = fmtSize(f.size) + ' \u00b7 listo para subir';
         }
         btn.disabled = !f;
         resetSteps();
@@ -312,7 +313,7 @@ if (isset($_GET['stats'])) {
     function lock(on) {
         running = on;
         btn.disabled = on || !input.files.length;
-        btn.textContent = on ? 'Procesando…' : 'Subir y actualizar';
+        btn.textContent = on ? 'Procesando\u2026' : 'Subir y actualizar';
         drop.className = 'ozu-drop' + (on ? ' is-disabled' : '');
         $id('ozu-clear').style.visibility = on ? 'hidden' : 'visible';
     }
@@ -431,7 +432,7 @@ if (isset($_GET['stats'])) {
         xhr.send();
     }
     function statsError() {
-        ['ozu-last', 'ozu-k-ont', 'ozu-k-eq', 'ozu-k-det', 'ozu-k-vas'].forEach(function (id) { $id(id).textContent = '–'; });
+        ['ozu-last', 'ozu-k-ont', 'ozu-k-eq', 'ozu-k-det', 'ozu-k-vas'].forEach(function (id) { $id(id).textContent = '\u2013'; });
         $id('ozu-top').innerHTML = '<li class="ozu-empty">No se pudo leer el resumen.</li>';
     }
 
