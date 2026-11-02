@@ -165,25 +165,18 @@ if (isset($_GET['stats'])) {
     <div class="ozu-grid">
         <div>
             <div class="ozu-card">
-                <h2>Subir archivo <small>Solo .zip</small></h2>
+                <h2>Subir archivos <small id="ozu-count">0 de 2 archivos .zip</small></h2>
 
                 <label class="ozu-drop" id="ozu-drop" for="fileToUpload">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>
                     </svg>
-                    <strong>Arrastra el archivo aqu&iacute; o haz clic para seleccionarlo</strong>
-                    <span>Archivo .zip con los CSV de ONU GPON (por ejemplo All_GPON_ONU.csv)</span>
-                    <input id="fileToUpload" type="file" name="fileToUpload" accept=".zip" />
+                    <strong>Arrastra los 2 archivos .zip aqu&iacute; o haz clic para seleccionarlos</strong>
+                    <span>Reportes All GPON ONU de OnNet y EQF. Las columnas de cada CSV se reconocen por su encabezado.</span>
+                    <input id="fileToUpload" type="file" name="fileToUpload" accept=".zip" multiple />
                 </label>
 
-                <div class="ozu-file" id="ozu-file">
-                    <div class="ozu-file-ico">ZIP</div>
-                    <div class="ozu-file-info">
-                        <div class="ozu-file-name" id="ozu-file-name"></div>
-                        <div class="ozu-file-meta" id="ozu-file-meta"></div>
-                    </div>
-                    <button type="button" class="ozu-x" id="ozu-clear" title="Quitar archivo">&times;</button>
-                </div>
+                <div id="ozu-files"></div>
 
                 <div class="ozu-actions">
                     <button type="button" class="ozu-btn" id="envio" disabled>Subir y actualizar</button>
@@ -194,8 +187,8 @@ if (isset($_GET['stats'])) {
                     <li class="ozu-step" data-step="1">
                         <div class="ozu-step-n">1</div>
                         <div>
-                            <div class="ozu-step-t">Subida del archivo</div>
-                            <div class="ozu-step-d">Transferencia del .zip al servidor</div>
+                            <div class="ozu-step-t">Subida de archivos</div>
+                            <div class="ozu-step-d">Transferencia de los .zip al servidor</div>
                             <div class="ozu-bar"><i></i></div>
                         </div>
                         <div class="ozu-step-s">Pendiente</div>
@@ -204,7 +197,7 @@ if (isset($_GET['stats'])) {
                         <div class="ozu-step-n">2</div>
                         <div>
                             <div class="ozu-step-t">Procesamiento en servidor</div>
-                            <div class="ozu-step-d">Descompresi&oacute;n, carga de CSV y actualizaci&oacute;n de VAS Profile</div>
+                            <div class="ozu-step-d">Validaci&oacute;n de columnas, carga de CSV y actualizaci&oacute;n de VAS Profile</div>
                             <div class="ozu-bar is-indeterminate"><i></i></div>
                         </div>
                         <div class="ozu-step-s">Pendiente</div>
@@ -225,8 +218,9 @@ if (isset($_GET['stats'])) {
             <div class="ozu-card">
                 <h2>Qu&eacute; hace este proceso</h2>
                 <ol class="ozu-info">
-                    <li>Vac&iacute;a la tabla <code>OLT_INFO_ONT_PRUEBA</code> y descomprime el .zip en el servidor.</li>
-                    <li>Lee cada CSV y carga <b>equipo, frame, slot, port, ONU, nombre, serie, line/service profile y VAS profile</b>.</li>
+                    <li>Descomprime cada .zip en su propia carpeta (los CSV de OnNet y EQF tienen los mismos nombres).</li>
+                    <li>Revisa el encabezado de cada CSV y ubica las columnas <b>por nombre</b>: OnNet trae <i>Running Status</i> y <i>ONU Version</i> de m&aacute;s. Si a alg&uacute;n CSV le falta una columna se detiene sin modificar la base.</li>
+                    <li>Vac&iacute;a <code>OLT_INFO_ONT_PRUEBA</code> y carga de todos los CSV <b>equipo, frame, slot, port, ONU, nombre, serie, line/service profile y VAS profile</b>, comparando con el total informado por cada reporte.</li>
                     <li>Cruza por <b>equipo + frame + slot + port + ONU</b> contra la vista ONT Detalle y completa la columna <b>VAS Profile</b>. Si una ONT no est&aacute; en el archivo queda con <code>--</code>.</li>
                     <li>Elimina los archivos temporales del servidor.</li>
                 </ol>
@@ -295,31 +289,48 @@ if (isset($_GET['stats'])) {
     function showAlert(type, html) { alertB.className = 'ozu-alert is-' + type; alertB.innerHTML = html; }
     function hideAlert() { alertB.className = 'ozu-alert'; alertB.innerHTML = ''; }
 
-    function setFile(f) {
-        hideAlert();
-        if (f && !/\.zip$/i.test(f.name)) {
-            showAlert('err', 'El archivo <b>' + esc(f.name) + '</b> no es un .zip.');
-            f = null;
+    var MIN_ARCHIVOS = 2;
+    var archivos = [];
+
+    function pintarArchivos(estado) {
+        estado = estado || {};
+        $id('ozu-files').innerHTML = archivos.map(function (f, i) {
+            var meta = estado[i] || (fmtSize(f.size) + ' \u00b7 listo para subir');
+            return '<div class="ozu-file is-visible"><div class="ozu-file-ico">ZIP</div><div class="ozu-file-info">' +
+                   '<div class="ozu-file-name">' + esc(f.name) + '</div><div class="ozu-file-meta">' + esc(meta) + '</div></div>' +
+                   (running ? '' : '<button type="button" class="ozu-x" data-i="' + i + '" title="Quitar archivo">&times;</button>') + '</div>';
+        }).join('');
+        var falta = MIN_ARCHIVOS - archivos.length;
+        $id('ozu-count').textContent = archivos.length + ' de ' + MIN_ARCHIVOS + ' archivos .zip' + (falta > 0 ? '' : ' \u2713');
+        btn.disabled = running || falta > 0;
+    }
+    function agregarArchivos(lista) {
+        hideAlert(); resetSteps();
+        var rechazados = [];
+        for (var i = 0; i < lista.length; i++) {
+            var f = lista[i];
+            if (!/\.zip$/i.test(f.name)) { rechazados.push(f.name); continue; }
+            var dup = archivos.some(function (a) { return a.name === f.name && a.size === f.size; });
+            if (!dup) archivos.push(f);
         }
-        if (!f) { input.value = ''; }
-        $id('ozu-file').className = 'ozu-file' + (f ? ' is-visible' : '');
-        if (f) {
-            $id('ozu-file-name').textContent = f.name;
-            $id('ozu-file-meta').textContent = fmtSize(f.size) + ' \u00b7 listo para subir';
-        }
-        btn.disabled = !f;
-        resetSteps();
+        input.value = '';
+        if (rechazados.length) showAlert('err', 'Solo se aceptan archivos .zip: <b>' + rechazados.map(esc).join(', ') + '</b>');
+        pintarArchivos();
     }
     function lock(on) {
         running = on;
-        btn.disabled = on || !input.files.length;
         btn.textContent = on ? 'Procesando\u2026' : 'Subir y actualizar';
         drop.className = 'ozu-drop' + (on ? ' is-disabled' : '');
-        $id('ozu-clear').style.visibility = on ? 'hidden' : 'visible';
+        pintarArchivos(on ? estadoSubida : null);
     }
+    var estadoSubida = {};
 
-    input.addEventListener('change', function () { setFile(input.files[0]); });
-    $id('ozu-clear').addEventListener('click', function () { setFile(null); });
+    input.addEventListener('change', function () { agregarArchivos(input.files); });
+    $id('ozu-files').addEventListener('click', function (e) {
+        var i = e.target.getAttribute('data-i');
+        if (i === null || running) return;
+        archivos.splice(+i, 1); hideAlert(); resetSteps(); pintarArchivos();
+    });
     ['dragenter', 'dragover'].forEach(function (ev) {
         drop.addEventListener(ev, function (e) { e.preventDefault(); if (!running) drop.classList.add('is-over'); });
     });
@@ -328,42 +339,59 @@ if (isset($_GET['stats'])) {
     });
     drop.addEventListener('drop', function (e) {
         if (running || !e.dataTransfer.files.length) return;
-        var f = e.dataTransfer.files[0];
-        try { var dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; } catch (err) {}
-        setFile(f);
+        agregarArchivos(e.dataTransfer.files);
     });
     window.addEventListener('beforeunload', function (e) { if (running) { e.preventDefault(); e.returnValue = ''; } });
 
     btn.addEventListener('click', function () {
-        var f = input.files[0];
-        if (!f || running) return;
+        if (running || archivos.length < MIN_ARCHIVOS) return;
+        estadoSubida = {};
         lock(true); hideAlert(); resetSteps();
-        step(1, 'active', '0%');
+        var subidos = [], total = archivos.reduce(function (t, f) { return t + f.size; }, 0), previo = 0;
+        // Nombre unico en el servidor (ONT_aaaammddhhmmss_1.zip, _2.zip...) para que dos archivos con el mismo nombre no se pisen
+        var d = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+        var sello = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds());
 
-        var fd = new FormData();
-        fd.append('fileToUpload', f);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', UPLOAD_URL);
-        xhr.upload.onprogress = function (e) {
-            if (e.lengthComputable) { var p = Math.round(e.loaded / e.total * 100); setBar(p); step(1, 'active', p + '%'); }
-        };
-        xhr.onload = function () {
-            // doajaxfileupload10.php responde {error: '...', msg: 'subido correctamente || nombre.zip'}
-            var txt = xhr.responseText || '';
-            var err = (txt.match(/error:\s*'([^']*)'/) || [])[1] || '';
-            var msg = (txt.match(/msg:\s*'([^']*)'/) || [])[1] || '';
-            var parts = msg.split('||');
-            if (xhr.status !== 200 || err || parts.length < 2) {
-                return fail(1, 'No se pudo subir el archivo al servidor.', err || txt);
+        // Sube los .zip uno a uno con doajaxfileupload10.php y luego procesa todos juntos
+        (function subir(i) {
+            if (i === archivos.length) {
+                step(1, 'done', archivos.length + ' archivos \u00b7 ' + fmtSize(total));
+                return procesar(subidos);
             }
-            step(1, 'done', fmtSize(f.size));
-            procesar(parts[1].trim(), f.size);
-        };
-        xhr.onerror = function () { fail(1, 'Error de red al subir el archivo.'); };
-        xhr.send(fd);
+            var f = archivos[i];
+            step(1, 'active', (i + 1) + '/' + archivos.length + ' \u00b7 0%');
+            estadoSubida[i] = fmtSize(f.size) + ' \u00b7 subiendo\u2026'; pintarArchivos(estadoSubida);
+            var fd = new FormData();
+            fd.append('fileToUpload', f, 'ONT_' + sello + '_' + (i + 1) + '.zip');
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', UPLOAD_URL);
+            xhr.upload.onprogress = function (e) {
+                if (!e.lengthComputable) return;
+                var p = Math.round(e.loaded / e.total * 100);
+                setBar(Math.round((previo + f.size * e.loaded / e.total) / total * 100));
+                step(1, 'active', (i + 1) + '/' + archivos.length + ' \u00b7 ' + p + '%');
+            };
+            xhr.onload = function () {
+                // doajaxfileupload10.php responde {error: '...', msg: 'subido correctamente || nombre.zip'}
+                var txt = xhr.responseText || '';
+                var err = (txt.match(/error:\s*'([^']*)'/) || [])[1] || '';
+                var msg = (txt.match(/msg:\s*'([^']*)'/) || [])[1] || '';
+                var parts = msg.split('||');
+                if (xhr.status !== 200 || err || parts.length < 2) {
+                    estadoSubida[i] = 'error al subir'; pintarArchivos(estadoSubida);
+                    return fail(1, 'No se pudo subir ' + esc(f.name) + ' al servidor.', err || txt);
+                }
+                subidos.push(parts[1].trim());
+                previo += f.size;
+                estadoSubida[i] = fmtSize(f.size) + ' \u00b7 subido'; pintarArchivos(estadoSubida);
+                subir(i + 1);
+            };
+            xhr.onerror = function () { fail(1, 'Error de red al subir ' + esc(f.name) + '.'); };
+            xhr.send(fd);
+        })(0);
     });
 
-    function procesar(nombre, subido) {
+    function procesar(nombres) {
         var t0 = Date.now();
         step(2, 'active', '0:00');
         timer = setInterval(function () { step(2, 'active', fmtTime(Math.round((Date.now() - t0) / 1000))); }, 1000);
@@ -376,21 +404,23 @@ if (isset($_GET['stats'])) {
             var dur = fmtTime(Math.round((Date.now() - t0) / 1000));
             var txt = (xhr.responseText || '').trim();
             if (xhr.status === 200 && /OK$/.test(txt)) {
-                setFile(null);
-                step(1, 'done', fmtSize(subido)); step(2, 'done', dur); step(3, 'done', now());
-                showAlert('ok', '<b>Carga completada.</b> El archivo <b>' + esc(nombre) + '</b> se proces&oacute; en ' + dur +
-                    ' y se actualiz&oacute; el VAS Profile de la vista ONT Detalle.' +
+                var cant = archivos.length;
+                archivos = []; estadoSubida = {};
+                lock(false);
+                step(1, 'done', cant + ' archivos'); step(2, 'done', dur); step(3, 'done', now());
+                showAlert('ok', '<b>Carga completada.</b> Se procesaron ' + cant + ' archivos en ' + dur +
+                    ' y se actualiz\u00f3 el VAS Profile de la vista ONT Detalle.' +
                     (txt !== 'OK' ? '<pre>' + esc(txt.replace(/OK$/, '').trim()) + '</pre>' : ''));
                 cargarStats();
-                lock(false);
             } else {
-                fail(2, 'El servidor no pudo procesar el archivo.', txt || ('HTTP ' + xhr.status));
+                fail(2, 'El servidor no pudo procesar los archivos.', txt || ('HTTP ' + xhr.status));
             }
         };
-        xhr.onerror = function () { clearInterval(timer); fail(2, 'Se perdi&oacute; la conexi&oacute;n mientras se procesaba el archivo. Revisa el resumen antes de volver a cargarlo.'); };
-        xhr.send('name_xls=' + encodeURIComponent(nombre));
+        xhr.onerror = function () { clearInterval(timer); fail(2, 'Se perdi\u00f3 la conexi\u00f3n mientras se procesaban los archivos. Revisa el resumen antes de volver a cargarlos.'); };
+        xhr.send(nombres.map(function (n, i) {
+            return 'name_xls[]=' + encodeURIComponent(n) + '&name_orig[]=' + encodeURIComponent(archivos[i].name);
+        }).join('&'));
     }
-
     function fail(n, msg, detalle) {
         clearInterval(timer);
         step(n, 'error', 'Error');
