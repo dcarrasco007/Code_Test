@@ -14,9 +14,12 @@ if ($usuario == '') {
 if (!$db) {
     die('<center><h4>No se pudo conectar a la base de datos.</h4></center>');
 }
-if (!ea_tiene_acceso($db, $usuario)) {
+$nivel = ea_nivel_acceso($usuario);
+if ($nivel == '') {
     die('<center><h4>Usuario sin acceso a este item.</h4></center>');
 }
+// 'total' ve el mantenedor de rutas y el log; 'eliminar' solo la lista de archivos.
+$total = $nivel == 'total';
 $token = ea_token();
 ?>
 <style>
@@ -40,6 +43,7 @@ $token = ea_token();
         <div class="col-sm-3 col-xs-6"><div class="well well-sm text-center">Eliminados en esta sesión<br><span class="ea-num" id="ea_m_elim">0</span></div></div>
     </div>
 
+    <?php if ($total) { ?>
     <!-- Mantenedor de rutas -->
     <div class="panel panel-default">
         <div class="panel-heading"><strong>Rutas permitidas</strong>
@@ -61,6 +65,7 @@ $token = ea_token();
             </div>
         </div>
     </div>
+    <?php } ?>
 
     <!-- Archivos -->
     <div class="panel panel-default">
@@ -87,6 +92,7 @@ $token = ea_token();
         </div>
     </div>
 
+    <?php if ($total) { ?>
     <!-- Log -->
     <div class="panel panel-default">
         <div class="panel-heading"><strong>Últimos movimientos</strong>
@@ -94,6 +100,7 @@ $token = ea_token();
         </div>
         <div class="panel-body" id="ea_log" style="display:none;"></div>
     </div>
+    <?php } ?>
 
     <!-- Confirmación -->
     <div class="modal fade" id="ea_modal" tabindex="-1" role="dialog">

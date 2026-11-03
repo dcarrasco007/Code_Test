@@ -16,7 +16,7 @@ sql/ESTRUCTURA_ELIMINAR_ARCHIVOS.sql          Tablas + rutas iniciales (O&M y Ca
 contingencia/OLT/Eliminar_Archivos/           → servidor 181 (contingencia): carpeta OLT/Eliminar_Archivos
     index_eliminar_archivos.php               Vista (se carga dentro de menu.php)
     ajax_eliminar_archivos.php                Endpoint POST/JSON: cargar, agregar_ruta, estado_ruta, quitar_ruta, eliminar, log
-    lib/ea_config.php                         Raíz, conexión, extensiones, carpetas protegidas y usuarios/perfiles con acceso
+    lib/ea_config.php                         Raíz, conexión, extensiones, carpetas protegidas y usuarios con acceso
     lib/ea_funciones.php                      Validación de rutas, escaneo, borrado y log
 ```
 
@@ -34,10 +34,25 @@ Todo el código es compatible con PHP 5.3 y 5.5, y no necesita mbstring.
    host: `/var/www/Contenedor/portal-php53/www/Eliminar_Archivos`.
 3. Crear la opción de menú con el INSERT comentado al final del SQL, completando el id, la posición y el menú padre.
    Luego dar acceso al perfil desde Administración > Perfiles.
-4. Por defecto solo entra el usuario `admin`. Para dar acceso a otros perfiles, agregar su `id_perfil` en
-   `ea_perfiles_permitidos()` de `lib/ea_config.php`. El endpoint vuelve a revisar el acceso en cada petición.
+4. Definir quién entra en `lib/ea_config.php` (ver "Niveles de acceso"). Por defecto solo entra `admin`.
 5. El usuario web (`www-data`) necesita permiso de escritura en las carpetas para poder borrar. Si no lo tiene, la
    ventana muestra "No se pudo eliminar el archivo (revisar permisos del usuario web)".
+
+## Niveles de acceso
+
+Se configuran con dos listas de usuarios (`user_olt` de la sesión) en `lib/ea_config.php`:
+
+| Lista | Qué puede hacer |
+|---|---|
+| `ea_usuarios_total()` | Todo: ve el mantenedor de rutas (agregar, activar, desactivar y quitar), el log de movimientos y elimina archivos |
+| `ea_usuarios_eliminar()` | Solo ve la lista de archivos de las rutas activas y los elimina de a uno |
+
+- Un usuario que no está en ninguna lista ve "Usuario sin acceso a este item".
+- Si un usuario está en las dos listas, manda la de acceso total.
+- Al usuario "solo eliminar" la vista no le muestra el mantenedor ni el log. El endpoint, además, le rechaza
+  `agregar_ruta`, `estado_ruta`, `quitar_ruta` y `log`, y solo le envía las rutas activas, sin quién las registró.
+  Así no puede saltarse la restricción llamando al endpoint directamente.
+- Cada eliminación queda en el log con el usuario que la hizo, sea cual sea su nivel.
 
 ## Reglas de seguridad
 
@@ -79,7 +94,9 @@ para ella.
 
 ## Pruebas realizadas (local, PHP 7.3 + MySQL 5.7 temporal)
 
-- **Acceso:** sin sesión, usuario sin perfil y token incorrecto quedan rechazados.
+- **Acceso:** sin sesión, usuario fuera de las listas y token incorrecto quedan rechazados. Con "solo eliminar":
+  no se ve el mantenedor ni el log, el endpoint rechaza las acciones de rutas y de log, recibe solo las rutas
+  activas, y el borrado funciona y queda en el log con su usuario.
 - **Alta de rutas:** se rechazan la carpeta protegida, `..`, un solo nivel, una carpeta inexistente, una duplicada
   (también escrita con `/` sobrantes) y las anidadas en ambos sentidos.
 - **Listado:** muestra csv, CSV, xls y xlsx en subcarpetas, también con nombres con ñ. No muestra `.php` ni archivos

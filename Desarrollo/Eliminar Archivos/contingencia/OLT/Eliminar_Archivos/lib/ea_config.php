@@ -28,14 +28,16 @@ function ea_carpetas_protegidas()
         'Select2', 'Highcharts-4.2.3', 'lee_web', 'ip_safe', 'extras', 'Eliminar_Archivos');
 }
 
-// Usuarios con acceso al módulo.
-function ea_usuarios_permitidos()
+// Acceso total: ven el mantenedor de rutas (agregar, activar, desactivar y quitar),
+// el log de movimientos y eliminan archivos.
+function ea_usuarios_total()
 {
     return array('admin');
 }
 
-// Perfiles con acceso al módulo (id_perfil de OLT_PERFILES). Vacío = solo los usuarios de arriba.
-function ea_perfiles_permitidos()
+// Solo eliminar: ven la lista de archivos de las rutas activas y los eliminan de a uno.
+// No ven el mantenedor de rutas ni el log. Si un usuario está en las dos listas, manda la de acceso total.
+function ea_usuarios_eliminar()
 {
     return array();
 }

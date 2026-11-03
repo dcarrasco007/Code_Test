@@ -28,24 +28,19 @@ function ea_usuario()
     return isset($_SESSION['user_olt']) ? trim($_SESSION['user_olt']) : '';
 }
 
-function ea_tiene_acceso($db, $usuario)
+// Nivel de acceso del usuario: 'total', 'eliminar' o '' (sin acceso). Ver lib/ea_config.php.
+function ea_nivel_acceso($usuario)
 {
     if ($usuario == '') {
-        return false;
+        return '';
     }
-    if (in_array($usuario, ea_usuarios_permitidos())) {
-        return true;
+    if (in_array($usuario, ea_usuarios_total(), true)) {
+        return 'total';
     }
-    $perfiles = ea_perfiles_permitidos();
-    if (count($perfiles) == 0) {
-        return false;
+    if (in_array($usuario, ea_usuarios_eliminar(), true)) {
+        return 'eliminar';
     }
-    $u = $db->real_escape_string($usuario);
-    $res = $db->query("SELECT perfil FROM OLT_USUARIOS WHERE usuario = '$u' LIMIT 1");
-    if (!$res || !($row = $res->fetch_row())) {
-        return false;
-    }
-    return in_array((string)$row[0], array_map('strval', $perfiles));
+    return '';
 }
 
 // Token por sesión para que los POST solo vengan desde la ventana del módulo.

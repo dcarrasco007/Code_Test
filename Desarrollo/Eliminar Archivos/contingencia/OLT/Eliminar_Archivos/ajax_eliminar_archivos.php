@@ -35,18 +35,26 @@ if (ea_post('token') != ea_token()) {
     ea_error('La ventana quedó desactualizada. Recarga la opción del menú.');
 }
 
+$nivel = ea_nivel_acceso($usuario);
+if ($nivel == '') {
+    ea_error('Tu usuario no tiene acceso a esta opción.');
+}
+$accion = ea_post('accion');
+// Con acceso "solo eliminar" únicamente se puede listar y eliminar archivos.
+if ($nivel != 'total' && !in_array($accion, array('cargar', 'eliminar'))) {
+    ea_error('Tu usuario solo puede eliminar archivos.');
+}
+
 $db = ea_conectar();
 if (!$db) {
     ea_error('No se pudo conectar a la base de datos.');
 }
-if (!ea_tiene_acceso($db, $usuario)) {
-    ea_error('Tu usuario no tiene acceso a esta opción.');
-}
 
 $error = '';
-switch (ea_post('accion')) {
+switch ($accion) {
     case 'cargar':
-        $rutas = ea_rutas($db);
+        // "Solo eliminar" recibe solo las rutas activas y sin datos de quién las registró.
+        $rutas = ea_rutas($db, $nivel != 'total');
         $activas = array();
         foreach ($rutas as $r) {
             if ($r['ACTIVA'] == 1) {
@@ -56,6 +64,9 @@ switch (ea_post('accion')) {
         $lista = ea_listar_archivos($activas);
         foreach ($rutas as $i => $r) {
             $rutas[$i]['RESUMEN'] = isset($lista['resumen'][$r['ID']]) ? $lista['resumen'][$r['ID']] : null;
+            if ($nivel != 'total') {
+                unset($rutas[$i]['USUARIO'], $rutas[$i]['FECHA_REGISTRO']);
+            }
         }
         ea_responder(array(
             'ok' => true,
